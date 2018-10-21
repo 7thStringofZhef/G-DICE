@@ -1,13 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="133de9a7-d462-4802-928a-4f54449518e9" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/G-DICE-Python/Agent.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/G-DICE-Python/BeliefNode.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/G-DICE-Python/EnvObs.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/G-DICE-Python/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-    </list>
+    <list default="true" id="133de9a7-d462-4802-928a-4f54449518e9" name="Default Changelist" comment="" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -37,7 +31,7 @@
     <session id="-1334191195">
       <usages-collector id="statistics.lifecycle.project">
         <counts>
-          <entry key="project.closed" value="1" />
+          <entry key="project.closed" value="2" />
           <entry key="project.open.time.0" value="1" />
           <entry key="project.open.time.4" value="1" />
           <entry key="project.opened" value="2" />
@@ -98,7 +92,7 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/G-DICE-Python/EnvObs.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="390">
@@ -111,11 +105,11 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/@EnvObs/EnvObs.m">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="240">
-              <caret line="16" column="39" lean-forward="true" selection-start-line="16" selection-start-column="39" selection-end-line="16" selection-end-column="101" />
+            <state relative-caret-position="356">
+              <caret line="110" column="71" lean-forward="true" selection-start-line="110" selection-start-column="71" selection-end-line="110" selection-end-column="71" />
             </state>
           </provider>
         </entry>
@@ -298,13 +292,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/@EnvObs/EnvObs.m">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="240">
-          <caret line="16" column="39" lean-forward="true" selection-start-line="16" selection-start-column="39" selection-end-line="16" selection-end-column="101" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/G-DICE-Python/EnvObs.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="390">
@@ -313,6 +300,13 @@
             <marker date="1540159878418" expanded="true" signature="324:325" ph="..." />
             <marker date="1540159878418" expanded="true" signature="324:465" ph="..." />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/@EnvObs/EnvObs.m">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="356">
+          <caret line="110" column="71" lean-forward="true" selection-start-line="110" selection-start-column="71" selection-end-line="110" selection-end-column="71" />
         </state>
       </provider>
     </entry>
