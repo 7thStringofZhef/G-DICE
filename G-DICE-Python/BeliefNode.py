@@ -1,17 +1,23 @@
 from __future__ import absolute_import, print_function, division
 
+"""
+Class to represent a belief node in the belief space
+
+In the package delivery scenario, this could be base 1, base 2, destination 1, destination 2, destination inside airspace
+
+Instance Variables:
+  index: Unique BeliefNode index
+  descriptor: String describing this belief node
+  xE: Environmental observation
+"""
 class BeliefNode(object):
 
     """
-    Constructor. Makes a BeliefNode object
-    Inputs:
-      index: Unique BeliefNode index
-      name: String name for belief node
-      xE: Environmental observation
+    Constructor.
     """
-    def __init__(self, index, name, xE):
+    def __init__(self, index, descriptor, xE):
         self.index = index
-        self.name = name
+        self.descriptor = descriptor
         self.envObs = xE
 
     """
