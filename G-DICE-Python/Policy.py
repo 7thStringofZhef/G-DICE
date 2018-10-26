@@ -124,19 +124,25 @@ class GraphPolicyController(object):
         #***CONTINUE
 
     """
-    Sample TMAs at the node, using updated probability densitry function of best nodes
+    Sample TMAs at the node, using updated probability density function of best nodes
     Then sample transitions.
     Inputs:
       numSamples: How many samples to take
     """
     def sample(self, numSamples):
-        pass
+        for node in self.nodes:
+            node.sampleTMAs(numSamples)
+            for observationIndex in range(1, self.numObs+1):
+                node.sampleTransitions(observationIndex, numSamples)
 
     """
-    
+    Set the TMA to be executed at the node, and next-node transition
+    Input:
+      sampleIndex: Index of sample (TMA, nextNode) to set this node to
     """
     def setGraph(self, sampleIndex):
-        pass
+        for node in self.nodes:
+            node.setToSampleNumber(sampleIndex)
 
     """
     Update policy probabilities
@@ -149,9 +155,14 @@ class GraphPolicyController(object):
 
     """
     Add a new node to the graph
+    Inputs:
+      nodeIndex: Index of node
+      numTMAs: Number of task macro-actions
+      numObs: number of observations
+      numSamples: Number of samples
     """
     def appendToGraphNodes(self, nodeIndex, numTMAs, numObs, numSamples):
-        pass
+        self.nodes.append(GraphNode(self.numNodes, nodeIndex, numTMAs, numObs, numSamples))
 
 
     """
@@ -169,8 +180,10 @@ class GraphPolicyController(object):
       newPolicyNodeIndex: Index of next policy node
       newTMAIndex: Index of next TMA
     """
-    def getNextTMAIndex(self,currentNodeIndex, currentXeIndex):
-        pass
+    def getNextTMAIndex(self, currentNodeIndex, currentXeIndex):
+        newPolicyNodeIndex = self.nodes[currentNodeIndex].nextNode[currentXeIndex]
+        newTMAIndex = self.nodes[newPolicyNodeIndex].nodeTMA
+        return newPolicyNodeIndex, newTMAIndex
 
     """
     Return the policy table for this controller

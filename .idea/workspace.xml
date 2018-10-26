@@ -2,10 +2,11 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="133de9a7-d462-4802-928a-4f54449518e9" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/G-DICE-Python/Policy.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/G-DICE.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/G-DICE.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/codeStyles/Project.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/codeStyles/Project.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/G-DICE-Python/Agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/G-DICE-Python/Agent.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/G-DICE-Python/EnvObs.py" beforeDir="false" afterPath="$PROJECT_DIR$/G-DICE-Python/EnvObs.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/G-DICE-Python/Policy.py" beforeDir="false" afterPath="$PROJECT_DIR$/G-DICE-Python/Policy.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -13,38 +14,19 @@
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
-  <component name="DockManager">
-    <window id="2">
-      <content type="file-editors">
-        <state>
-          <leaf>
-            <file pinned="false" current-in-tab="true">
-              <entry file="file://$PROJECT_DIR$/Original G-DICE/@GraphPolicyController/GraphPolicyController.m">
-                <provider selected="true" editor-type-id="text-editor">
-                  <state relative-caret-position="1275">
-                    <caret line="95" column="49" selection-start-line="95" selection-start-column="21" selection-end-line="95" selection-end-column="49" />
-                  </state>
-                </provider>
-              </entry>
-            </file>
-          </leaf>
-        </state>
-      </content>
-    </window>
-  </component>
   <component name="FUSProjectUsageTrigger">
     <session id="-1334191195">
       <usages-collector id="statistics.lifecycle.project">
         <counts>
           <entry key="project.closed" value="2" />
           <entry key="project.open.time.0" value="1" />
-          <entry key="project.open.time.4" value="1" />
-          <entry key="project.opened" value="2" />
+          <entry key="project.open.time.4" value="2" />
+          <entry key="project.opened" value="3" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.open">
         <counts>
-          <entry key="m" value="6" />
+          <entry key="m" value="8" />
           <entry key="md" value="1" />
           <entry key="py" value="3" />
         </counts>
@@ -52,19 +34,19 @@
       <usages-collector id="statistics.file.types.open">
         <counts>
           <entry key="Markdown" value="1" />
-          <entry key="Matlab" value="5" />
+          <entry key="Matlab" value="7" />
           <entry key="PLAIN_TEXT" value="1" />
           <entry key="Python" value="3" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.edit">
         <counts>
-          <entry key="py" value="2458" />
+          <entry key="py" value="3205" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.edit">
         <counts>
-          <entry key="Python" value="2458" />
+          <entry key="Python" value="3205" />
         </counts>
       </usages-collector>
     </session>
@@ -110,9 +92,32 @@
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
       <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/Original G-DICE/@GraphPolicyController/GraphPolicyController.m">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="1350">
+              <caret line="90" column="88" lean-forward="true" selection-start-line="90" selection-start-column="27" selection-end-line="90" selection-end-column="88" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/G-DICE-Python/Policy.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="631">
+              <caret line="135" column="68" selection-start-line="135" selection-start-column="68" selection-end-line="135" selection-end-column="68" />
+              <folding>
+                <element signature="e#0#64#0" expanded="true" />
+                <marker date="1540597006298" expanded="true" signature="4182:4268" ph="..." />
+                <marker date="1540597006298" expanded="true" signature="4764:4863" ph="..." />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Original G-DICE/@Domain/Domain.m">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1770">
+            <state relative-caret-position="865">
               <caret line="190" column="36" selection-start-line="190" selection-start-column="36" selection-end-line="190" selection-end-column="36" />
             </state>
           </provider>
@@ -121,8 +126,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/G-DICE-Python/TMA.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="480">
-              <caret line="32" column="29" lean-forward="true" selection-start-line="32" selection-start-column="29" selection-end-line="32" selection-end-column="29" />
+            <state relative-caret-position="435">
+              <caret line="32" column="29" selection-start-line="32" selection-start-column="29" selection-end-line="32" selection-end-column="29" />
               <folding>
                 <element signature="e#0#64#0" expanded="true" />
               </folding>
@@ -134,7 +139,7 @@
         <entry file="file://$PROJECT_DIR$/G-DICE-Python/BeliefNode.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="405">
-              <caret line="27" lean-forward="true" selection-start-line="27" selection-end-line="27" />
+              <caret line="33" selection-start-line="33" selection-end-line="33" />
             </state>
           </provider>
         </entry>
@@ -142,11 +147,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/G-DICE-Python/EnvObs.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1545">
-              <caret line="103" column="31" selection-start-line="103" selection-start-column="31" selection-end-line="103" selection-end-column="31" />
-              <folding>
-                <element signature="e#0#64#0" expanded="true" />
-              </folding>
+            <state relative-caret-position="450">
+              <caret line="127" selection-start-line="127" selection-end-line="127" />
             </state>
           </provider>
         </entry>
@@ -154,31 +156,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/G-DICE-Python/Agent.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="526">
-              <caret line="94" column="97" selection-start-line="94" selection-start-column="97" selection-end-line="94" selection-end-column="97" />
-              <folding>
-                <element signature="e#0#64#0" expanded="true" />
-                <marker date="1540571183191" expanded="true" signature="1459:1667" ph="..." />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/G-DICE-Python/Policy.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="630">
-              <caret line="185" column="57" selection-start-line="185" selection-start-column="57" selection-end-line="185" selection-end-column="57" />
-              <folding>
-                <element signature="e#0#64#0" expanded="true" />
-                <marker date="1540573663998" expanded="true" signature="216:217" ph="..." />
-                <marker date="1540573663998" expanded="true" signature="216:250" ph="..." />
-                <marker date="1540573663998" expanded="true" signature="216:254" ph="..." />
-                <marker date="1540573663998" expanded="true" signature="2979:2981" ph="..." />
-                <marker date="1540573663998" expanded="true" signature="3274:5613" ph="..." />
-                <marker date="1540573663998" expanded="true" signature="3848:3857" ph="..." />
-                <marker date="1540573663998" expanded="true" signature="4989:5231" ph="..." />
-              </folding>
+            <state relative-caret-position="781">
+              <caret line="107" selection-start-line="107" selection-end-line="107" />
             </state>
           </provider>
         </entry>
@@ -188,9 +167,6 @@
           <provider selected="true" editor-type-id="text-editor">
             <state>
               <caret selection-end-line="1" />
-              <folding>
-                <marker date="1540484223785" expanded="true" signature="87:88" ph="..." />
-              </folding>
             </state>
           </provider>
         </entry>
@@ -221,9 +197,9 @@
       </list>
     </option>
   </component>
-  <component name="ProjectFrameBounds">
+  <component name="ProjectFrameBounds" extendedState="6">
     <option name="x" value="325" />
-    <option name="y" value="115" />
+    <option name="y" value="53" />
     <option name="width" value="1400" />
     <option name="height" value="1000" />
   </component>
@@ -232,7 +208,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -277,6 +252,7 @@
           <select />
         </subPane>
       </pane>
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -309,10 +285,10 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="325" y="115" width="1400" height="1000" extended-state="0" />
+    <frame x="0" y="0" width="1920" height="1053" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.24909224" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.18037136" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info id="DB Browser" order="3" />
@@ -425,64 +401,6 @@
     <entry file="file://$PROJECT_DIR$/Shuo G-DICE/agent_move.m">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
-    <entry file="file://$PROJECT_DIR$/G-DICE-Python/Domain.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state>
-          <caret selection-end-line="1" />
-          <folding>
-            <marker date="1540484223785" expanded="true" signature="87:88" ph="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/G-DICE-Python/TMA.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="480">
-          <caret line="32" column="29" lean-forward="true" selection-start-line="32" selection-start-column="29" selection-end-line="32" selection-end-column="29" />
-          <folding>
-            <element signature="e#0#64#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/G-DICE-Python/BeliefNode.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="405">
-          <caret line="27" lean-forward="true" selection-start-line="27" selection-end-line="27" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/G-DICE-Python/EnvObs.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1545">
-          <caret line="103" column="31" selection-start-line="103" selection-start-column="31" selection-end-line="103" selection-end-column="31" />
-          <folding>
-            <element signature="e#0#64#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/G-DICE-Python/Agent.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="526">
-          <caret line="94" column="97" selection-start-line="94" selection-start-column="97" selection-end-line="94" selection-end-column="97" />
-          <folding>
-            <element signature="e#0#64#0" expanded="true" />
-            <marker date="1540571183191" expanded="true" signature="1459:1667" ph="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Original G-DICE/@Domain/Domain.m">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1770">
-          <caret line="190" column="36" selection-start-line="190" selection-start-column="36" selection-end-line="190" selection-end-column="36" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Original G-DICE/@GraphNode/GraphNode.m">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
     <entry file="file://$PROJECT_DIR$/Original G-DICE/@Policy/Policy.m">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
@@ -493,26 +411,69 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/G-DICE-Python/TMA.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="435">
+          <caret line="32" column="29" selection-start-line="32" selection-start-column="29" selection-end-line="32" selection-end-column="29" />
+          <folding>
+            <element signature="e#0#64#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/G-DICE-Python/BeliefNode.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="405">
+          <caret line="33" selection-start-line="33" selection-end-line="33" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/G-DICE-Python/EnvObs.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="450">
+          <caret line="127" selection-start-line="127" selection-end-line="127" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/G-DICE-Python/Domain.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <caret selection-end-line="1" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/G-DICE-Python/Agent.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="781">
+          <caret line="107" selection-start-line="107" selection-end-line="107" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Original G-DICE/@Domain/Domain.m">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="865">
+          <caret line="190" column="36" selection-start-line="190" selection-start-column="36" selection-end-line="190" selection-end-column="36" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Original G-DICE/@GraphNode/GraphNode.m">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
     <entry file="file://$PROJECT_DIR$/Original G-DICE/@GraphPolicyController/GraphPolicyController.m">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1275">
-          <caret line="95" column="49" selection-start-line="95" selection-start-column="21" selection-end-line="95" selection-end-column="49" />
+        <state relative-caret-position="1350">
+          <caret line="90" column="88" lean-forward="true" selection-start-line="90" selection-start-column="27" selection-end-line="90" selection-end-column="88" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/G-DICE-Python/Policy.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="630">
-          <caret line="185" column="57" selection-start-line="185" selection-start-column="57" selection-end-line="185" selection-end-column="57" />
+        <state relative-caret-position="631">
+          <caret line="135" column="68" selection-start-line="135" selection-start-column="68" selection-end-line="135" selection-end-column="68" />
           <folding>
             <element signature="e#0#64#0" expanded="true" />
-            <marker date="1540573663998" expanded="true" signature="216:217" ph="..." />
-            <marker date="1540573663998" expanded="true" signature="216:250" ph="..." />
-            <marker date="1540573663998" expanded="true" signature="216:254" ph="..." />
-            <marker date="1540573663998" expanded="true" signature="2979:2981" ph="..." />
-            <marker date="1540573663998" expanded="true" signature="3274:5613" ph="..." />
-            <marker date="1540573663998" expanded="true" signature="3848:3857" ph="..." />
-            <marker date="1540573663998" expanded="true" signature="4989:5231" ph="..." />
+            <marker date="1540597006298" expanded="true" signature="4182:4268" ph="..." />
+            <marker date="1540597006298" expanded="true" signature="4764:4863" ph="..." />
           </folding>
         </state>
       </provider>
