@@ -1,5 +1,7 @@
 from __future__ import absolute_import, print_function, division
 
+import numpy as np
+
 from .TMA import TMA
 from .BeliefNode import BeliefNode
 from .Policy import GraphPolicyController
@@ -146,8 +148,118 @@ class Domain(object):
 
                     #For goto *somewhere* tasks, need to remove self from availability
                     if newTMAIndex != 13:
-                        if agent.currentBeliefNode.index in [1,2]:
-                            
+                        if agent.currentBeliefNode.index in [1, 2]:
+                            # Fail if trying to joint pickup a small package or solo pickup large
+                            if (agent.currentBeliefNode.envObs.psi == 1 and newTMAIndex == 9) or (agent.currentBeliefNode.envObs.psi == 2 and newTMAIndex == 8):
+                                agent.currentTMACountdown = -100
+                            else:
+                                agent.setNodeXe(agent.currentTMAIndex, 0, 1, isOutputOn)
+
+                            if isOutputOn:
+                                print('Agent ', agent.index, ' removed itself from the current node')
+
+                    if newTMAIndex == 9:  # Joint pickup needs to coordinate
+                        if jointPickupTMAChosen:  # Other agent initiated joint pickup
+                            if agent.currentBeliefNode in [1, 2]:
+                                agent.setNodeXe(newTMAIndex, 0, 1, isOutputOn)
+
+                            jointPickupTMAChosen, fellowAgentTMATimer, fellowAgentDelta, fellowAgentDelta = (0, 0, 0, 0)
+                        else:  # You are first agent to intiate, tell friend to help
+                            jointPickupTMAChosen = 1
+                            fellowAgentTMATimer = agent.currentTMACountdown
+                            fellowAgentDelta = agent.packageDelta
+                            fellowAgentPsi = agent.packagePsi
+
+                    elif newTMAIndex in [6, 7, 11]: #Joint goto d1/d2, joint put down
+                        if jointActionChosen:
+                            jointActionChosen, fellowAgentTMATimer, fellowAgentTMAIdx = (0, 0, 0)
+                        else:
+                            jointActionChosen = 1  # Flag other agent for help
+                            fellowAgentTMATimer = agent.currentTMACountdown
+                            fellowAgentTMAIdx = newTMAIndex
+
+                    # If new TMA is not a valid child of previous, fail
+                    if newTMAIndex not in self.TMAs[agent.currentTMAIndex].allowableChildTMAIndices:
+                        agent.currentTMACountdown = -100
+
+                    agent.currentTMAIndex = newTMAIndex
+
+            currentTime += 1
+
+        if numPackagesDelivered < numPackagesGoal:
+            completionTime = -1
+        else:
+            completionTime = currentTime
+
+        return value, completionTime
+
+    """
+    Print allowable TMAs from all TMA indices
+    """
+    def printAllowableTMAs(self):
+        for TMAIndex in range(1, self.numTMAs+1):
+            print(TMAIndex)
+            print(self.TMAs[TMAIndex-1].allowableChildTMAIndices)
+
+    """
+    Construct a high-level policy tree from TMAs
+    """
+    def constructTree(self):
+        for TMA in self.TMAs:
+            if np.isnan(TMA.bTerm):  # NaN means term set = init set
+                # Find allowable init set elements
+                allTerminationIndices = np.where(not np.isnan(TMA.tau)).flatten()
+                for index in allTerminationIndices:
+                    TMA.allowableChildTMAIndices = self.findAllowableTMAs(index)
+            else: # Otherwise, specific termination set for this TMA
+                for beliefIndex in range(self.numBeliefNodes):
+                    if TMA.bTerm[beliefIndex] == 1:
+                        TMA.allowableChildTMAIndices = self.findAllowableTMAs(beliefIndex)
+
+    """
+    Return a list of the allowable TMAs given a belief node
+    Input:
+      initiationIndex: Index of belief node. 0-numNodes-1
+    Output:
+      allowableTMAs: List of allowable TMAs
+    """
+    def findAllowableTMAs(self, initiationIndex):
+        return [tma for tma in self.TMAs if not np.isnan(tma.tau[initiationIndex])]
+
+    """
+    """
+    def drawTree(self, rootNodes, rootNodeTMAIndices, nodeMap, nodeMapIndices, maxDepth, numLeaves):
+        pass
+
+    """
+    Create a TMA policy tree to be drawn in "drawTree"
+    Inputs:
+      Same as above
+    Outputs:
+      numLeaves: Number of leaves in created tree
+      nodeMap: Updated nodeMap
+      nodeMapIndices: Updated nodeMapIndices
+    """
+    def createDrawnTree(self, rootNodes, rootNodeTMAIndices, nodeMap, nodeMapIndices, maxDepth, numLeaves):
+        if numLeaves < 0:
+            numLeaves = 0
+
+        if maxDepth <= 0:
+            return numLeaves, nodeMap, nodeMapIndices
+
+        numNodes = nodeMap.shape[0]
+        if numNodes == 0:
+            nodeMap = [0]
+            nodeMapIndices = rootNodes
+
+        tempIndex = 1
+        for node in rootNodes:
+            rootNodeTMAIndices
+
+
+
+
+
 
 
 
