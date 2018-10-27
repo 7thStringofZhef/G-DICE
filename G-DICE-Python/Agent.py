@@ -12,7 +12,7 @@ Instance Variables:
   packagePsi: 0 if no package, otherwise size of package
   policy: Policy controller
   currentPolicyNodeIndex: Agent's position in policy controller graph
-
+  currentTMACountdown: Timer of TMA counts down until it's complete
 """
 
 #Dict to map currentTMAIndex to belief node
@@ -35,6 +35,7 @@ class Agent(object):
         self.packageDelta, self.packagePsi = (0, 0)  # No package
         self.policy = None  # No policy yet
         self.currentPolicyNodeIndex = 0  # No policy yet
+        self.currentTMACountdown = 1
 
     """
     Updates Agent's current belief node depending on TMA index
