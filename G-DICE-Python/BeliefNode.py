@@ -6,7 +6,7 @@ Class to represent a belief node in the belief space
 In the package delivery scenario, this could be base 1, base 2, destination 1, destination 2, destination inside airspace
 
 Instance Variables:
-  index: Unique BeliefNode index
+  index: Unique BeliefNode index. Starts at 1
   descriptor: String describing this belief node
   xE: Environmental observation
 """

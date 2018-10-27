@@ -66,7 +66,7 @@ class EnvObs(object):
       currentTMAIndex: Agent's currently active task macro-action {1-13}
       isOutputOn: Print caller agent
     Output:
-      xeIndex: Index of environmental observation as used by Domain
+      xeIndex: Index of environmental observation as used by Domain. Starts at 1
     """
     def getXeIndex(self, callerAgentIndex, callerAgentPackageDelta, currentTMAIndex, isOutputOn=False):
         xe = [self.psi, self.delta, (not not self.phi)]

@@ -12,7 +12,7 @@ Class variables
   tauStdDeviation: Normalized standard deviation of completion time. Used in sampling 
 
 Instance Variables
-  index: Index of this TMA within domain
+  index: Index of this TMA within domain. Starts at 1
   descriptor: String describing TMA
   tau: List of expected completion time (in timesteps) from belief node
   terminalBeliefs: List of belief nodes for which this TMA is considered completed. NaN if same, 0 if not terminated, 1 if terminated

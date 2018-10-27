@@ -1,11 +1,11 @@
 from __future__ import absolute_import, print_function, division
 
-from .Policy import Policy
+from .Policy import Policy, GraphPolicyController
 """
 Class to represent an agent acting in the environment
 
 Instance Variables:
-  index: Agent's unique index.
+  index: Agent's unique index. Starts at 1. May make sense to switch to uuid
   currentBeliefNode: Current belief node 
   currentTMAIndex: Currently executing task macro action. 0 if no TMA
   packageDelta: 0 if no package, otherwise destination of package 

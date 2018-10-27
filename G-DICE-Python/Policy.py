@@ -66,7 +66,7 @@ class GraphNode(object):
       numSamples: Number of samples
     """
     def sampleTransitions(self, observationIndex, numSamples):
-        self.transitions[:, observationIndex] = np.random.choice(range(1, self.numNodesInFullGraph+1), size=numSamples,
+        self.transitions[:, observationIndex-1] = np.random.choice(range(1, self.numNodesInFullGraph+1), size=numSamples,
                                                                  p=self.pTableNextNode[:, observationIndex])
     """
     Set TMA and next node to this sample index
@@ -93,7 +93,7 @@ class GraphNode(object):
       nextNodeIndex: Index of next node
     """
     def setNextNode(self, observationIndex, nextNodeIndex):
-        self.nextNode[observationIndex] = nextNodeIndex
+        self.nextNode[observationIndex-1] = nextNodeIndex
 
 
 
@@ -101,7 +101,7 @@ class GraphNode(object):
 """
 Class to represent a FSA policy
 Instance variables:
-  nodes: Nodes in the FSC
+  nodes: Nodes in the FSC. Indexed 0-numNodes-1
   numNodes: Number of nodes in the FSC
   alpha: learning rate
   numObs: Number of observations
@@ -121,7 +121,9 @@ class GraphPolicyController(object):
         self.numObs = numObs
         self.numTMAs = numTMAs
         self.numSamples = numSamples
-        #***CONTINUE
+        self.nodes = []  # Empty list of nodes
+        for nodeIndex in range(numNodes):
+            self.appendNodeToGraph(nodeIndex, numTMAs, numObs, numSamples)
 
     """
     Sample TMAs at the node, using updated probability density function of best nodes
@@ -138,7 +140,7 @@ class GraphPolicyController(object):
     """
     Set the TMA to be executed at the node, and next-node transition
     Input:
-      sampleIndex: Index of sample (TMA, nextNode) to set this node to
+      sampleIndex: Index of sample (TMA, nextNode) to set all nodes to
     """
     def setGraph(self, sampleIndex):
         for node in self.nodes:
@@ -149,9 +151,43 @@ class GraphPolicyController(object):
     Inputs:
       currentIterationValues: Values of samples
       N_b: Number n best samples to keep
+      isOutputOn: Print debug messages
     """
-    def updateProbs(self, currentIterationValues, N_b):
-        pass
+    def updateProbs(self, currentIterationValues, N_b, isOutputOn=True):
+        # Sort in descending order, get N_b best values > 0
+        sortedValues, sortingIndices = np.sort(currentIterationValues)[::-1], currentIterationValues[::-1].argsort()
+        maxValues = sortedValues[:N_b]
+        maxValueIndices = sortingIndices[:N_b]
+        maxValueIndices = maxValueIndices[maxValues > 0]  # Remove below 0
+        N_b = maxValueIndices.shape[0]
+        if isOutputOn:
+            print(N_b,' samples with value > 0 found!')
+
+        #Ensure we have at least 1 sample so we don't need to renormalize pdf
+        if N_b == 0:
+            return
+
+        weightPerSample = 1 / N_b
+        # ***Could make this more efficient if I can vectorize***
+        for node in self.nodes:
+            newPVectorTMA = node.pVectorTMA * (1-self.alpha)
+            newPTableNextNode = node.pTableNextNode * (1-self.alpha)
+            for sampleIndex in maxValueIndices:
+                if isOutputOn:
+                    print('Updating weights using "best" sample ', sampleIndex)
+
+                sampleTMA = node.TMAs[sampleIndex]
+                newPVectorTMA[sampleTMA] = newPVectorTMA[sampleTMA] + weightPerSample*self.alpha
+
+                for observationIndex in range(self.numObs):
+                    sampleNextNode = node.transitions[sampleIndex, observationIndex]
+                    newPTableNextNode[sampleNextNode, observationIndex] = newPTableNextNode[sampleNextNode, observationIndex] + weightPerSample*self.alpha
+
+            #Update the pdfs
+            node.pVectorTMA = newPVectorTMA
+            node.pTableNextNode = newPTableNextNode
+
+
 
     """
     Add a new node to the graph
@@ -161,7 +197,7 @@ class GraphPolicyController(object):
       numObs: number of observations
       numSamples: Number of samples
     """
-    def appendToGraphNodes(self, nodeIndex, numTMAs, numObs, numSamples):
+    def appendNodeToGraph(self, nodeIndex, numTMAs, numObs, numSamples):
         self.nodes.append(GraphNode(self.numNodes, nodeIndex, numTMAs, numObs, numSamples))
 
 
@@ -175,13 +211,13 @@ class GraphPolicyController(object):
     Get the next TMA index given the current node and observation
     Inputs:
       currentNodeIndex: Index of current node in controller
-      currentXeIndex: Index of environmental observation in domain
+      currentObservationIndex: Index of environmental observation in domain
     Outputs:
       newPolicyNodeIndex: Index of next policy node
       newTMAIndex: Index of next TMA
     """
-    def getNextTMAIndex(self, currentNodeIndex, currentXeIndex):
-        newPolicyNodeIndex = self.nodes[currentNodeIndex].nextNode[currentXeIndex]
+    def getNextTMAIndex(self, currentNodeIndex, currentObservationIndex):
+        newPolicyNodeIndex = self.nodes[currentNodeIndex].nextNode[currentObservationIndex]
         newTMAIndex = self.nodes[newPolicyNodeIndex].nodeTMA
         return newPolicyNodeIndex, newTMAIndex
 
@@ -193,10 +229,10 @@ class GraphPolicyController(object):
     """
     def getPolicyTable(self):
         TMAs = np.zeros(self.numNodes)
-        transitions = np.zeros(self.numNodes, self.numObs)
+        transitions = np.zeros((self.numNodes, self.numObs))
         for node in self.nodes:
             TMAs[node.nodeIndex] = node.nodeTMA
-            transitions[node.nodeIndex,:] = node.nextNode
+            transitions[node.nodeIndex, :] = node.nextNode
 
     """
     Set the policy according to variables as retrieved from above
