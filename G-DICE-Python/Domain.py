@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 from .TMA import TMA
 from .BeliefNode import BeliefNode
 from .Policy import GraphPolicyController
+from .EnvObs import EnvObs
+from.Agent import Agent
 
 class Domain(object):
 
@@ -17,7 +19,39 @@ class Domain(object):
         self.agents = [] #List of agents in domain
 
         # Define belief nodes
+        # Base nodes. Always have a package
+        tempEnvObs = EnvObs([1, 2], [1, 2, 3])
+        self.appendToBeliefNodes(1, 'B1', tempEnvObs)
+        self.appendToBeliefNodes(2, 'B2', tempEnvObs)
+
+        # Delivery nodes
+        tempEnvObs = EnvObs([], [])
+        self.appendToBeliefNodes(3, 'R', tempEnvObs)
+        self.appendToBeliefNodes(4, 'D1', tempEnvObs)
+        self.appendToBeliefNodes(5, 'D2', tempEnvObs)
+
+        # Define agents. Start both at B1
+        self.appendToAgents(Agent(1, self.beliefNodes[0], 1))
+        self.appendToAgents(Agent(2, self.beliefNodes[0], 1))
+
         # Define TMAs
+        # 1: goto B1
+        # 2: Goto B2
+        # 3: Goto R
+        # 4: Goto D1
+        # 5: Goto D2
+
+        # 6: Joint Goto D1
+        # 7: Joint goto D2
+
+        # 8: Pickup package
+        # 9: Joint pickup package
+
+        # 10: Put down package
+        # 11: Joint put down package
+
+        # 12: Place package on truck
+        # 13: Wait for 1 time unit
 
         # Init environmental state
         self.initXe()
