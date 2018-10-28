@@ -1,6 +1,7 @@
 from __future__ import absolute_import, print_function, division
 
 import numpy as np
+import matplotlib.pyplot as plt
 
 from .TMA import TMA
 from .BeliefNode import BeliefNode
@@ -229,7 +230,13 @@ class Domain(object):
     """
     """
     def drawTree(self, rootNodes, rootNodeTMAIndices, nodeMap, nodeMapIndices, maxDepth, numLeaves):
-        pass
+        labelTMAs = False
+
+        numLeaves, nodeMap, nodeMapIndices = self.createDrawnTree(rootNodes, rootNodeTMAIndices, nodeMap, nodeMapIndices, maxDepth, numLeaves)
+        treeFigure = plt.Figure()
+
+        if labelTMAs;
+            pass
 
     """
     Create a TMA policy tree to be drawn in "drawTree"
@@ -252,9 +259,31 @@ class Domain(object):
             nodeMap = [0]
             nodeMapIndices = rootNodes
 
-        tempIndex = 1
-        for node in rootNodes:
-            rootNodeTMAIndices
+        tempIndex = 0
+        for rootNode in rootNodes:
+            rootNodeTMAIndex = rootNodeTMAIndices[tempIndex]
+            # Get all children of the root node
+            rootNodeTMAIndicesNext = self.TMAs[rootNodeTMAIndex-1].allowableChildTMAIndices
+            numChildren = rootNodeTMAIndicesNext.shape[0]
+            rootNodesNext = np.arange(numChildren) + nodeMap.shape[0]  # Tree index for visualization
+            nodeMap = nodeMap.append(np.ones(numChildren) * rootNode)
+            nodeMapIndices = nodeMapIndices.append(rootNodeTMAIndicesNext)
+
+            # Go to next level
+            numLeaves, nodeMap, nodeMapIndices = self.createDrawnTree(rootNodesNext, rootNodeTMAIndicesNext, nodeMap, nodeMapIndices, maxDepth - 1, numLeaves)
+            tempIndex += 1
+
+
+        # If maxDepth is 1, we are at leaf level. Report # leaves
+        if maxDepth == 1:
+            tempIndex = 0
+            for rootNode in rootNodes:
+                rootNodeTMAIndex = rootNodeTMAIndices[tempIndex]
+                # Get all children of root node
+                rootNodesTMAIndicesNext = self.TMAs[rootNodeTMAIndex-1].allowableChildTMAIndices
+                numLeaves += rootNodeTMAIndicesNext.shape[0]
+                tempIndex += 1
+
 
 
 

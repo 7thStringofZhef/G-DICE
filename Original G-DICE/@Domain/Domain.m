@@ -182,7 +182,6 @@ classdef Domain < handle
             %-------------------------------------------------------------------------%
             %initialize environmental state
             obj.initXe();
-            
                                        % [obj.psi obj.delta obj.phi] = [size, destination, other agents avail]
                                        %  1   2   3   4   5   6   7   8   9  10  11  12  13
                                        %000 110 120 130 210 220 230 111 121 131 211 221 231
