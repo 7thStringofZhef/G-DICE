@@ -15,7 +15,29 @@ class Domain(object):
         self.numTMAs = 0 #Initially no TMAs
         self.numBeliefNodes = 5 #Number of expected belief nodes
         self.agents = [] #List of agents in domain
-        self.validTMATransitions
+
+        # Define belief nodes
+        # Define TMAs
+
+        # Init environmental state
+        self.initXe()
+
+        # [obj.psi obj.delta obj.phi] = [size, destination, other agents avail]
+                                            #  1   2   3   4   5   6   7   8   9  10  11  12  13
+                                            #000 110 120 130 210 220 230 111 121 131 211 221 231
+        self.validTMATransitions = np.array([[-1, 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],  #1 -goto b1 (at b1)
+                                             [-1, 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],  # 2 -goto b2 (at b2)
+                                             [0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],  # 3 -goto r (at r)
+                                             [0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],  # 4 -goto d1 (at d1)
+                                             [0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],  # 5 -goto d2 (at d2)
+                                             [0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],  # 6 -joint goto d1 (at d1)
+                                             [0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],  # 7 -joint goto d2 (at d2)
+                                             [-1, 0,  0,  0, -1, -1, -1,  0,  0,  0, -1, -1, -1],  # 8 -pickup pkg (at b1 or b2) %this is a special case where the observations MUST COME BEFOREA NEW PKG IS GENERATED!!
+                                             [-1,-1, -1, -1, -1, -1, -1, -1, -1, -1,  0,  0, -1],  # 9 -joint pickup pkg (at b1 or b2)
+                                             [0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],  # 10 -put down pkg (at d1 or d2)
+                                             [0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],  # 11 -joint put down pkg (at d1 or d2)
+                                             [0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],  # 12 -place on truck (at r)
+                                             [0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0]])  # 13 -wait (anywhere)
 
 
     """
@@ -235,7 +257,7 @@ class Domain(object):
         numLeaves, nodeMap, nodeMapIndices = self.createDrawnTree(rootNodes, rootNodeTMAIndices, nodeMap, nodeMapIndices, maxDepth, numLeaves)
         treeFigure = plt.Figure()
 
-        if labelTMAs;
+        if labelTMAs:
             pass
 
     """
