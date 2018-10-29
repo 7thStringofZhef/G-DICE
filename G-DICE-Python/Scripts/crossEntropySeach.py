@@ -5,6 +5,7 @@ from time import time_ns
 import matplotlib.pyplot as plt
 
 from ..Policy import GraphPolicyController
+from ..Domain import Domain
 
 def crossEntropySearch():
     #plt.ion()
@@ -53,6 +54,7 @@ def crossEntropySearch():
         axisHandle.set_ydata(allValues[:(iteration + 1) * N_s])
         plt.ion()
         """
+    print('G-DICE finished in ', time_ns() - currentTime)  # Track runtime
 
     #Plot the full set of values and save
     plt.plot(allValues, color='b', marker='+')
@@ -67,9 +69,36 @@ def crossEntropySearch():
 Evaluate a given GraphPolicyController
 Input:
   evalPolicy: GraphPolicyController object to evaluate, set at a sample index
+Outputs:
+  finalValue: Final average value of policy
+  completionTime: nparray of completion time for each iteration (in timesteps in domain)
+  successProb:
 """
-def evalPolicy(policyController):
-    pass
+def evalPolicy(policyController, numPackageGoal=9999, isOutputOn=False):
+    maxRuns = 80
+    values = np.zeros(maxRuns)
+    completionTime = np.zeros(maxRuns)
+    for runIndex in range(maxRuns):
+        dom = Domain()
+        dom.setPolicyForAllAgents(policyController)
+        values[runIndex], completionTime[runIndex] = \
+            dom.evaluateCurrentPolicy(numPackagesGoal=numPackageGoal, isOutputOn=isOutputOn)
+
+    print("Average value ", np.mean(values))
+    print("Best value ", np.max(values))
+
+    valuePlotY = np.zeros(maxRuns)
+    for valueIndex in range(maxRuns):
+        valuePlotY[valueIndex] = np.sum(values[:valueIndex]) / (valueIndex+1)
+
+    finalValue = valuePlotY[-1]
+    successProb = np.sum(completionTime != -1) / completionTime.size  # Number of times completion time is valid
+    completionTime = np.sum(completionTime[completionTime != 1]) / completionTime[completionTime != 1].size  # Sum of valid completion times
+    return finalValue, successProb, completionTime
+
+
+
+
 
 
 if __name__ == "__main__":
