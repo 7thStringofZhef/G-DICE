@@ -3,6 +3,7 @@ from __future__ import absolute_import, print_function, division
 import numpy as np
 from time import time_ns
 import matplotlib.pyplot as plt
+import multiprocessing
 
 from ..Policy import GraphPolicyController
 from ..Domains.PackageDelivery.Domain import PackageDeliveryDomain as Domain
@@ -61,7 +62,25 @@ def crossEntropySearch():
     plt.savefig('crossEntropySearch.eps', dpi=600)
 
 
+def crossEntropySearchParallel():
+    # Set up pool
+    pool = multiprocessing.Pool(processes=4)
 
+    
+    numNodes = 10
+    alpha = 0.2
+    numTMAs = 13
+    numObs = 13
+    N_k = 300
+    N_s = 30
+    N_b = 3
+    bestTMAs = None
+    bestTransitions = None
+
+    mGraphPolicyController = GraphPolicyController(numNodes, alpha, numTMAs, numObs, N_s)
+
+    bestValue = 0
+    allValues = np.zeros(N_k*N_s)
 
 
 
