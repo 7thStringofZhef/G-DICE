@@ -1,6 +1,7 @@
 from __future__ import absolute_import, print_function, division
 
 import numpy as np
+from numpy import nan
 import matplotlib.pyplot as plt
 
 from .TMA import TMA
@@ -9,8 +10,128 @@ from .Policy import GraphPolicyController
 from .EnvObs import EnvObs
 from.Agent import Agent
 
+# Mapping of environmental observation index to BeliefNode for PackageDelivery
+# Base nodes always have a package
+# Delivery nodes do not
+envObsBeliefNodeDictForPackageDelivery = {
+    1: BeliefNode(1, 'B1', EnvObs([1, 2], [1, 2, 3])),
+    2: BeliefNode(2, 'B2', EnvObs([1, 2], [1, 2, 3])),
+    3: BeliefNode(3, 'R', EnvObs([], [])),
+    4: BeliefNode(4, 'D1', EnvObs([], [])),
+    5: BeliefNode(5, 'D2', EnvObs([], []))
+}
+
+# TMA descriptors for package delivery
+tmaDescriptorsForPackageDelivery = [
+    'Go to B1',
+    'Go to B2',
+    'Go to R',
+    'Go to D1',
+    'Go to D2',
+    'Joint go to D1',
+    'Joint go to D2',
+    'Pick up package',
+    'Joint pick up package',
+    'Put down package',
+    'Joint put down package',
+    'Place package on truck',
+    'Wait'
+]
+
+# TMA tau for package delivery
+tmaTauForPackageDelivery = [
+    np.array([nan, 2, 4, 3, 2]),
+    np.array([2, nan, 4, 2, 4]),
+    np.array([3, 4, nan, nan, nan]),
+    np.array([3, 2, nan, nan, nan]),
+    np.array([2, 4, nan, nan, nan]),  # End of single gotos
+    np.array([3, 2, nan, nan, nan])*1.5,
+    np.array([2, 4, nan, nan, nan])*1.5,  #End of joint gotos
+    np.array([1, 1, nan, nan, nan]),
+    np.array([1, 1, nan, nan, nan])*1.5,  # End of pickup
+    np.array([nan, nan, nan, 1, 1]),
+    np.array([nan, nan, nan, 1, 1])*1.5,  # End of delivery
+    np.array([nan, nan, 1, nan, nan]),
+    np.array([nan, nan, nan, nan, nan])
+]
+
+# TMA terminal beliefs for package delivery
+tmaBTermForPackageDelivery = [
+    np.array([1, 0, 0, 0, 0]),
+    np.array([0, 1, 0, 0, 0]),
+    np.array([0, 0, 1, 0, 0]),
+    np.array([0, 0, 0, 1, 0]),
+    np.array([0, 0, 0, 0, 1]),
+    np.array([0, 0, 0, 1, 0]),
+    np.array([0, 0, 0, 0, 1]),  # end of goto tmas
+    np.array([nan, nan, nan, nan, nan]),
+    np.array([nan, nan, nan, nan, nan]),
+    np.array([nan, nan, nan, nan, nan]),
+    np.array([nan, nan, nan, nan, nan]),
+    np.array([nan, nan, nan, nan, nan]),
+    np.array([nan, nan, nan, nan, nan])
+]
+
+# TMA rewards for package delivery
+tmaRewardsForPackageDelivery = [
+    np.zeros(5),
+    np.zeros(5),
+    np.zeros(5),
+    np.zeros(5),
+    np.zeros(5),
+    np.zeros(5),
+    np.zeros(5),  # End of goto tmas
+    np.array([0, 0, nan, nan, nan]),
+    np.array([0, 0, nan, nan, nan]),  # End of pickup tmas
+    np.array([nan, nan, nan, 1, 1]),
+    np.array([nan, nan, nan, 3, 3]),  # End of deliver tmas
+    np.array([nan, nan, 0, nan, nan]),
+    np.zeros(5)
+]
+
+# TMA allowable child TMA indices for package delivery
+# Must be int type to be indices
+tmaChildTMAsForPackageDelivery = [
+    np.array([2, 3, 8, 9], dtype=np.int16),
+    np.array([1, 3, 8, 9], dtype=np.int16),
+    np.array([1, 2, 12], dtype=np.int16),
+    np.array([1, 2, 10], dtype=np.int16),
+    np.array([1, 2, 10], dtype=np.int16),  # end of single goto
+    np.array([11], dtype=np.int16),
+    np.array([11], dtype=np.int16),  # end of goto tmas
+    np.array([3, 4, 5], dtype=np.int16),
+    np.array([6, 7], dtype=np.int16),  # end of pickup tmas
+    np.array([1, 2], dtype=np.int16),
+    np.array([1, 2], dtype=np.int16),
+    np.array([1, 2], dtype=np.int16),
+    np.array([13], dtype=np.int16)
+]
+
+# TMA definitions for package delivery
+tmaDictForPackageDelivery = {k+1: TMA(k+1, tmaDescriptorsForPackageDelivery[k], tmaTauForPackageDelivery[k],
+                                      tmaBTermForPackageDelivery[k], tmaRewardsForPackageDelivery[k],
+                                      tmaRewardsForPackageDelivery[k]) for k in range(len(tmaDescriptorsForPackageDelivery))}
+
 class Domain(object):
 
+                                    #  1   2   3   4   5   6   7   8   9  10  11  12  13
+                                    #000 110 120 130 210 220 230 111 121 131 211 221 231
+    validTMATransitions = np.array([[-1, 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],  #1 -goto b1 (at b1)
+                                    [-1, 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],  # 2 -goto b2 (at b2)
+                                    [0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],  # 3 -goto r (at r)
+                                    [0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],  # 4 -goto d1 (at d1)
+                                    [0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],  # 5 -goto d2 (at d2)
+                                    [0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],  # 6 -joint goto d1 (at d1)
+                                    [0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],  # 7 -joint goto d2 (at d2)
+                                    [-1, 0,  0,  0, -1, -1, -1,  0,  0,  0, -1, -1, -1],  # 8 -pickup pkg (at b1 or b2) %this is a special case where the observations MUST COME BEFOREA NEW PKG IS GENERATED!!
+                                    [-1,-1, -1, -1, -1, -1, -1, -1, -1, -1,  0,  0, -1],  # 9 -joint pickup pkg (at b1 or b2)
+                                    [0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],  # 10 -put down pkg (at d1 or d2)
+                                    [0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],  # 11 -joint put down pkg (at d1 or d2)
+                                    [0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],  # 12 -place on truck (at r)
+                                    [0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0]])  # 13 -wait (anywhere)
+    """
+    Constructor.
+    """
     def __init__(self):
         self.beliefNodes = [] #List of belief nodes in this domain
         self.TMAs = [] #List of task macro-actions in this domain
@@ -19,59 +140,22 @@ class Domain(object):
         self.agents = [] #List of agents in domain
 
         # Define belief nodes
-        # Base nodes. Always have a package
-        tempEnvObs = EnvObs([1, 2], [1, 2, 3])
-        self.appendToBeliefNodes(1, 'B1', tempEnvObs)
-        self.appendToBeliefNodes(2, 'B2', tempEnvObs)
-
-        # Delivery nodes
-        tempEnvObs = EnvObs([], [])
-        self.appendToBeliefNodes(3, 'R', tempEnvObs)
-        self.appendToBeliefNodes(4, 'D1', tempEnvObs)
-        self.appendToBeliefNodes(5, 'D2', tempEnvObs)
+        for beliefNodeIndex in range(1, len(envObsBeliefNodeDictForPackageDelivery) + 1):
+            self.appendToBeliefNodes(envObsBeliefNodeDictForPackageDelivery[beliefNodeIndex])
 
         # Define agents. Start both at B1
         self.appendToAgents(Agent(1, self.beliefNodes[0], 1))
         self.appendToAgents(Agent(2, self.beliefNodes[0], 1))
 
         # Define TMAs
-        # 1: goto B1
-        # 2: Goto B2
-        # 3: Goto R
-        # 4: Goto D1
-        # 5: Goto D2
-
-        # 6: Joint Goto D1
-        # 7: Joint goto D2
-
-        # 8: Pickup package
-        # 9: Joint pickup package
-
-        # 10: Put down package
-        # 11: Joint put down package
-
-        # 12: Place package on truck
-        # 13: Wait for 1 time unit
+        for tmaIndex in range(1, len(tmaDictForPackageDelivery)+1):
+            self.appendToTMAs(tmaDictForPackageDelivery[tmaIndex])
+        self.numTMAs = len(self.TMAs)
 
         # Init environmental state
         self.initXe()
 
         # [obj.psi obj.delta obj.phi] = [size, destination, other agents avail]
-                                            #  1   2   3   4   5   6   7   8   9  10  11  12  13
-                                            #000 110 120 130 210 220 230 111 121 131 211 221 231
-        self.validTMATransitions = np.array([[-1, 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],  #1 -goto b1 (at b1)
-                                             [-1, 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],  # 2 -goto b2 (at b2)
-                                             [0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],  # 3 -goto r (at r)
-                                             [0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],  # 4 -goto d1 (at d1)
-                                             [0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],  # 5 -goto d2 (at d2)
-                                             [0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],  # 6 -joint goto d1 (at d1)
-                                             [0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],  # 7 -joint goto d2 (at d2)
-                                             [-1, 0,  0,  0, -1, -1, -1,  0,  0,  0, -1, -1, -1],  # 8 -pickup pkg (at b1 or b2) %this is a special case where the observations MUST COME BEFOREA NEW PKG IS GENERATED!!
-                                             [-1,-1, -1, -1, -1, -1, -1, -1, -1, -1,  0,  0, -1],  # 9 -joint pickup pkg (at b1 or b2)
-                                             [0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],  # 10 -put down pkg (at d1 or d2)
-                                             [0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],  # 11 -joint put down pkg (at d1 or d2)
-                                             [0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],  # 12 -place on truck (at r)
-                                             [0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0]])  # 13 -wait (anywhere)
 
 
     """
@@ -85,27 +169,20 @@ class Domain(object):
 
     """
     Add a new TMA
-    Inputs:
-      tmaIndex: Index of TMA, 1-numTMAs+1
-      tmaDescriptor: String describing the tma
-      tau: List of expected completion times of TMA (for each belief node)
-      bTerm: List of belief nodes, 0 if not a terminal node, 1 if terminal, NaN if TMA terminates in same node it started in
-      rewards: List of rewards (for each belief node)
-      allowableChildTMAs: list of possible subsequent TMAs
+    Input:
+      tma: TMA object (contains index, descriptor, tau, terminal beliefs, rewards, allowable child tma indices
     """
-    def appendToTMAs(self, tmaIndex, tmaDescriptor, tau, bTerm, rewards, allowableChildTMAIndices):
-        self.TMAs.append(TMA(tmaIndex, tmaDescriptor, tau, bTerm, rewards, allowableChildTMAIndices))
+    def appendToTMAs(self, tma):
+        self.TMAs.append(tma)
 
 
     """
     Add a new BeliefNode
-    Inputs:
-      beliefNodeIndex: Index of belief node, 1-numBeliefNodes+1
-      beliefNodeDescriptor: String describing belief node  (e.g., B1)
-      beliefNodexE: Observation associated with this belief node
+    Input:
+      beliefNode: BeliefNode object (contains index, descriptor, envobs)
     """
-    def appendToBeliefNodes(self, beliefNodeIndex, beliefNodeDescriptor, beliefNodexE):
-        self.beliefNodes.append(BeliefNode(beliefNodeIndex, beliefNodeDescriptor, beliefNodexE))
+    def appendToBeliefNodes(self, beliefNode):
+        self.beliefNodes.append(beliefNode)
 
     """
     Add new agent to list
