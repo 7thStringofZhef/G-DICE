@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="133de9a7-d462-4802-928a-4f54449518e9" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/G-DICE-Python/Scripts/crossEntropySeach.py" beforeDir="false" afterPath="$PROJECT_DIR$/G-DICE-Python/Scripts/crossEntropySeach.py" afterDir="false" />
-    </list>
+    <list default="true" id="133de9a7-d462-4802-928a-4f54449518e9" name="Default Changelist" comment="" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -52,7 +50,7 @@
     <session id="501145981">
       <usages-collector id="statistics.lifecycle.project">
         <counts>
-          <entry key="project.closed" value="7" />
+          <entry key="project.closed" value="8" />
           <entry key="project.open.time.0" value="1" />
           <entry key="project.open.time.1" value="1" />
           <entry key="project.open.time.3" value="2" />
@@ -107,12 +105,12 @@
         <entry file="file://$PROJECT_DIR$/G-DICE-Python/Scripts/crossEntropySeach.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="378">
-              <caret line="68" column="4" selection-start-line="68" selection-start-column="4" selection-end-line="68" selection-end-column="4" />
+              <caret line="68" selection-start-line="68" selection-end-line="68" />
               <folding>
                 <element signature="e#0#64#0" expanded="true" />
-                <marker date="1540836159063" expanded="true" signature="327:332" ph="..." />
-                <marker date="1540836159063" expanded="true" signature="2541:2842" ph="..." />
-                <marker date="1540836159063" expanded="true" signature="3203:4133" ph="..." />
+                <marker date="1540836246279" expanded="true" signature="327:332" ph="..." />
+                <marker date="1540836246279" expanded="true" signature="2537:2838" ph="..." />
+                <marker date="1540836246279" expanded="true" signature="3199:4129" ph="..." />
               </folding>
             </state>
           </provider>
@@ -242,7 +240,6 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="-1" width="1920" height="1053" extended-state="6" />
-    <editor active="true" />
     <layout>
       <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.15023722" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
@@ -538,12 +535,12 @@
     <entry file="file://$PROJECT_DIR$/G-DICE-Python/Scripts/crossEntropySeach.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="378">
-          <caret line="68" column="4" selection-start-line="68" selection-start-column="4" selection-end-line="68" selection-end-column="4" />
+          <caret line="68" selection-start-line="68" selection-end-line="68" />
           <folding>
             <element signature="e#0#64#0" expanded="true" />
-            <marker date="1540836159063" expanded="true" signature="327:332" ph="..." />
-            <marker date="1540836159063" expanded="true" signature="2541:2842" ph="..." />
-            <marker date="1540836159063" expanded="true" signature="3203:4133" ph="..." />
+            <marker date="1540836246279" expanded="true" signature="327:332" ph="..." />
+            <marker date="1540836246279" expanded="true" signature="2537:2838" ph="..." />
+            <marker date="1540836246279" expanded="true" signature="3199:4129" ph="..." />
           </folding>
         </state>
       </provider>

@@ -66,7 +66,7 @@ def crossEntropySearchParallel():
     # Set up pool
     pool = multiprocessing.Pool(processes=4)
 
-    
+
     numNodes = 10
     alpha = 0.2
     numTMAs = 13
