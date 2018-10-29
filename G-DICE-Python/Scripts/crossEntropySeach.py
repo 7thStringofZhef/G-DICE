@@ -5,7 +5,7 @@ from time import time_ns
 import matplotlib.pyplot as plt
 
 from ..Policy import GraphPolicyController
-from ..Domain import Domain
+from ..Domains.PackageDeliveryDomain import PackageDeliveryDomain as Domain
 
 def crossEntropySearch():
     #plt.ion()

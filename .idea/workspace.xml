@@ -5,11 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="133de9a7-d462-4802-928a-4f54449518e9" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/G-DICE-Python/Domains/Base.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/G-DICE-Python/Domains/PackageDeliveryDomain.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/G-DICE-Python/Domains/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/G-DICE-Python/Policy.py" beforeDir="false" afterPath="$PROJECT_DIR$/G-DICE-Python/Policy.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/G-DICE-Python/Domains/Base.py" beforeDir="false" afterPath="$PROJECT_DIR$/G-DICE-Python/Domains/Base.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/G-DICE-Python/Domains/PackageDeliveryDomain.py" beforeDir="false" afterPath="$PROJECT_DIR$/G-DICE-Python/Domains/PackageDeliveryDomain.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/G-DICE-Python/Scripts/crossEntropySeach.py" beforeDir="false" afterPath="$PROJECT_DIR$/G-DICE-Python/Scripts/crossEntropySeach.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -105,12 +103,12 @@
       <usages-collector id="statistics.file.extensions.edit">
         <counts>
           <entry key="Python Console" value="245" />
-          <entry key="py" value="20089" />
+          <entry key="py" value="20256" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.edit">
         <counts>
-          <entry key="Python" value="20334" />
+          <entry key="Python" value="20501" />
         </counts>
       </usages-collector>
     </session>
@@ -132,12 +130,12 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/G-DICE-Python/Scripts/crossEntropySeach.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-387">
-              <caret line="42" column="58" lean-forward="true" selection-start-line="42" selection-start-column="58" selection-end-line="42" selection-end-column="58" />
+            <state relative-caret-position="30">
+              <caret line="17" column="41" lean-forward="true" selection-start-line="17" selection-start-column="41" selection-end-line="17" selection-end-column="41" />
               <folding>
                 <element signature="e#0#64#0" expanded="true" />
-                <marker date="1540830821305" expanded="true" signature="255:260" ph="..." />
-                <marker date="1540830821305" expanded="true" signature="2732:3662" ph="..." />
+                <marker date="1540834761820" expanded="true" signature="303:308" ph="..." />
+                <marker date="1540834761820" expanded="true" signature="2780:3710" ph="..." />
               </folding>
             </state>
           </provider>
@@ -180,24 +178,24 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/G-DICE-Python/EnvObs.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="255">
+            <state relative-caret-position="705">
               <caret line="49" column="6" lean-forward="true" selection-start-line="49" selection-start-column="6" selection-end-line="49" selection-end-column="6" />
             </state>
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/G-DICE-Python/Domains/PackageDeliveryDomain.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="363">
-              <caret line="136" column="53" lean-forward="true" selection-start-line="136" selection-start-column="53" selection-end-line="136" selection-end-column="53" />
+            <state relative-caret-position="2343">
+              <caret line="295" column="36" selection-start-line="295" selection-start-column="36" selection-end-line="295" selection-end-column="36" />
               <folding>
                 <element signature="e#0#54#0" expanded="true" />
-                <marker date="1540834158159" expanded="true" signature="5505:5506" ph="..." />
-                <marker date="1540834158159" expanded="true" signature="5505:5507" ph="..." />
+                <marker date="1540834713887" expanded="true" signature="5531:5532" ph="..." />
+                <marker date="1540834713887" expanded="true" signature="5531:5533" ph="..." />
               </folding>
             </state>
           </provider>
@@ -206,10 +204,12 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/G-DICE-Python/Domains/Base.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="210">
-              <caret line="14" column="16" selection-start-line="14" selection-start-column="16" selection-end-line="14" selection-end-column="16" />
+            <state relative-caret-position="-645">
+              <caret line="17" lean-forward="true" selection-start-line="17" selection-end-line="17" />
               <folding>
-                <marker date="1540833981002" expanded="true" signature="337:472" ph="..." />
+                <element signature="e#0#54#0" expanded="true" />
+                <marker date="1540834564709" expanded="true" signature="388:5740" ph="..." />
+                <marker date="1540834564709" expanded="true" signature="1985:2067" ph="..." />
               </folding>
             </state>
           </provider>
@@ -218,8 +218,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/G-DICE-Python/Domain.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="135">
-              <caret line="135" selection-start-line="135" selection-end-line="155" selection-end-column="21" />
+            <state relative-caret-position="-972">
+              <caret line="327" column="36" lean-forward="true" selection-start-line="204" selection-end-line="327" selection-end-column="36" />
               <folding>
                 <element signature="e#0#64#0" expanded="true" />
               </folding>
@@ -257,10 +257,10 @@
         <option value="$PROJECT_DIR$/G-DICE-Python/Agent.py" />
         <option value="$PROJECT_DIR$/Original G-DICE/@Domain/Domain.m" />
         <option value="$PROJECT_DIR$/G-DICE-Python/Domain.py" />
-        <option value="$PROJECT_DIR$/G-DICE-Python/Scripts/crossEntropySeach.py" />
         <option value="$PROJECT_DIR$/G-DICE-Python/Policy.py" />
         <option value="$PROJECT_DIR$/G-DICE-Python/Domains/Base.py" />
         <option value="$PROJECT_DIR$/G-DICE-Python/Domains/PackageDeliveryDomain.py" />
+        <option value="$PROJECT_DIR$/G-DICE-Python/Scripts/crossEntropySeach.py" />
       </list>
     </option>
   </component>
@@ -542,23 +542,6 @@
         <state relative-caret-position="-648" />
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/G-DICE-Python/Scripts/crossEntropySeach.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-387">
-          <caret line="42" column="58" lean-forward="true" selection-start-line="42" selection-start-column="58" selection-end-line="42" selection-end-column="58" />
-          <folding>
-            <element signature="e#0#64#0" expanded="true" />
-            <marker date="1540830821305" expanded="true" signature="255:260" ph="..." />
-            <marker date="1540830821305" expanded="true" signature="2732:3662" ph="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Original G-DICE/main.m">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-45" />
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/G-DICE-Python/TreeNode.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="510">
@@ -593,42 +576,61 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/G-DICE-Python/EnvObs.py">
+    <entry file="file://$PROJECT_DIR$/G-DICE-Python/Domains/Base.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="255">
-          <caret line="49" column="6" lean-forward="true" selection-start-line="49" selection-start-column="6" selection-end-line="49" selection-end-column="6" />
+        <state relative-caret-position="-645">
+          <caret line="17" lean-forward="true" selection-start-line="17" selection-end-line="17" />
+          <folding>
+            <element signature="e#0#54#0" expanded="true" />
+            <marker date="1540834564709" expanded="true" signature="388:5740" ph="..." />
+            <marker date="1540834564709" expanded="true" signature="1985:2067" ph="..." />
+          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/G-DICE-Python/Domain.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="135">
-          <caret line="135" selection-start-line="135" selection-end-line="155" selection-end-column="21" />
+        <state relative-caret-position="-972">
+          <caret line="327" column="36" lean-forward="true" selection-start-line="204" selection-end-line="327" selection-end-column="36" />
           <folding>
             <element signature="e#0#64#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/G-DICE-Python/Domains/Base.py">
+    <entry file="file://$PROJECT_DIR$/Original G-DICE/main.m">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="210">
-          <caret line="14" column="16" selection-start-line="14" selection-start-column="16" selection-end-line="14" selection-end-column="16" />
+        <state relative-caret-position="-45" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/G-DICE-Python/Scripts/crossEntropySeach.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="30">
+          <caret line="17" column="41" lean-forward="true" selection-start-line="17" selection-start-column="41" selection-end-line="17" selection-end-column="41" />
           <folding>
-            <marker date="1540833981002" expanded="true" signature="337:472" ph="..." />
+            <element signature="e#0#64#0" expanded="true" />
+            <marker date="1540834761820" expanded="true" signature="303:308" ph="..." />
+            <marker date="1540834761820" expanded="true" signature="2780:3710" ph="..." />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/G-DICE-Python/Domains/PackageDeliveryDomain.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="363">
-          <caret line="136" column="53" lean-forward="true" selection-start-line="136" selection-start-column="53" selection-end-line="136" selection-end-column="53" />
+        <state relative-caret-position="2343">
+          <caret line="295" column="36" selection-start-line="295" selection-start-column="36" selection-end-line="295" selection-end-column="36" />
           <folding>
             <element signature="e#0#54#0" expanded="true" />
-            <marker date="1540834158159" expanded="true" signature="5505:5506" ph="..." />
-            <marker date="1540834158159" expanded="true" signature="5505:5507" ph="..." />
+            <marker date="1540834713887" expanded="true" signature="5531:5532" ph="..." />
+            <marker date="1540834713887" expanded="true" signature="5531:5533" ph="..." />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/G-DICE-Python/EnvObs.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="705">
+          <caret line="49" column="6" lean-forward="true" selection-start-line="49" selection-start-column="6" selection-end-line="49" selection-end-column="6" />
         </state>
       </provider>
     </entry>
