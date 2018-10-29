@@ -8,15 +8,23 @@ import multiprocessing
 from ..Policy import GraphPolicyController
 from ..Domains.PackageDelivery.Domain import PackageDeliveryDomain as Domain
 
-def crossEntropySearch():
+"""
+Run G-Dice on the PackageDelivery domain with the given parameters
+
+Inputs:
+  numNodes: Number of nodes in GraphPolicyController
+  alpha: Learning rate
+  numTMAs: Number ot TMAs defined
+  numObs: Number of observations in observation space
+  N_k: Number of iterations
+  N_s: Number of samples per iteration
+  N_b: Number of best samples kept from each iteration
+Outputs:
+  bestValue: Best policy value seen
+  bestTMAs, bestTransitions: Returns from policycontroller that gave best value
+"""
+def crossEntropySearch(numNodes=13, alpha=0.2, numTMAs=13, numObs=13, N_k=50, N_s=50, N_b=5):
     #plt.ion()
-    numNodes = 13  # Number of nodes in GraphPolicyController
-    alpha = 0.2  # Learning rate
-    numTMAs = 13  # Number ot TMAs defined
-    numObs = 13  # Number of observations in observation space
-    N_k = 50  # Number of iterations
-    N_s = 50  # Number of samples per iteration
-    N_b = 5  # Number of best samples kept from each iteration
     bestTMAs = None
     bestTransitions = None
 
@@ -30,7 +38,6 @@ def crossEntropySearch():
     bestValue = 0
     allValues = np.zeros((N_k*N_s))
     totalIterations = allValues.size
-
     for iteration in range(N_k):
         currentIterationValues = np.full(N_s, -100)  # Reset sample values
         mGraphPolicyController.sample(N_s)  # Sample N_s samples
@@ -47,6 +54,7 @@ def crossEntropySearch():
                 bestTMAs, bestTransitions = mGraphPolicyController.getPolicyTable()
 
         allValues[iteration*N_s:iteration*N_s+N_s] = currentIterationValues  # Store a history of iterations
+        mGraphPolicyController.updateProbs(currentIterationValues, N_b)
 
         # Plot values so far
         """
@@ -55,25 +63,23 @@ def crossEntropySearch():
         axisHandle.set_ydata(allValues[:(iteration + 1) * N_s])
         plt.ion()
         """
-    print('G-DICE finished in ', time_ns() - currentTime)  # Track runtime
+        print('G-DICE iteration ',iteration,' finished in ', time_ns() - currentTime)  # Track runtime
 
     #Plot the full set of values and save
     plt.plot(allValues, color='b', marker='+')
     plt.savefig('crossEntropySearch.eps', dpi=600)
+    return bestValue, bestTMAs, bestTransitions
 
 
-def crossEntropySearchParallel():
+def crossEntropySearchParallel(numNodes=10, alpha=0.2, numTMAs=13, numObs=13, N_k=300, N_s=30, N_b=3, numWorkers=4):
     # Set up pool
-    pool = multiprocessing.Pool(processes=4)
+    pool = multiprocessing.Pool(processes=numWorkers)
+    def runIteration(iterationIndex):
+        pass
 
+    def runSample(iterationIndex, sampleIndex):
+        pass
 
-    numNodes = 10
-    alpha = 0.2
-    numTMAs = 13
-    numObs = 13
-    N_k = 300
-    N_s = 30
-    N_b = 3
     bestTMAs = None
     bestTransitions = None
 
