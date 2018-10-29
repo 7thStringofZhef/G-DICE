@@ -77,7 +77,8 @@ def crossEntropySearchParallel(numNodes=10, alpha=0.2, numTMAs=13, numObs=13, N_
     def runIteration(iterationIndex):
         pass
 
-    def runSample(iterationIndex, sampleIndex):
+    def runSample(iterationIndex, sampleIndex, isOutputOn=False):
+        mGraphPolicyController.setGraph(sampleIndex)
         pass
 
     bestTMAs = None
