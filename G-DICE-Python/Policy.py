@@ -67,7 +67,7 @@ class GraphNode(object):
     """
     def sampleTransitions(self, observationIndex, numSamples):
         self.transitions[:, observationIndex-1] = np.random.choice(range(1, self.numNodesInFullGraph+1), size=numSamples,
-                                                                 p=self.pTableNextNode[:, observationIndex])
+                                                                   p=self.pTableNextNode[:, observationIndex])
     """
     Set TMA and next node to this sample index
     Input:
