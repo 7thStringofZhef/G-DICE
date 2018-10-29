@@ -3,11 +3,11 @@ from __future__ import absolute_import, print_function
 import numpy as np
 from numpy import nan
 
-from .Base import DomainConfiguration
-from ..BeliefNode import BeliefNode
-from ..TMA import TMA
-from ..EnvObs import EnvObs
-from ..Agent import Agent
+from ..Base import Domain
+from .EnvObs import EnvObs
+from ...BeliefNode import BeliefNode
+from ...TMA import TMA
+from ...Agent import Agent
 
 # Mapping of environmental observation index to BeliefNode for PackageDelivery
 # Base nodes always have a package
@@ -129,7 +129,7 @@ validTMATransitions = np.array([[-1, 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, 
                                 [0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0]])  # 13 -wait (anywhere)
 
 
-class PackageDeliveryDomain(DomainConfiguration):
+class PackageDeliveryDomain(Domain):
 
     """
     Constructor.
@@ -294,3 +294,4 @@ class PackageDeliveryDomain(DomainConfiguration):
             completionTime = currentTime
 
         return value, completionTime
+

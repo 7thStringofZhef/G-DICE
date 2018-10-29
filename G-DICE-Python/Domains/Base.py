@@ -6,7 +6,7 @@ import numpy as np
 """
 Class to hold domain-specific dictionaries
 """
-class DomainConfiguration(object):
+class Domain(object):
     envObsToBeliefNodeDict = {}
     envObsToEnvObsIndexDict = {}
     tmaDescriptors = []
@@ -172,3 +172,15 @@ class DomainConfiguration(object):
                 numLeaves += rootNodeTMAIndicesNext.shape[0]
                 tempIndex += 1
 
+
+"""
+Class to represent environmental observations in various domains
+
+"""
+class EnvObs(object):
+
+    """
+    Constructor
+    """
+    def __init__(self):
+        raise NotImplementedError("Must create subclass of EnvObs")
