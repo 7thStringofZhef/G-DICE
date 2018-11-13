@@ -1,0 +1,204 @@
+
+<!-- saved from url=(0070)http://cs.brown.edu/research/ai/pomdp/examples/pomdp-file-grammar.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+   
+   <meta name="GENERATOR" content="Mozilla/4.04 [en] (X11; I; Linux 2.1.123 i586) [Netscape]">
+   <meta name="Author" content="Anthony R. Cassandra">
+   <meta name="Keywords" content="POMDP, Markov, Planning, decision theory">
+   <title>POMDP File Grammar</title>
+</head><body text="#F0F0F0" bgcolor="#003300" link="#F8D900" vlink="#CCCCCC" alink="#00FF00">
+
+<center><font size="-1"><b>
+<a href="http://cs.brown.edu/research/ai/pomdp/index.html">POMDP Home</a>
+| <a href="http://cs.brown.edu/research/ai/pomdp/tutorial/index.html">Tutorial</a>
+| <a href="http://cs.brown.edu/research/ai/pomdp/papers/index.html">Papers</a>
+| <a href="http://cs.brown.edu/research/ai/pomdp/examples/index.html">Repository</a>
+| <a href="http://cs.brown.edu/research/ai/pomdp/code/index.html">Code</a>
+</b></font></center>
+
+<img src="./POMDP File Grammar_files/brown-clear.gif" height="111" width="102" align="LEFT">
+
+<p>
+</p><center><img src="./POMDP File Grammar_files/oak-a-stripe.gif" height="5" width="490">
+</center>
+
+<center><h1>Tony's POMDP file format grammar</h1>
+</center>
+
+<p>
+</p><center><img src="./POMDP File Grammar_files/oak-a-stripe.gif" height="5" width="490">
+</center>
+
+<p>
+This file gives the formal syntax for the POMDP file format which is used
+for the example files and the '<a href="http://cs.brown.edu/research/ai/pomdp/code/index.html">pomdp-solve</a>'
+program.<i></i>
+
+</p><p><i>For associated semantics see the '<a href="http://cs.brown.edu/research/ai/pomdp/examples/pomdp-file-spec.html">POMDP
+specification file</a>'.</i>
+
+</p><p><b><font face="Courier New,Courier"><font size="+3">&lt;pomdp_file&gt; ::=
+&lt;preamble&gt; &lt;param_list&gt; &lt;eof&gt;;</font></font></b><b><font face="Courier New,Courier"><font size="+3"></font></font></b>
+
+</p><p><b><font face="Courier New,Courier"><font size="+3">&lt;preamble&gt; ::=&nbsp;
+&lt;preamble&gt; &lt;param_type&gt;</font></font></b>
+<br><b><font face="Courier New,Courier"><font size="+3">&nbsp;&nbsp;&nbsp;
+| NIL ;</font></font></b><b><font face="Courier New,Courier"><font size="+3"></font></font></b>
+
+</p><p><b><font face="Courier New,Courier"><font size="+3">&lt;param-type&gt; ::=&nbsp;
+&lt;discount_param&gt;</font></font></b>
+<br><b><font face="Courier New,Courier"><font size="+3">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|&nbsp;&nbsp; &lt;value_param&gt;</font></font></b>
+<br><b><font face="Courier New,Courier"><font size="+3">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|&nbsp;&nbsp; &lt;state_param&gt;</font></font></b>
+<br><b><font face="Courier New,Courier"><font size="+3">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|&nbsp;&nbsp; &lt;actions&gt;</font></font></b>
+<br><b><font face="Courier New,Courier"><font size="+3">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|&nbsp;&nbsp; &lt;obs_param&gt;;</font></font></b><b><font face="Courier New,Courier"><font size="+3"></font></font></b>
+
+</p><p><b><font face="Courier New,Courier"><font size="+3">&lt;discount_param&gt;
+::= DISCOUNT COLON &lt;number&gt;;</font></font></b><b><font face="Courier New,Courier"><font size="+3"></font></font></b>
+
+</p><p><b><font face="Courier New,Courier"><font size="+3">&lt;value_param&gt;&nbsp;
+::=&nbsp; VALUES COLON &lt;value_tail&gt;;</font></font></b><b><font face="Courier New,Courier"><font size="+3"></font></font></b>
+
+</p><p><b><font face="Courier New,Courier"><font size="+3">&lt;value_tail&gt; ::=
+REWARD</font></font></b>
+<br><b><font face="Courier New,Courier"><font size="+3">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|&nbsp;&nbsp; COST;</font></font></b><b><font face="Courier New,Courier"><font size="+3"></font></font></b>
+
+</p><p><b><font face="Courier New,Courier"><font size="+3">&lt;state_param&gt; ::=
+STATES COLON &lt;state_tail&gt;;</font></font></b><b><font face="Courier New,Courier"><font size="+3"></font></font></b>
+
+</p><p><b><font face="Courier New,Courier"><font size="+3">&lt;state_tail&gt; ::=
+INTEGER</font></font></b>
+<br><b><font face="Courier New,Courier"><font size="+3">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+| &lt;ident_list&gt;;</font></font></b><b><font face="Courier New,Courier"><font size="+3"></font></font></b>
+
+</p><p><b><font face="Courier New,Courier"><font size="+3">&lt;action_param&gt;&nbsp;
+::= ACTIONS COLON &lt;action_tail&gt;;</font></font></b><b><font face="Courier New,Courier"><font size="+3"></font></font></b>
+
+</p><p><b><font face="Courier New,Courier"><font size="+3">&lt;action_tail&gt; ::=
+INTEGER</font></font></b>
+<br><b><font face="Courier New,Courier"><font size="+3">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+| &lt;ident_list&gt;;</font></font></b><b><font face="Courier New,Courier"><font size="+3"></font></font></b>
+
+</p><p><b><font face="Courier New,Courier"><font size="+3">&lt;obs_param&gt;&nbsp;
+::= OBSERVATIONS COLON &lt;obs_param_tail&gt;;</font></font></b><b><font face="Courier New,Courier"><font size="+3"></font></font></b>
+
+</p><p><b><font face="Courier New,Courier"><font size="+3">&lt;obs_param_tail&gt;
+::= INTEGER</font></font></b>
+<br><b><font face="Courier New,Courier"><font size="+3">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+| &lt;ident_list&gt;;</font></font></b><b><font face="Courier New,Courier"><font size="+3"></font></font></b>
+
+</p><p><b><font face="Courier New,Courier"><font size="+3">&lt;param_list&gt; ::=
+&lt;param_list&gt; &lt;param_spec&gt;;</font></font></b><b><font face="Courier New,Courier"><font size="+3"></font></font></b>
+
+</p><p><b><font face="Courier New,Courier"><font size="+3">&lt;param_spec&gt; ::=
+&lt;trans_prob_spec&gt;</font></font></b>
+<br><b><font face="Courier New,Courier"><font size="+3">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+| &lt;obs_prob_spec&gt;</font></font></b>
+<br><b><font face="Courier New,Courier"><font size="+3">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+| &lt;reward_spec&gt;;</font></font></b><b><font face="Courier New,Courier"><font size="+3"></font></font></b>
+
+</p><p><b><font face="Courier New,Courier"><font size="+3">&lt;trans_prob_spec&gt;
+::= T COLON &lt;trans_spec_tail&gt;;</font></font></b><b><font face="Courier New,Courier"><font size="+3"></font></font></b>
+
+</p><p><b><font face="Courier New,Courier"><font size="+3">&lt;trans_spec_tail&gt;
+::= &lt;action&gt; COLON &lt;state&gt; COLON &lt;state&gt; &lt;prob&gt;</font></font></b>
+<br><b><font face="Courier New,Courier"><font size="+3">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+| &lt;action&gt; COLON &lt;state&gt; &lt;u-matrix&gt;</font></font></b>
+<br><b><font face="Courier New,Courier"><font size="+3">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+| &lt;action&gt; &lt;ui-matrix&gt;;</font></font></b><b><font face="Courier New,Courier"><font size="+3"></font></font></b>
+
+</p><p><b><font face="Courier New,Courier"><font size="+3">&lt;obs_prob_spec&gt;
+::= O COLON &lt;obs_spec_tail&gt;;</font></font></b><b><font face="Courier New,Courier"><font size="+3"></font></font></b>
+
+</p><p><b><font face="Courier New,Courier"><font size="+3">&lt;obs_spec_tail&gt;
+::= &lt;action&gt; COLON &lt;state&gt; COLON &lt;obs&gt; &lt;prob&gt;</font></font></b>
+<br><b><font face="Courier New,Courier"><font size="+3">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+| &lt;action&gt; COLON &lt;state&gt; COLON &lt;u-matrix&gt;</font></font></b>
+<br><b><font face="Courier New,Courier"><font size="+3">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+| &lt;action&gt; &lt;u-matrix&gt;;</font></font></b><b><font face="Courier New,Courier"><font size="+3"></font></font></b>
+
+</p><p><b><font face="Courier New,Courier"><font size="+3">&lt;reward_spec&gt; ::=
+R COLON &lt;reward_spec_tail&gt;;</font></font></b><b><font face="Courier New,Courier"><font size="+3"></font></font></b>
+
+</p><p><b><font face="Courier New,Courier"><font size="+3">&lt;reward_spec_tail&gt;
+::= &lt;action&gt; COLON &lt;state&gt; COLON &lt;state&gt; COLON &lt;obs&gt; &lt;number&gt;</font></font></b>
+<br><b><font face="Courier New,Courier"><font size="+3">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+| &lt;action&gt; COLON &lt;state&gt; COLON &lt;state&gt; &lt;num-matrix&gt;</font></font></b>
+<br><b><font face="Courier New,Courier"><font size="+3">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|&nbsp; &lt;action&gt; COLON &lt;state&gt; &lt;num-matrix&gt;;</font></font></b>
+<br><b><font face="Courier New,Courier"><font size="+3"></font></font></b>&nbsp;<b><font face="Courier New,Courier"><font size="+3"></font></font></b>
+
+</p><p><b><font face="Courier New,Courier"><font size="+3">&lt;ui_matrix&gt; ::=
+UNIFORM</font></font></b>
+<br><b><font face="Courier New,Courier"><font size="+3">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+| IDENTITY</font></font></b>
+<br><b><font face="Courier New,Courier"><font size="+3">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+| &lt;prob_matrix&gt;;</font></font></b><b><font face="Courier New,Courier"><font size="+3"></font></font></b>
+
+</p><p><b><font face="Courier New,Courier"><font size="+3">&lt;u_matrix&gt;&nbsp;
+::= UNIFORM</font></font></b>
+<br><b><font face="Courier New,Courier"><font size="+3">&nbsp;&nbsp;&nbsp;&nbsp;
+| &lt;prob_matrix&gt;;</font></font></b><b><font face="Courier New,Courier"><font size="+3"></font></font></b>
+
+</p><p><b><font face="Courier New,Courier"><font size="+3">&lt;prob_matrix&gt;&nbsp;
+::= &lt;prob_matrix&gt; &lt;prob&gt;</font></font></b>
+<br><b><font face="Courier New,Courier"><font size="+3">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+| &lt;prob&gt;;</font></font></b><b><font face="Courier New,Courier"><font size="+3"></font></font></b>
+
+</p><p><b><font face="Courier New,Courier"><font size="+3">&lt;num_matrix&gt;&nbsp;
+::= &lt;num_matrix&gt; &lt;number&gt;</font></font></b>
+<br><b><font face="Courier New,Courier"><font size="+3">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+| &lt;number&gt;;</font></font></b><b><font face="Courier New,Courier"><font size="+3"></font></font></b>
+
+</p><p><b><font face="Courier New,Courier"><font size="+3">&lt;state&gt; ::=&nbsp;
+INTEGER</font></font></b>
+<br><b><font face="Courier New,Courier"><font size="+3">&nbsp;|&nbsp;&nbsp;
+STRING</font></font></b>
+<br><b><font face="Courier New,Courier"><font size="+3">&nbsp;|&nbsp;&nbsp;
+ASTERICK;</font></font></b>
+<br><b><font face="Courier New,Courier"><font size="+3"></font></font></b>&nbsp;<b><font face="Courier New,Courier"><font size="+3"></font></font></b>
+
+</p><p><b><font face="Courier New,Courier"><font size="+3">&lt;action&gt; ::=&nbsp;
+INTEGER</font></font></b>
+<br><b><font face="Courier New,Courier"><font size="+3">&nbsp; |&nbsp;&nbsp;&nbsp;
+STRING</font></font></b>
+<br><b><font face="Courier New,Courier"><font size="+3">&nbsp; |&nbsp;&nbsp;&nbsp;
+ASTERICK;</font></font></b><b><font face="Courier New,Courier"><font size="+3"></font></font></b>
+
+</p><p><b><font face="Courier New,Courier"><font size="+3">&lt;obs&gt; ::=&nbsp;
+INTEGER</font></font></b>
+<br><b><font face="Courier New,Courier"><font size="+3">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|&nbsp; STRING</font></font></b>
+<br><b><font face="Courier New,Courier"><font size="+3">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|&nbsp; ASTERICK;</font></font></b><b><font face="Courier New,Courier"><font size="+3"></font></font></b>
+
+</p><p><b><font face="Courier New,Courier"><font size="+3">&lt;ident_list&gt; ::=
+&lt;ident_list&gt; STRING</font></font></b>
+<br><b><font face="Courier New,Courier"><font size="+3">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+| STRING;</font></font></b><b><font face="Courier New,Courier"><font size="+3"></font></font></b>
+
+</p><p><b><font face="Courier New,Courier"><font size="+3">&lt;prob&gt; ::= FLOAT</font></font></b>
+<br><b><font face="Courier New,Courier"><font size="+3">&nbsp;|&nbsp; INTEGER;</font></font></b><b><font face="Courier New,Courier"><font size="+3"></font></font></b>
+
+</p><p><b><font face="Courier New,Courier"><font size="+3">&lt;number&gt; ::= &lt;optional_sign&gt;
+FLOAT</font></font></b>
+<br><b><font face="Courier New,Courier"><font size="+3">&nbsp; |&nbsp;&nbsp;
+&lt;optional_sign&gt; INTEGER;</font></font></b><b><font face="Courier New,Courier"><font size="+3"></font></font></b>
+
+</p><p><b><font face="Courier New,Courier"><font size="+3">optional_sign ::=&nbsp;
++</font></font></b>
+<br><b><font face="Courier New,Courier"><font size="+3">&nbsp; |&nbsp;&nbsp;&nbsp;
+- ;</font></font></b>
+
+</p><p>
+<img src="./POMDP File Grammar_files/oak-a-stripe.gif" height="5" width="490">
+
+</p><p>
+<i>Last updated: 01/31/99</i>
+
+
+</p></body></html>
