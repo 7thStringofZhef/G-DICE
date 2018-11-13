@@ -4,6 +4,7 @@ import numpy as np
 from time import time_ns
 import matplotlib.pyplot as plt
 import multiprocessing
+from functools import partial
 
 from ..Policy import GraphPolicyController
 from ..Domains.PackageDelivery.Domain import PackageDeliveryDomain as Domain
@@ -70,16 +71,29 @@ def crossEntropySearch(numNodes=13, alpha=0.2, numTMAs=13, numObs=13, N_k=50, N_
     plt.savefig('crossEntropySearch.eps', dpi=600)
     return bestValue, bestTMAs, bestTransitions
 
+# Function to call for parallel samples (iterations can't be parallel). Returns evaluated value
+def _crossEntropySearchOneSample(policyController, sampleIndex):
+    policyController.setGraph(sampleIndex)
+    return evalPolicy(policyController)[0]
 
-def crossEntropySearchParallel(numNodes=10, alpha=0.2, numTMAs=13, numObs=13, N_k=300, N_s=30, N_b=3, numWorkers=4):
-    # Set up pool
-    pool = multiprocessing.Pool(processes=numWorkers)
-    def runIteration(iterationIndex):
-        pass
+"""
+Run G-Dice on the PackageDelivery domain with the given parameters. Parallelizes across samples with max #workers
 
-    def runSample(iterationIndex, sampleIndex, isOutputOn=False):
-        mGraphPolicyController.setGraph(sampleIndex)
-        pass
+Inputs:
+  numNodes: Number of nodes in GraphPolicyController
+  alpha: Learning rate
+  numTMAs: Number ot TMAs defined
+  numObs: Number of observations in observation space
+  N_k: Number of iterations
+  N_s: Number of samples per iteration
+  N_b: Number of best samples kept from each iteration
+Outputs:
+  bestValue: Best policy value seen
+  bestTMAs, bestTransitions: Returns from policycontroller that gave best value
+"""
+def crossEntropySearchParallel(numNodes=10, alpha=0.2, numTMAs=13, numObs=13, N_k=300, N_s=30, N_b=3):
+    # Set up pool with max # workers
+    pool = multiprocessing.Pool()
 
     bestTMAs = None
     bestTransitions = None
@@ -87,7 +101,32 @@ def crossEntropySearchParallel(numNodes=10, alpha=0.2, numTMAs=13, numObs=13, N_
     mGraphPolicyController = GraphPolicyController(numNodes, alpha, numTMAs, numObs, N_s)
 
     bestValue = 0
-    allValues = np.zeros(N_k*N_s)
+    allValues = np.zeros((N_k*N_s))
+    totalIterations = allValues.size
+    for iteration in range(N_k):
+        print("Iteration ", (iteration * N_s + 1), " of ", totalIterations, ". Best value so far: ", bestValue)
+        mGraphPolicyController.sample(N_s)  # Sample N_s samples
+
+        sampleFunc = partial(_crossEntropySearchOneSample, mGraphPolicyController)  # Define a partial functions for this iteration
+        poolResults = pool.map(sampleFunc, range(N_s))
+        pool.close()
+        pool.join()
+        currentIterationValues = np.array(poolResults)
+
+        # Update best value
+        for sampleIndex in range(N_s):
+            if currentIterationValues[sampleIndex] > bestValue:
+                bestValue = currentIterationValues[sampleIndex]
+                mGraphPolicyController.setGraph(sampleIndex)
+                bestTMAs, bestTransitions = mGraphPolicyController.getPolicyTable()
+
+        allValues[iteration*N_s:iteration*N_s+N_s] = currentIterationValues  # Store a history of iterations
+        mGraphPolicyController.updateProbs(currentIterationValues, N_b)
+
+    #Plot the full set of values and save
+    plt.plot(allValues, color='b', marker='+')
+    plt.savefig('crossEntropySearch.eps', dpi=600)
+    return bestValue, bestTMAs, bestTransitions
 
 
 
