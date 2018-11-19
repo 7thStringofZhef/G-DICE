@@ -1,6 +1,7 @@
 from __future__ import absolute_import, print_function
 
 import matplotlib.pyplot as plt
+from ete3 import Tree, TreeStyle, NodeStyle
 import numpy as np
 
 """
@@ -121,6 +122,13 @@ class Domain(object):
 
         numLeaves, nodeMap, nodeMapIndices = self.createDrawnTree(rootNodes, rootNodeTMAIndices, nodeMap,
                                                                   nodeMapIndices, maxDepth, numLeaves)
+        t = Tree()
+        tStyle = TreeStyle()
+        nStyle = NodeStyle()
+        nStyle["shape"] = "sphere"
+        nStyle["size"] = 10
+        nStyle["fgcolor"] = "darkred"
+        tStyle.rotation = 90 #Rotate 90 degrees
         treeFigure = plt.Figure()
 
         if labelTMAs:
