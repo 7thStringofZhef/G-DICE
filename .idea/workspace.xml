@@ -3,7 +3,10 @@
   <component name="ChangeListManager">
     <list default="true" id="133de9a7-d462-4802-928a-4f54449518e9" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+<<<<<<< Updated upstream
       <change beforePath="$PROJECT_DIR$/G-DICE-Python/Domains/Base.py" beforeDir="false" afterPath="$PROJECT_DIR$/G-DICE-Python/Domains/Base.py" afterDir="false" />
+=======
+>>>>>>> Stashed changes
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -11,6 +14,7 @@
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+<<<<<<< Updated upstream
   <component name="DockManager">
     <window id="1">
       <content type="file-editors">
@@ -48,14 +52,17 @@
       </content>
     </window>
   </component>
+=======
+>>>>>>> Stashed changes
   <component name="FUSProjectUsageTrigger">
     <session id="-1334191195">
       <usages-collector id="statistics.lifecycle.project">
         <counts>
-          <entry key="project.closed" value="3" />
+          <entry key="project.closed" value="6" />
           <entry key="project.open.time.0" value="1" />
-          <entry key="project.open.time.4" value="3" />
-          <entry key="project.opened" value="4" />
+          <entry key="project.open.time.4" value="4" />
+          <entry key="project.open.time.5" value="1" />
+          <entry key="project.opened" value="6" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.open">
@@ -166,8 +173,13 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/G-DICE-Python/Policy.py">
           <provider selected="true" editor-type-id="text-editor">
+<<<<<<< Updated upstream
             <state relative-caret-position="-2022">
               <caret line="46" column="28" selection-start-line="46" selection-start-column="28" selection-end-line="46" selection-end-column="28" />
+=======
+            <state relative-caret-position="3435">
+              <caret line="231" column="59" selection-start-line="231" selection-start-column="59" selection-end-line="231" selection-end-column="59" />
+>>>>>>> Stashed changes
               <folding>
                 <element signature="e#0#64#0" expanded="true" />
               </folding>
@@ -187,11 +199,16 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/G-DICE-Python/Domains/Base.py">
           <provider selected="true" editor-type-id="text-editor">
+<<<<<<< Updated upstream
             <state relative-caret-position="405">
               <caret line="126" column="19" lean-forward="true" selection-start-line="126" selection-start-column="19" selection-end-line="126" selection-end-column="19" />
               <folding>
                 <element signature="e#0#54#0" expanded="true" />
               </folding>
+=======
+            <state relative-caret-position="120">
+              <caret line="8" column="45" selection-start-line="8" selection-start-column="45" selection-end-line="8" selection-end-column="45" />
+>>>>>>> Stashed changes
             </state>
           </provider>
         </entry>
@@ -199,8 +216,13 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/G-DICE-Python/BeliefNode.py">
           <provider selected="true" editor-type-id="text-editor">
+<<<<<<< Updated upstream
             <state relative-caret-position="120">
               <caret line="8" column="32" selection-start-line="8" selection-start-column="32" selection-end-line="8" selection-end-column="32" />
+=======
+            <state relative-caret-position="990">
+              <caret line="68" column="80" selection-start-line="68" selection-start-column="80" selection-end-line="68" selection-end-column="80" />
+>>>>>>> Stashed changes
             </state>
           </provider>
         </entry>
@@ -208,8 +230,13 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/G-DICE-Python/Scripts/crossEntropySeach.py">
           <provider selected="true" editor-type-id="text-editor">
+<<<<<<< Updated upstream
             <state relative-caret-position="184">
               <caret line="124" selection-start-line="124" selection-end-line="124" />
+=======
+            <state relative-caret-position="313">
+              <caret line="53" column="34" selection-start-line="53" selection-start-column="34" selection-end-line="53" selection-end-column="34" />
+>>>>>>> Stashed changes
               <folding>
                 <element signature="e#0#64#0" expanded="true" />
                 <marker date="1542132225188" expanded="true" signature="905:910" ph="..." />
@@ -259,9 +286,15 @@
       </list>
     </option>
   </component>
+<<<<<<< Updated upstream
   <component name="ProjectFrameBounds" extendedState="6">
     <option name="width" value="1910" />
     <option name="height" value="524" />
+=======
+  <component name="ProjectFrameBounds" extendedState="4">
+    <option name="width" value="1912" />
+    <option name="height" value="1053" />
+>>>>>>> Stashed changes
   </component>
   <component name="ProjectView">
     <navigator proportions="" version="1">
@@ -351,10 +384,16 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
+<<<<<<< Updated upstream
     <frame x="0" y="-1" width="1920" height="1053" extended-state="6" />
     <editor active="true" />
     <layout>
       <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.15023722" />
+=======
+    <frame x="0" y="0" width="960" height="1053" extended-state="4" />
+    <layout>
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.30486485" />
+>>>>>>> Stashed changes
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info id="DB Browser" order="3" />
@@ -369,7 +408,11 @@
       <window_info anchor="bottom" id="DB Execution Console" order="8" />
       <window_info anchor="bottom" id="Terminal" order="9" />
       <window_info anchor="bottom" id="Event Log" order="10" side_tool="true" />
+<<<<<<< Updated upstream
       <window_info anchor="bottom" id="Python Console" order="11" visible="true" weight="0.3286638" />
+=======
+      <window_info active="true" anchor="bottom" id="Python Console" order="11" visible="true" weight="0.32899022" />
+>>>>>>> Stashed changes
       <window_info anchor="right" id="Commander" order="0" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
@@ -510,6 +553,7 @@
         </state>
       </provider>
     </entry>
+<<<<<<< Updated upstream
     <entry file="file://$PROJECT_DIR$/G-DICE-Python/EnvObs.py" />
     <entry file="file://$PROJECT_DIR$/G-DICE-Python/Domains/PackageDelivery/EnvObs.py">
       <provider selected="true" editor-type-id="text-editor">
@@ -524,6 +568,8 @@
         <state relative-caret-position="-45" />
       </provider>
     </entry>
+=======
+>>>>>>> Stashed changes
     <entry file="file://$PROJECT_DIR$/G-DICE-Python/TreeNode.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="510">
@@ -538,6 +584,7 @@
         </state>
       </provider>
     </entry>
+<<<<<<< Updated upstream
     <entry file="file://$PROJECT_DIR$/Original G-DICE/plotPolicySuccessProb_gdice.m">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
@@ -556,6 +603,19 @@
             <marker date="1542132225188" expanded="true" signature="905:910" ph="..." />
             <marker date="1542132225188" expanded="true" signature="3792:3793" ph="..." />
           </folding>
+=======
+    <entry file="file://$PROJECT_DIR$/G-DICE-Python/Agent.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-420">
+          <caret line="14" column="67" selection-start-line="14" selection-start-column="67" selection-end-line="14" selection-end-column="67" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Original G-DICE/@Domain/Domain.m">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="711">
+          <caret line="186" column="40" selection-start-line="186" selection-start-column="40" selection-end-line="186" selection-end-column="40" />
+>>>>>>> Stashed changes
         </state>
       </provider>
     </entry>
@@ -600,32 +660,57 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/G-DICE-Python/Policy.py">
       <provider selected="true" editor-type-id="text-editor">
+<<<<<<< Updated upstream
         <state relative-caret-position="-2022">
           <caret line="46" column="28" selection-start-line="46" selection-start-column="28" selection-end-line="46" selection-end-column="28" />
+=======
+        <state relative-caret-position="3435">
+          <caret line="231" column="59" selection-start-line="231" selection-start-column="59" selection-end-line="231" selection-end-column="59" />
+>>>>>>> Stashed changes
           <folding>
             <element signature="e#0#64#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
+<<<<<<< Updated upstream
     <entry file="file://$PROJECT_DIR$/G-DICE-Python/Domains/PackageDelivery/Domain.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-1497">
           <caret line="15" column="53" selection-start-line="15" selection-start-column="53" selection-end-line="15" selection-end-column="53" />
+=======
+    <entry file="file://$PROJECT_DIR$/Original G-DICE/@TreeNode/TreeNode.m">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/G-DICE-Python/BeliefNode.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="120">
+          <caret line="8" column="45" selection-start-line="8" selection-start-column="45" selection-end-line="8" selection-end-column="45" />
+>>>>>>> Stashed changes
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Original G-DICE/@Domain/Domain.m">
+    <entry file="file://$PROJECT_DIR$/G-DICE-Python/EnvObs.py">
       <provider selected="true" editor-type-id="text-editor">
+<<<<<<< Updated upstream
         <state relative-caret-position="-4515">
           <caret line="120" column="37" selection-start-line="120" selection-start-column="37" selection-end-line="120" selection-end-column="37" />
+=======
+        <state relative-caret-position="990">
+          <caret line="68" column="80" selection-start-line="68" selection-start-column="80" selection-end-line="68" selection-end-column="80" />
+>>>>>>> Stashed changes
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/G-DICE-Python/Domains/Base.py">
       <provider selected="true" editor-type-id="text-editor">
+<<<<<<< Updated upstream
         <state relative-caret-position="405">
           <caret line="126" column="19" lean-forward="true" selection-start-line="126" selection-start-column="19" selection-end-line="126" selection-end-column="19" />
+=======
+        <state relative-caret-position="313">
+          <caret line="53" column="34" selection-start-line="53" selection-start-column="34" selection-end-line="53" selection-end-column="34" />
+>>>>>>> Stashed changes
           <folding>
             <element signature="e#0#54#0" expanded="true" />
           </folding>
