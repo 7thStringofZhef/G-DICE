@@ -1,7 +1,7 @@
 from __future__ import absolute_import, print_function
 
 import matplotlib.pyplot as plt
-from ete3 import Tree, TreeStyle, NodeStyle
+#from ete3 import Tree, TreeStyle, NodeStyle
 import numpy as np
 
 """
@@ -122,6 +122,7 @@ class Domain(object):
 
         numLeaves, nodeMap, nodeMapIndices = self.createDrawnTree(rootNodes, rootNodeTMAIndices, nodeMap,
                                                                   nodeMapIndices, maxDepth, numLeaves)
+        """
         t = Tree()
         tStyle = TreeStyle()
         nStyle = NodeStyle()
@@ -133,6 +134,7 @@ class Domain(object):
 
         if labelTMAs:
             pass
+        """
 
     """
     Create a TMA policy tree to be drawn in "drawTree"

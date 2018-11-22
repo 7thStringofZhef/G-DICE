@@ -4,7 +4,7 @@ import numpy as np
 from numpy import nan
 
 from ..Base import Domain
-from .EnvObs import EnvObs
+from .EnvObs import PackageDeliveryEnvObs as EnvObs
 from ...BeliefNode import BeliefNode
 from ...TMA import TMA
 from ...Agent import Agent
