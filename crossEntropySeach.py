@@ -167,4 +167,4 @@ def evalPolicy(policyController, numPackageGoal=9999, isOutputOn=False):
 
 
 if __name__ == "__main__":
-    crossEntropySearchParallel()
+    crossEntropySearch()
