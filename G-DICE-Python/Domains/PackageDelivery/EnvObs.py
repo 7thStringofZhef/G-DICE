@@ -23,30 +23,30 @@ Instance variables
 
 # Dict to map envObs to envObsIndex
 packageDeliveryEnvObsIndexDict = {
-    [0, 0, 0]: 1,  # Null case
-    [1, 1, 0]: 2,  # small, dest1, no other agent
-    [1, 2, 0]: 3,  # small, dest2, no agent
-    [1, 3, 0]: 4,  # small, destr, no agent
-    [2, 1, 0]: 5,  # large, dest1, no agent
-    [2, 2, 0]: 6,  # large, dest2, no agent
-    [2, 3, 0]: 7,  # large, destr, no agent
-    [1, 1, 1]: 8,  # small, dest1, agent available
-    [1, 2, 1]: 9,  # small, dest2, agent
-    [1, 3, 1]: 10,  # small, destr, agent
-    [2, 1, 1]: 11,  # large, dest1, agent
-    [2, 2, 1]: 12,  # large, dest2, agent
-    [2, 3, 1]: 13  # large, destr, agent
+    (0, 0, 0): 1,  # Null case
+    (1, 1, 0): 2,  # small, dest1, no other agent
+    (1, 2, 0): 3,  # small, dest2, no agent
+    (1, 3, 0): 4,  # small, destr, no agent
+    (2, 1, 0): 5,  # large, dest1, no agent
+    (2, 2, 0): 6,  # large, dest2, no agent
+    (2, 3, 0): 7,  # large, destr, no agent
+    (1, 1, 1): 8,  # small, dest1, agent available
+    (1, 2, 1): 9,  # small, dest2, agent
+    (1, 3, 1): 10,  # small, destr, agent
+    (2, 1, 1): 11,  # large, dest1, agent
+    (2, 2, 1): 12,  # large, dest2, agent
+    (2, 3, 1): 13  # large, destr, agent
 }
 
 # Special case dict to map [TMAIndex, packageDelta] to envObsIndex
 pickupIndexDict = {
     # Single pickup
-    [8, 1]: 2,
-    [8, 2]: 3,
-    [8, 3]: 4,
+    (8, 1): 2,
+    (8, 2): 3,
+    (8, 3): 4,
     # Dual pickup
-    [9, 1]: 11,
-    [9, 2]: 12
+    (9, 1): 11,
+    (9, 2): 12
 }
 
 class PackageDeliveryEnvObs(EnvObs):
@@ -83,12 +83,12 @@ class PackageDeliveryEnvObs(EnvObs):
 
         #  For pickup tasks, assign xeIndex based on delivery destination
         try:
-            return pickupIndexDict[[currentTMAIndex, callerAgentPackageDelta]]
+            return pickupIndexDict[(currentTMAIndex, callerAgentPackageDelta)]
         except KeyError:
             pass
 
         try:
-            return packageDeliveryEnvObsIndexDict[xe]
+            return packageDeliveryEnvObsIndexDict[tuple(xe)]
         except KeyError:
             raise ValueError('Received xe: ', xe, ' which is impossible')
 
