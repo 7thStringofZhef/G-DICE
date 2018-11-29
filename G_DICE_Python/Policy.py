@@ -177,7 +177,7 @@ class GraphPolicyController(object):
                     print('Updating weights using "best" sample ', sampleIndex)
 
                 sampleTMA = node.TMAs[sampleIndex]
-                newPVectorTMA[sampleTMA] = newPVectorTMA[sampleTMA] + weightPerSample*self.alpha
+                newPVectorTMA[sampleTMA-1] = newPVectorTMA[sampleTMA-1] + weightPerSample*self.alpha
 
                 for observationIndex in range(self.numObs):
                     sampleNextNode = node.transitions[sampleIndex, observationIndex]
