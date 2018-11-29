@@ -45,8 +45,8 @@ class Agent(object):
     """
     def updateBeliefNode(self, beliefNodes):
         try:
-            self.currentBeliefNode = beliefNodes(beliefNodeUpdateDict[self.currentTMAIndex])
-        except KeyError:
+            self.currentBeliefNode = beliefNodes[beliefNodeUpdateDict[self.currentTMAIndex]]
+        except:
             return  # In all other cases, belief node remains the same
 
     """
@@ -63,7 +63,7 @@ class Agent(object):
             raise ValueError('hasArrived cannot be equal to hasLeft, no zero-time TMAs')
 
         #Only change xE at node B1 or B2. Doesn't matter otherwise in this domain, even at rendezvous
-        if self.currentBeliefNode in [1, 2]:  # B1,B2
+        if self.currentBeliefNode.index in [1, 2]:  # B1,B2
             if TMAIndex in [8, 9]:  # Pickup/Joint pickup
                 self.currentBeliefNode.xeSamplePackage()  # Generate a new package
                 self.currentBeliefNode.xeSetPhi(self.index, 0, 1)  # Picking up, so not available
@@ -86,7 +86,7 @@ class Agent(object):
       nextTMAIndex: Index of next TMA according to policy
     """
     def executePolicy(self, currentXeIndex):
-        self.currentPolicyNodeIndex, nextTMAIndex = self.policy.getNextTMAIndex(self.currentPolicyNodeIndex)
+        self.currentPolicyNodeIndex, nextTMAIndex = self.policy.getNextTMAIndex(self.currentPolicyNodeIndex, currentXeIndex)
         return nextTMAIndex
 
     """

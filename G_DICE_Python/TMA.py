@@ -42,12 +42,12 @@ class TMA(object):
     """
     def sampleTau(self, currentBeliefNode):
         if self.index == 13: #Wait TMA waits deterministically
-            return self.tau(currentBeliefNode.index)
-        sample = self.tau(currentBeliefNode.index) * (1 + self.tauStDevParam * random.randn())
+            return self.tau[currentBeliefNode.index-1]
+        sample = self.tau[currentBeliefNode.index-1] * (1 + self.tauStdDeviation * random.randn())
 
         #If it would round to 0, and tau is not 0, return tau
-        if (sample < 0.5 and self.tau(currentBeliefNode.index)!=0):
-            return self.tau(currentBeliefNode.index)
+        if (sample < 0.5 and self.tau[currentBeliefNode.index-1]!=0):
+            return self.tau[currentBeliefNode.index-1]
 
         #If our tau was NaN, we shouldn't be able to do this, return 0. Throw error?
         if np.isnan(sample):

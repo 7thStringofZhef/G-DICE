@@ -166,7 +166,7 @@ class PackageDeliveryDomain(Domain):
     """
     def initXe(self):
         for agent in self.agents:
-            agent.currentBeliefNode.xeSetPhi(agent.agentIndex, 1, 0)
+            agent.currentBeliefNode.xeSetPhi(agent.index, 1, 0)
         for baseIndex in [1, 2]:
             self.beliefNodes[baseIndex-1].xeSamplePackage()
 
@@ -202,7 +202,7 @@ class PackageDeliveryDomain(Domain):
                     if agent.packagePsi and ((agent.currentTMAIndex == 10 and agent.packagePsi == 1) or (agent.currentTMAIndex == 11 and agent.packagePsi == 2)):
                         # Package delivery, agent has package and is either delivering or joint delivering
                         if agent.packageDelta == agent.currentBeliefNode.index - 3:  # Make sure we're delivering to the right destination
-                            value += (gamma**currentTime) * self.TMAs[agent.currentTMAIndex].rewards[agent.currentBeliefNode.index]
+                            value += (gamma**currentTime) * self.TMAs[agent.currentTMAIndex-1].rewards[agent.currentBeliefNode.index-1]
                             numPackagesDelivered += 1
 
                         agent.packageDelta, agent.packagePsi = (0, 0)
@@ -281,7 +281,7 @@ class PackageDeliveryDomain(Domain):
                             fellowAgentTMAIdx = newTMAIndex
 
                     # If new TMA is not a valid child of previous, fail
-                    if newTMAIndex not in self.TMAs[agent.currentTMAIndex].allowableChildTMAIndices:
+                    if newTMAIndex not in self.TMAs[agent.currentTMAIndex-1].allowableChildTMAIndices:
                         agent.currentTMACountdown = -100
 
                     agent.currentTMAIndex = newTMAIndex

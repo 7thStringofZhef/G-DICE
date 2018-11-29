@@ -21,7 +21,8 @@ class Domain(object):
     Constructor
     """
     def __init__(self):
-        raise NotImplementedError("Must create a specific domain subclass")
+        pass
+        # raise NotImplementedError("Must create a specific domain subclass")
 
     """
     Init envObs

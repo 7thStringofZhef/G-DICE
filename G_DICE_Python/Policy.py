@@ -46,7 +46,7 @@ class GraphNode(object):
         self.numNodesInFullGraph = numNodesInFullGraph
         self.numObs = numObs
         self.numTMAs = numTMAs
-        self.transitions = np.zeros((numSamples, numObs))
+        self.transitions = np.zeros((numSamples, numObs), dtype=np.int32)
         self.pVectorTMA = np.ones((numTMAs,1)) / numTMAs
         self.pTableNextNode = np.ones((numNodesInFullGraph, numObs)) / numNodesInFullGraph
         self.nextNode = None
@@ -57,7 +57,7 @@ class GraphNode(object):
       numSamples: Number of samples to take
     """
     def sampleTMAs(self, numSamples):
-        self.TMAs = np.random.choice(range(1, self.numTMAs+1), size=numSamples, p=self.pVectorTMA)
+        self.TMAs = np.random.choice(range(1, self.numTMAs+1), size=numSamples, p=self.pVectorTMA.flatten())
 
     """
     Sample transitions from transition table for a particular environmental observation
@@ -66,8 +66,8 @@ class GraphNode(object):
       numSamples: Number of samples
     """
     def sampleTransitions(self, observationIndex, numSamples):
-        self.transitions[:, observationIndex-1] = np.random.choice(range(1, self.numNodesInFullGraph+1), size=numSamples,
-                                                                   p=self.pTableNextNode[:, observationIndex])
+        self.transitions[:, observationIndex-1] = np.random.choice(range(self.numNodesInFullGraph), size=numSamples,
+                                                                   p=self.pTableNextNode[:, observationIndex-1].flatten())
     """
     Set TMA and next node to this sample index
     Input:
@@ -217,7 +217,7 @@ class GraphPolicyController(object):
       newTMAIndex: Index of next TMA
     """
     def getNextTMAIndex(self, currentNodeIndex, currentObservationIndex):
-        newPolicyNodeIndex = self.nodes[currentNodeIndex].nextNode[currentObservationIndex]
+        newPolicyNodeIndex = self.nodes[currentNodeIndex].nextNode[currentObservationIndex-1]
         newTMAIndex = self.nodes[newPolicyNodeIndex].nodeTMA
         return newPolicyNodeIndex, newTMAIndex
 
@@ -229,10 +229,11 @@ class GraphPolicyController(object):
     """
     def getPolicyTable(self):
         TMAs = np.zeros(self.numNodes)
-        transitions = np.zeros((self.numNodes, self.numObs))
+        transitions = np.zeros((self.numNodes, self.numObs), dtype=np.int32)
         for node in self.nodes:
             TMAs[node.nodeIndex] = node.nodeTMA
             transitions[node.nodeIndex, :] = node.nextNode
+        return TMAs, transitions
 
     """
     Set the policy according to variables as retrieved from above

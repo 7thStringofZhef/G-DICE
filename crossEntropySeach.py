@@ -1,13 +1,13 @@
 from __future__ import absolute_import, print_function, division
 
 import numpy as np
-from time import time_ns
+from time import time
 import matplotlib.pyplot as plt
 import multiprocessing
 from functools import partial
 
-from ..Policy import GraphPolicyController
-from ..Domains.PackageDelivery.Domain import PackageDeliveryDomain as Domain
+from G_DICE_Python.Policy import GraphPolicyController
+from G_DICE_Python.Domains.PackageDelivery.Domain import PackageDeliveryDomain as Domain
 
 """
 Run G-Dice on the PackageDelivery domain with the given parameters
@@ -26,8 +26,8 @@ Outputs:
 """
 def crossEntropySearch(numNodes=13, alpha=0.2, numTMAs=13, numObs=13, N_k=50, N_s=50, N_b=5):
     #plt.ion()
-    bestTMAs = None
-    bestTransitions = None
+    bestTMAs = []
+    bestTransitions = []
 
     """
     valueFigure = plt.figure()
@@ -42,7 +42,7 @@ def crossEntropySearch(numNodes=13, alpha=0.2, numTMAs=13, numObs=13, N_k=50, N_
     for iteration in range(N_k):
         currentIterationValues = np.full(N_s, -100)  # Reset sample values
         mGraphPolicyController.sample(N_s)  # Sample N_s samples
-        currentTime = time_ns()
+        currentTime = time()
 
         # Evaluate each sample
         for sampleIndex in range(N_s):
@@ -64,7 +64,7 @@ def crossEntropySearch(numNodes=13, alpha=0.2, numTMAs=13, numObs=13, N_k=50, N_
         axisHandle.set_ydata(allValues[:(iteration + 1) * N_s])
         plt.ion()
         """
-        print('G-DICE iteration ',iteration,' finished in ', time_ns() - currentTime)  # Track runtime
+        print('G-DICE iteration ',iteration,' finished in ', time() - currentTime)  # Track runtime
 
     #Plot the full set of values and save
     plt.plot(allValues, color='b', marker='+')
