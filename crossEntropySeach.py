@@ -109,8 +109,6 @@ def crossEntropySearchParallel(numNodes=10, alpha=0.2, numTMAs=13, numObs=13, N_
 
         sampleFunc = partial(_crossEntropySearchOneSample, mGraphPolicyController)  # Define a partial functions for this iteration
         poolResults = pool.map(sampleFunc, range(N_s))
-        pool.close()
-        pool.join()
         currentIterationValues = np.array(poolResults)
 
         # Update best value
@@ -124,6 +122,8 @@ def crossEntropySearchParallel(numNodes=10, alpha=0.2, numTMAs=13, numObs=13, N_
         mGraphPolicyController.updateProbs(currentIterationValues, N_b)
 
     #Plot the full set of values and save
+    pool.close()
+    pool.join()
     plt.plot(allValues, color='b', marker='+')
     plt.savefig('crossEntropySearch.eps', dpi=600)
     return bestValue, bestTMAs, bestTransitions
@@ -167,4 +167,4 @@ def evalPolicy(policyController, numPackageGoal=9999, isOutputOn=False):
 
 
 if __name__ == "__main__":
-    crossEntropySearch()
+    crossEntropySearchParallel()
