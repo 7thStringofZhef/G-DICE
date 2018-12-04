@@ -105,14 +105,19 @@ def evaluateFSCOnEnvironment(env, controller, params, timeHorizon=50, parallel=N
     bestActionProbs = None
     bestNodeTransitionProbs = None
     bestValue = np.NINF
+
+    # Wrap the environment to sample multiple trajectories simulatenously
+    multiEnv = MultiActionPOMDP(env, numTrajectories=params.numSamples)
     for iteration in params.numIterations:
-        # For each node in controller, sample actions
-        sampledActions = controller.sampleActionFromAllNodes(params.numSamples)
+        for timestep in timeHorizon:
+            # For each node in controller, sample actions
+            sampledActions = controller.sampleActionFromAllNodes(params.numSamples)
 
-        # For each node, observation in controller, sample next node
-        sampledNodes = controller.sampleAllObservationTransitionsFromAllNodes(params.numSamples)
+            # For each node, observation in controller, sample next node
+            sampledNodes = controller.sampleAllObservationTransitionsFromAllNodes(params.numSamples)
 
-        # For each sampled action, evaluate in environment
+            # For each sampled action, evaluate in environment
+            obs, rewards, isDones = multiEnv.step(sampledActions)
 
 
     pass
@@ -164,11 +169,16 @@ class MultiActionPOMDP(gym.Wrapper):
     def step(self, actions):
         if np.isscalar(actions):
             actions = np.full(self.numTrajectories, actions, dtype=np.int32)
+
         newStates = np.array([self.np_random.multinomial(1, p).argmax() for p in self.env.T[self.state, actions]])
         obs =np.array([self.np_random.multinomial(1, p).argmax() for p in self.env.O[self.state, actions, newStates]])
         rewards = np.array(self.env.R[self.state, actions, newStates, obs])
         done = np.zeros(self.numTrajectories, dtype=bool)
-        self.state = newStates
+        if self.env.episodic:
+            done = self.env.D[self.state, actions]
+            self.state = None
+        else:
+            self.state = newStates
         return obs, rewards, done, {}
 
 
