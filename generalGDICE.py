@@ -80,6 +80,10 @@ class FiniteStateController(object):
     def updateTransitionProbability(self, firstNodeIndex, secondNodeIndex, observationIndex, newProbability):
         self.nodeTransitionProbabilities[firstNodeIndex, secondNodeIndex, observationIndex] = newProbability
 
+    # Get the probability vector for node(s)
+    def getPolicy(self, nodeIndex):
+        return self.actionProbabilities[np.array(nodeIndex, dtype=np.int32), :]
+
     # Get the current probability tables
     def save(self):
         return self.actionProbabilities, self.nodeTransitionProbabilities
@@ -167,8 +171,13 @@ class MultiActionPOMDP(gym.Wrapper):
     # Step given an nparray or list of actions
     # If actions is a scalar, applies to all
     def step(self, actions):
+        # Scalar action given, apply to all
         if np.isscalar(actions):
             actions = np.full(self.numTrajectories, actions, dtype=np.int32)
+
+        # Tuple of (action, index) given, step for one worker only
+        if isinstance(actions, tuple) and len(actions) == 2:
+            return self._stepForSingleWorker(int(actions[0]), int(actions[1]))
 
         newStates = np.array([self.np_random.multinomial(1, p).argmax() for p in self.env.T[self.state, actions]])
         obs =np.array([self.np_random.multinomial(1, p).argmax() for p in self.env.O[self.state, actions, newStates]])
@@ -180,6 +189,21 @@ class MultiActionPOMDP(gym.Wrapper):
         else:
             self.state = newStates
         return obs, rewards, done, {}
+
+    # If multiprocessing, each worker will provide its trajectory index and desired action
+    def _stepForSingleWorker(self, action, index):
+        currState = self.state[index]
+        newState = self.np_random.multinomial(1, self.env.T[currState, action]).argmax()
+        obs = self.np_random.multinomial(1, self.env.O[currState, action, newState]).argmax()
+        reward = self.env.R[currState, action, newState, obs]
+        if self.env.episodic:
+            done = self.env.D[currState, action]
+            self.state[index] = None
+        else:
+            self.state[index] = newState
+
+        return obs, reward, done, {}
+
 
 
 if __name__ == "__main__":
