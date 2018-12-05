@@ -179,25 +179,51 @@ class MultiActionPOMDP(gym.Wrapper):
         if isinstance(actions, tuple) and len(actions) == 2:
             return self._stepForSingleWorker(int(actions[0]), int(actions[1]))
 
-        newStates = np.array([self.np_random.multinomial(1, p).argmax() for p in self.env.T[self.state, actions]])
-        obs =np.array([self.np_random.multinomial(1, p).argmax() for p in self.env.O[self.state, actions, newStates]])
-        rewards = np.array(self.env.R[self.state, actions, newStates, obs])
-        done = np.zeros(self.numTrajectories, dtype=bool)
+        # For each agent that is done, return nothing
+        doneIndices = np.nonzero(self.state[self.state is None])[0]
+        notDoneIndices = np.nonzero(self.state[self.state is not None])[0]
+
+        # Blank init
+        newStates = np.zeros(self.numTrajectories, dtype=np.int32)
+        obs = np.zeros(self.numTrajectories, dtype=np.int32)
+        rewards = np.zeros(self.numTrajectories, dtype=np.float64)
+        done = np.ones(self.numTrajectories, dtype=bool)
+
+        # Reduced list based on which workers are done. If env is not episodic, this will still work
+        validStates = self.state[notDoneIndices]
+        validActions = actions[notDoneIndices]
+        validNewStates = np.array([self.np_random.multinomial(1, p).argmax() for p in self.env.T[validStates, validActions]])
+        validObs = np.array([self.np_random.multinomial(1, p).argmax() for p in self.env.O[validStates, validActions, validNewStates]])
+        validRewards = np.array(self.env.R[validStates, validActions, validNewStates, validObs])
         if self.env.episodic:
-            done = self.env.D[self.state, actions]
-            self.state = None
+            done[notDoneIndices] = self.env.D[self.state, actions]
         else:
-            self.state = newStates
+            done *= False
+
+        newStates[notDoneIndices], newStates[doneIndices] = validNewStates, None
+        obs[notDoneIndices], obs[doneIndices] = validObs, None
+        rewards[notDoneIndices], rewards[doneIndices] = validRewards, 0.0
+        self.states = newStates
+
         return obs, rewards, done, {}
 
     # If multiprocessing, each worker will provide its trajectory index and desired action
     def _stepForSingleWorker(self, action, index):
         currState = self.state[index]
+
+        # If this worker's episode is finished, return nothing
+        if currState is None:
+            return None, 0.0, True, {}
+
         newState = self.np_random.multinomial(1, self.env.T[currState, action]).argmax()
         obs = self.np_random.multinomial(1, self.env.O[currState, action, newState]).argmax()
         reward = self.env.R[currState, action, newState, obs]
         if self.env.episodic:
             done = self.env.D[currState, action]
+        else:
+            done = False
+
+        if done:
             self.state[index] = None
         else:
             self.state[index] = newState
