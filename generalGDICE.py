@@ -109,11 +109,27 @@ def evaluateFSCOnEnvironment(env, controller, params, timeHorizon=50, parallel=N
     bestActionProbs = None
     bestNodeTransitionProbs = None
     bestValue = np.NINF
+    worstValue = np.NINF
+    allValues = np.zeros((params.numIterations, params.numSamples))
 
-    # Wrap the environment to sample multiple trajectories simulatenously
+
+    # Wrap the environment to sample multiple trajectories simultaneously
     multiEnv = MultiActionPOMDP(env, numTrajectories=params.numSamples)
     for iteration in params.numIterations:
-        for timestep in timeHorizon:
+        """
+        For each iteration
+          for each sample
+            for each node
+              sample action
+              sample all observation transitions (i.e., the node this node will transition to given an observation)
+            evaluate the controller starting from this sample for all nodes
+            if value of this controller is better than worst from this iteration, add to list of policies and values
+            If value of this controller is better than best overall, update best overall
+        
+        """
+        isDones = np.zeros((params.numSamples), dtype=bool)
+        timestep = 0
+        while not np.all(isDones) and timestep < timeHorizon:
             # For each node in controller, sample actions
             sampledActions = controller.sampleActionFromAllNodes(params.numSamples)
 
