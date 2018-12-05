@@ -180,8 +180,8 @@ class MultiActionPOMDP(gym.Wrapper):
             return self._stepForSingleWorker(int(actions[0]), int(actions[1]))
 
         # For each agent that is done, return nothing
-        doneIndices = np.nonzero(self.state[self.state is None])[0]
-        notDoneIndices = np.nonzero(self.state[self.state is not None])[0]
+        doneIndices = np.nonzero(self.state == -1)[0]
+        notDoneIndices = np.nonzero(self.state != -1)[0]
 
         # Blank init
         newStates = np.zeros(self.numTrajectories, dtype=np.int32)
@@ -200,8 +200,8 @@ class MultiActionPOMDP(gym.Wrapper):
         else:
             done *= False
 
-        newStates[notDoneIndices], newStates[doneIndices] = validNewStates, None
-        obs[notDoneIndices], obs[doneIndices] = validObs, None
+        newStates[notDoneIndices], newStates[doneIndices] = validNewStates, -1
+        obs[notDoneIndices], obs[doneIndices] = validObs, -1
         rewards[notDoneIndices], rewards[doneIndices] = validRewards, 0.0
         self.states = newStates
 
@@ -213,7 +213,7 @@ class MultiActionPOMDP(gym.Wrapper):
 
         # If this worker's episode is finished, return nothing
         if currState is None:
-            return None, 0.0, True, {}
+            return -1, 0.0, True, {}
 
         newState = self.np_random.multinomial(1, self.env.T[currState, action]).argmax()
         obs = self.np_random.multinomial(1, self.env.O[currState, action, newState]).argmax()
@@ -224,7 +224,7 @@ class MultiActionPOMDP(gym.Wrapper):
             done = False
 
         if done:
-            self.state[index] = None
+            self.state[index] = -1
         else:
             self.state[index] = newState
 
