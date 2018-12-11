@@ -259,7 +259,7 @@ class MultiActionPOMDP(gym.Wrapper):
                 self.state_space.n, size=self.numTrajectories)
         else:
             self.state = self.np_random.multinomial(
-                1, self.env.start, size=self.numTrajectories).argmax(1)
+                1, self.env.start/np.sum(self.env.start), size=self.numTrajectories).argmax(1)
 
     # Step given an nparray or list of actions
     # If actions is a scalar, applies to all
@@ -326,7 +326,7 @@ class MultiActionPOMDP(gym.Wrapper):
 
 
 if __name__ == "__main__":
-    env = gym.make(list_pomdps()[1])  # POMDP-1d-episodic-v0
+    env = gym.make(list_pomdps()[4])  # POMDP-1d-episodic-v0
     controller = FiniteStateController(10, env.action_space.n, env.observation_space.n)
     testParams = GDICEParams()
     #pool = Pool()  # Use a pool for parallel processing. Max # threads
