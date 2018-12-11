@@ -4,6 +4,7 @@ import numpy as np
 import numpy.random as npr
 from multiprocessing import Pool
 from functools import partial
+from inspect import isclass
 
 class FiniteStateController(object):
     def __init__(self, numNodes, numActions, numObservations):
@@ -71,7 +72,7 @@ class FiniteStateController(object):
         return np.array([self.sampleObservationTransitionFromAllNodes(obsIndex, numSamples)
                          for obsIndex in obsIndices], dtype=np.int32)
 
-    def updateProbabilitiesFromSamples(self, actions, nodeObs, values, learningRate):
+    def updateProbabilitiesFromSamples(self, actions, nodeObs, learningRate):
         if len(actions) == 0:  # No samples, no update
             return
         assert actions.shape[-1] == nodeObs.shape[-1]  # Same # samples
@@ -88,11 +89,15 @@ class FiniteStateController(object):
         self.actionProbabilities = self.actionProbabilities * (1-learningRate)
         self.nodeTransitionProbabilities = self.nodeTransitionProbabilities * (1-learningRate)
         nodeIndices = np.arange(0, self.numNodes, dtype=int)
+        obsIndices = np.arange(0,self.numObservations, dtype=int)
 
         # Add samples factored by weight
         for sample in range(numSamples):
             self.actionProbabilities[nodeIndices, actions[:,sample]] += learningRate*weightPerSample
-            self.nodeTransitionProbabilities[nodeIndices, nodeObs[:,:,sample]] += learningRate*weightPerSample
+            #self.nodeTransitionProbabilities[nodeIndices, nodeObs[repObsIndices, nodeIndices, sample], obsIndices] += learningRate*weightPerSample
+            for observation in range(nodeObs.shape[0]):
+                for startNode in range(nodeObs.shape[1]):
+                    self.nodeTransitionProbabilities[startNode, nodeObs[observation,startNode,sample], observation] += learningRate*weightPerSample
 
 
 
@@ -127,10 +132,13 @@ class FiniteStateController(object):
 def evaluateFSCOnEnvironment(env, controller, params, timeHorizon=50, parallel=None):
     # Ensure controller matches environment
     assert env.action_space.n == controller.numActions
-    assert env.state_space.n == controller.numObservations
+    assert env.observation_space.n == controller.numObservations
 
     # Reset controller
     controller.reset()
+
+    # Get environment gamma
+    gamma = env.discount
 
     # Start variables
     bestActionProbs = None
@@ -139,27 +147,34 @@ def evaluateFSCOnEnvironment(env, controller, params, timeHorizon=50, parallel=N
     worstValueOfPreviousIteration = np.NINF
     allValues = np.zeros((params.numIterations, params.numSamples))
 
-
     # Wrap the environment to sample multiple trajectories simultaneously
     multiEnv = MultiActionPOMDP(env, numTrajectories=params.numSamples)
+
     for iteration in range(params.numIterations):
         # For each node in controller, sample actions
         sampledActions = controller.sampleActionFromAllNodes(params.numSamples)  # numNodes*numSamples
 
         # For each node, observation in controller, sample next node
-        sampledNodes = controller.sampleAllObservationTransitionsFromAllNodes(params.numSamples)  # numObs*numNodes*numSamples
+        sampledNodes = controller.sampleAllObservationTransitionsFromAllNodes(params.numSamples)  # numObs*numBeginNodes*numSamples
 
         # For each sampled action, evaluate in environment
         # For parallel, try single environment. For single core (or low memory), use MultiEnv
-        if parallel is not None and isinstance(parallel, pool):
-            currentNodes = np.zeros(params.numSamples)
-            isDones = np.zeros(params.numSamples, dtype=bool)
-            obs, rewards, isDones = multiEnv.step(sampledActions)
-
-
-        else:
+        if parallel is not None and isinstance(parallel, type(Pool)):
+            env.reset()
             envEvalFn = partial(evaluateSample, env, timeHorizon)
-            values = np.array(pool.starmap(envEvalFn, [(sampledActions[:,i], sampledNodes[:,:,i]) for i in range(params.numSamples)]))
+            values = np.array(parallel.starmap(envEvalFn, [(sampledActions[:,i], sampledNodes[:,:,i]) for i in range(params.numSamples)]))
+        else:
+            multiEnv.reset()
+            sampleIndices = np.arange(params.numSamples)
+            currentNodes = np.zeros(params.numSamples, dtype=np.int32)
+            currentTimestep = 0
+            values = np.zeros(params.numSamples, dtype=np.float64)
+            isDones = np.zeros(params.numSamples, dtype=bool)
+            while not all(isDones) and currentTimestep < timeHorizon:
+                obs, rewards, isDones = multiEnv.step(sampledActions[currentNodes, sampleIndices])[:3]
+                currentNodes = sampledNodes[obs, currentNodes, sampleIndices]
+                values += rewards * (gamma ** currentTimestep)
+                currentTimestep += 1
 
         # Save values
         allValues[iteration, :] = values
@@ -180,7 +195,8 @@ def evaluateFSCOnEnvironment(env, controller, params, timeHorizon=50, parallel=N
         bestSampleIndices = bestSampleIndices[keepIndices]
 
         # For each node, update using best samples
-        controller.updateProbabilitiesFromSamples(sampledActions[:,bestSampleIndices], sampledNodes[:,:,bestSampleIndices], bestValues, params.learningRate)
+        controller.updateProbabilitiesFromSamples(sampledActions[:,bestSampleIndices], sampledNodes[:,:,bestSampleIndices], params.learningRate)
+        print('After '+str(iteration+1) + ' iterations, best (discounted) value is ' + str(bestValue))
 
     # Return best policy, best value, updated controller
     return bestValue, bestActionProbs, bestNodeTransitionProbs, controller
@@ -310,10 +326,8 @@ class MultiActionPOMDP(gym.Wrapper):
 
 
 if __name__ == "__main__":
-    env = gym.make(list_pomdps()[2])  # 4x3-v0 POMDP
-    #multiEnv = MultiActionPOMDP(env, 50)
-    #multiEnv.step(0)
-    controller = FiniteStateController(10, 4, 11)
+    env = gym.make(list_pomdps()[1])  # POMDP-1d-episodic-v0
+    controller = FiniteStateController(10, env.action_space.n, env.observation_space.n)
     testParams = GDICEParams()
-    pool = Pool()  # Use a pool for parallel processing. Max # threads
-    evaluateFSCOnEnvironment(env, controller, testParams, timeHorizon=50)
+    #pool = Pool()  # Use a pool for parallel processing. Max # threads
+    evaluateFSCOnEnvironment(env, controller, testParams, timeHorizon=50, parallel=None)
