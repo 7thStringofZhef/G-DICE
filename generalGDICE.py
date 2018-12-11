@@ -71,6 +71,32 @@ class FiniteStateController(object):
         return np.array([self.sampleObservationTransitionFromAllNodes(obsIndex, numSamples)
                          for obsIndex in obsIndices], dtype=np.int32)
 
+    def updateProbabilitiesFromSamples(self, actions, nodeObs, values, learningRate):
+        if len(actions) == 0:  # No samples, no update
+            return
+        assert actions.shape[-1] == nodeObs.shape[-1]  # Same # samples
+        if len(actions.shape) == 1:  # 1 sample
+            weightPerSample = 1
+            numSamples = 1
+            actions = np.expand_dims(actions, axis=1)
+            nodeObs = np.expand_dims(nodeObs, axis=2)
+        else:
+            weightPerSample = 1/actions.shape[-1]
+            numSamples = actions.shape[-1]
+
+        # Reduce
+        self.actionProbabilities = self.actionProbabilities * (1-learningRate)
+        self.nodeTransitionProbabilities = self.nodeTransitionProbabilities * (1-learningRate)
+        nodeIndices = np.arange(0, self.numNodes, dtype=int)
+
+        # Add samples factored by weight
+        for sample in range(numSamples):
+            self.actionProbabilities[nodeIndices, actions[:,sample]] += learningRate*weightPerSample
+            self.nodeTransitionProbabilities[nodeIndices, nodeObs[:,:,sample]] += learningRate*weightPerSample
+
+
+
+
 
     # Update the probability of taking an action in a particular node
     # Can be used for multiple inputs if numNodeIndices = n, numActionIndices = m, and newProbability = n*m or a scalar
@@ -154,17 +180,11 @@ def evaluateFSCOnEnvironment(env, controller, params, timeHorizon=50, parallel=N
         bestSampleIndices = bestSampleIndices[keepIndices]
 
         # For each node, update using best samples
+        controller.updateProbabilitiesFromSamples(sampledActions[:,bestSampleIndices], sampledNodes[:,:,bestSampleIndices], bestValues, params.learningRate)
 
-        # Return best policy, best value
-        return bestValue, bestActionProbs, bestNodeTransitionProbs
+    # Return best policy, best value, updated controller
+    return bestValue, bestActionProbs, bestNodeTransitionProbs, controller
 
-
-
-
-
-
-
-    pass
 
 # Evaluate a single sample, starting from first node
 # Inputs:
