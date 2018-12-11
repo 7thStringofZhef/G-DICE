@@ -3,6 +3,7 @@ import gym
 import numpy as np
 import numpy.random as npr
 from multiprocessing import Pool
+from functools import partial
 
 class FiniteStateController(object):
     def __init__(self, numNodes, numActions, numObservations):
@@ -109,42 +110,82 @@ def evaluateFSCOnEnvironment(env, controller, params, timeHorizon=50, parallel=N
     bestActionProbs = None
     bestNodeTransitionProbs = None
     bestValue = np.NINF
-    worstValue = np.NINF
+    worstValueOfPreviousIteration = np.NINF
     allValues = np.zeros((params.numIterations, params.numSamples))
 
 
     # Wrap the environment to sample multiple trajectories simultaneously
     multiEnv = MultiActionPOMDP(env, numTrajectories=params.numSamples)
-    for iteration in params.numIterations:
-        """
-        For each iteration
-          for each sample
-            for each node
-              sample action
-              sample all observation transitions (i.e., the node this node will transition to given an observation)
-            evaluate the controller starting from this sample for all nodes
-            if value of this controller is better than worst from this iteration, add to list of policies and values
-            If value of this controller is better than best overall, update best overall
-        
-        """
-        isDones = np.zeros((params.numSamples), dtype=bool)
-        timestep = 0
-        while not np.all(isDones) and timestep < timeHorizon:
-            # For each node in controller, sample actions
-            sampledActions = controller.sampleActionFromAllNodes(params.numSamples)
+    for iteration in range(params.numIterations):
+        # For each node in controller, sample actions
+        sampledActions = controller.sampleActionFromAllNodes(params.numSamples)  # numNodes*numSamples
 
-            # For each node, observation in controller, sample next node
-            sampledNodes = controller.sampleAllObservationTransitionsFromAllNodes(params.numSamples)
+        # For each node, observation in controller, sample next node
+        sampledNodes = controller.sampleAllObservationTransitionsFromAllNodes(params.numSamples)  # numObs*numNodes*numSamples
 
-            # For each sampled action, evaluate in environment
+        # For each sampled action, evaluate in environment
+        # For parallel, try single environment. For single core (or low memory), use MultiEnv
+        if parallel is not None and isinstance(parallel, pool):
+            currentNodes = np.zeros(params.numSamples)
+            isDones = np.zeros(params.numSamples, dtype=bool)
             obs, rewards, isDones = multiEnv.step(sampledActions)
 
 
+        else:
+            envEvalFn = partial(evaluateSample, env, timeHorizon)
+            values = np.array(pool.starmap(envEvalFn, [(sampledActions[:,i], sampledNodes[:,:,i]) for i in range(params.numSamples)]))
+
+        # Save values
+        allValues[iteration, :] = values
+
+        # Find N_b best policies
+        bestSampleIndices = values.argsort()[-params.numBestSamples:]
+        bestValues = values[bestSampleIndices]
+
+        # Save best policy (if better than overall previous)
+        if bestValue < bestValues[-1]:
+            bestValue = bestValues[-1]
+            bestActionProbs = sampledActions[:, bestSampleIndices[-1]]
+            bestNodeTransitionProbs = sampledNodes[:, :, bestSampleIndices[-1]]
+
+        # Throw away policies below value threshold (worst best value of previous iteration)
+        keepIndices = np.where(bestValues >= worstValueOfPreviousIteration)[0]
+        bestValues = bestValues[keepIndices]
+        bestSampleIndices = bestSampleIndices[keepIndices]
+
+        # For each node, update using best samples
+
+        # Return best policy, best value
+        return bestValue, bestActionProbs, bestNodeTransitionProbs
+
+
+
+
+
+
+
     pass
 
-# Evaluate a single sample
-def evaluateSample(env, controller):
-    pass
+# Evaluate a single sample, starting from first node
+# Inputs:
+#   env: Environment in which to evaluate
+#   timeHorizon: Time horizon over which to evaluate
+#   actionTransitions: (numNodes,) int array of chosen actions for each node
+#   nodeObservationTransitions: (numObs, numNodes) int array of chosen node transitions for obs
+#  Output:
+#    value: Discounted total return over timeHorizon (or until episode is done)
+def evaluateSample(env, timeHorizon, actionTransitions, nodeObservationTransitions):
+    gamma = env.discount
+    currentNodeIndex = 0
+    currentTimestep = 0
+    isDone = False
+    value = 0.0
+    while not isDone and currentTimestep < timeHorizon:
+        obs, reward, isDone = env.step(actionTransitions[currentNodeIndex])
+        currentNodeIndex = nodeObservationTransitions[obs, currentNodeIndex]
+        value += reward * (gamma ** currentTimestep)
+        currentTimestep += 1
+    return value
 
 
 
@@ -250,7 +291,9 @@ class MultiActionPOMDP(gym.Wrapper):
 
 if __name__ == "__main__":
     env = gym.make(list_pomdps()[2])  # 4x3-v0 POMDP
-    multiEnv = MultiActionPOMDP(env, 50)
-    multiEnv.step(0)
+    #multiEnv = MultiActionPOMDP(env, 50)
+    #multiEnv.step(0)
     controller = FiniteStateController(10, 4, 11)
+    testParams = GDICEParams()
     pool = Pool()  # Use a pool for parallel processing. Max # threads
+    evaluateFSCOnEnvironment(env, controller, testParams, timeHorizon=50)
