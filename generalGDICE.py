@@ -274,23 +274,6 @@ def evaluateSamplesMultiEnv(env, timeHorizon, numSimulations, actionTransitions,
     return allSampleValues.mean(axis=0), allSampleValues.std(axis=0)
 
 
-# GDICE parameter object
-# Inputs:
-#   numIterations: N_k number of iterations of GDICE to perform
-#   numSamples: N_s number of samples to take for each iteration from each node
-#   numBestSamples: N_b number of samples to keep from each set of samples
-#   leareningRate: 0-1 alpha value, learning rate at which controller shifts probabilities
-#   valueThreshold: If not None, ignore all samples with worse values, even if that means there aren't numBestSamples
-class GDICEParams(object):
-    def __init__(self, numIterations=30, numSamples=50, numSimulationsPerSample=1000, numBestSamples=5, learningRate=0.1, valueThreshold=None):
-        self.numIterations = numIterations
-        self.numSamples = numSamples
-        self.numSimulationsPerSample = numSimulationsPerSample
-        self.numBestSamples = numBestSamples
-        self.learningRate = learningRate
-        self.valueThreshold = valueThreshold
-
-
 # States, observations, rewards, actions, dones are now lists or np arrays
 class MultiActionPOMDP(gym.Wrapper):
 
@@ -373,15 +356,34 @@ class MultiActionPOMDP(gym.Wrapper):
 
         return obs, reward, done, {}
 
+# GDICE parameter object
+# Inputs:
+#   numIterations: N_k number of iterations of GDICE to perform
+#   numSamples: N_s number of samples to take for each iteration from each node
+#   numSimulationsPerSample: Number of times to run the environment for each sampled controller. Values will be averaged over these runs
+#   numBestSamples: N_b number of samples to keep from each set of samples
+#   learningRate: 0-1 alpha value, learning rate at which controller shifts probabilities
+#   valueThreshold: If not None, ignore all samples with worse values, even if that means there aren't numBestSamples
+class GDICEParams(object):
+    def __init__(self, numIterations=30, numSamples=50, numSimulationsPerSample=1000, numBestSamples=5, learningRate=0.1, valueThreshold=None):
+        self.numIterations = numIterations
+        self.numSamples = numSamples
+        self.numSimulationsPerSample = numSimulationsPerSample
+        self.numBestSamples = numBestSamples
+        self.learningRate = learningRate
+        self.valueThreshold = valueThreshold
 
 
 if __name__ == "__main__":
-    env = gym.make('POMDP-4x3-episodic-v0')  # POMDP-1d-episodic-v0
-    controller = FiniteStateController(10, env.action_space.n, env.observation_space.n)
-    testParams = GDICEParams()
+    env = gym.make('POMDP-4x3-episodic-v0')  # Make a gym environment with POMDP-1d-episodic-v0
+    controller = FiniteStateController(10, env.action_space.n, env.observation_space.n)  # make a controller with 10 nodes, with #actions and observations from environment
+    testParams = GDICEParams()  # Choose G-DICE parameters (look above for explanation)
     pool = Pool()  # Use a pool for parallel processing. Max # threads
-    #pool = None  # use a multiEnv for vectorized processing
+    #pool = None  # use a multiEnv for vectorized processing on computers with low memory or no core access
+
+    # Run GDICE. Return the best average value, its standard deviation, tables of the best deterministic transitions, and the updated distribution of controllers
     bestValue, bestValueStdDev, bestActionTransitions, bestNodeObservationTransitions, updatedController = \
         runGDICEOnEnvironment(env, controller, testParams, timeHorizon=50, parallel=pool)
 
+    # Create a deterministic controller from the tables above
     bestDeterministicController = DeterministicFiniteStateController(bestActionTransitions, bestNodeObservationTransitions)
