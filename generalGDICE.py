@@ -6,6 +6,7 @@ from multiprocessing import Pool
 from functools import partial
 from inspect import isclass
 
+
 class FiniteStateController(object):
     def __init__(self, numNodes, numActions, numObservations):
         self.numNodes = numNodes
@@ -120,6 +121,23 @@ class FiniteStateController(object):
     def save(self):
         return self.actionProbabilities, self.nodeTransitionProbabilities
 
+# A deterministic variant of the above.
+# Construct from the returned action and node transitions from GDICE
+class DeterministicFiniteStateController(FiniteStateController):
+    def __init__(self, actionTransitions, nodeObservationTransitions):
+        self.numNodes = nodeObservationTransitions.shape[0]
+        self.numObservations = nodeObservationTransitions.shape[2]
+        self.numActions = actionTransitions.shape[1]
+        self.currentNode = 0
+        self.actionProbabilities = np.zeros((self.numNodes, self.numActions))
+        self.nodeTransitionProbabilities = np.zeros((self.numNodes, self.numNodes, self.numObservations))
+        # Can vectorize later
+        for i in range(self.numNodes):
+            for j in range(self.numActions):
+                self.actionProbabilities[i,j] = 1.0
+            for j in range(self.numNodes):
+                for k in range(self.numObservations):
+                    self.nodeTransitionProbabilities[i,j,k] = 1.0
 
 # Run GDICE with controller(s) on an environment, given
 # Inputs:
@@ -184,6 +202,13 @@ def runGDICEOnEnvironment(env, controller, params, timeHorizon=50, parallel=None
         keepIndices = np.where(bestValues >= worstValueOfPreviousIteration)[0]
         bestValues = bestValues[keepIndices]
         bestSampleIndices = bestSampleIndices[keepIndices]
+
+        #If we're using a value threshold, also throw away iterations below that
+        if params.valueThreshold is not None:
+            keepIndices = np.where(bestValues >= params.valueThreshold)[0]
+            bestValues = bestValues[keepIndices]
+            bestSampleIndices = bestSampleIndices[keepIndices]
+
 
         # For each node, update using best samples
         controller.updateProbabilitiesFromSamples(sampledActions[:,bestSampleIndices], sampledNodes[:,:,bestSampleIndices], params.learningRate)
@@ -356,5 +381,7 @@ if __name__ == "__main__":
     testParams = GDICEParams()
     pool = Pool()  # Use a pool for parallel processing. Max # threads
     #pool = None  # use a multiEnv for vectorized processing
-    bestValue, besteValueStdDev, bestActionTransitions, bestNodeObservationTransitions, updatedController = \
+    bestValue, bestValueStdDev, bestActionTransitions, bestNodeObservationTransitions, updatedController = \
         runGDICEOnEnvironment(env, controller, testParams, timeHorizon=50, parallel=pool)
+
+    bestDeterministicController = DeterministicFiniteStateController(bestActionTransitions, bestNodeObservationTransitions)
