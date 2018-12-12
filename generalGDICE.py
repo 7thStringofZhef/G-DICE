@@ -121,7 +121,7 @@ class FiniteStateController(object):
         return self.actionProbabilities, self.nodeTransitionProbabilities
 
 
-# Evaluate controller(s) on an environment, given
+# Run GDICE with controller(s) on an environment, given
 # Inputs:
 #   env: Gym-like environment to evaluate on
 #   controller: A controller or list of controllers corresponding to agents in the environment
@@ -129,7 +129,7 @@ class FiniteStateController(object):
 #   timeHorizon: Number of timesteps to evaluate to. If None, run each sample until episode is finished
 #   parallel: Attempt to use python multiprocessing across samples. If not None, should be a Pool object
 
-def evaluateFSCOnEnvironment(env, controller, params, timeHorizon=50, parallel=None):
+def runGDICEOnEnvironment(env, controller, params, timeHorizon=50, parallel=None):
     # Ensure controller matches environment
     assert env.action_space.n == controller.numActions
     assert env.observation_space.n == controller.numObservations
@@ -144,11 +144,10 @@ def evaluateFSCOnEnvironment(env, controller, params, timeHorizon=50, parallel=N
     bestActionProbs = None
     bestNodeTransitionProbs = None
     bestValue = np.NINF
+    bestValueVariance = 0
     worstValueOfPreviousIteration = np.NINF
-    allValues = np.zeros((params.numIterations, params.numSamples))
-
-    # Wrap the environment to sample multiple trajectories simultaneously
-    multiEnv = MultiActionPOMDP(env, numTrajectories=params.numSamples)
+    allValues = np.zeros((params.numIterations, params.numSamples), dtype=np.float64)
+    allStdDev = np.zeros((params.numIterations, params.numSamples), dtype=np.float64)
 
     for iteration in range(params.numIterations):
         # For each node in controller, sample actions
@@ -160,32 +159,24 @@ def evaluateFSCOnEnvironment(env, controller, params, timeHorizon=50, parallel=N
         # For each sampled action, evaluate in environment
         # For parallel, try single environment. For single core (or low memory), use MultiEnv
         if parallel is not None and isinstance(parallel, type(Pool)):
-            env.reset()
-            envEvalFn = partial(evaluateSample, env, timeHorizon)
-            values = np.array(parallel.starmap(envEvalFn, [(sampledActions[:,i], sampledNodes[:,:,i]) for i in range(params.numSamples)]))
+            envEvalFn = partial(evaluateSample, timeHorizon=timeHorizon, numSimulations=params.numSimulationsPerSample)
+            values, stdDev = [(np.array(res[0]), np.array(res[1])) for res in parallel.starmap(envEvalFn, [(env, sampledActions[:,i], sampledNodes[:,:,i]) for i in range(params.numSamples)])]
         else:
-            multiEnv.reset()
-            sampleIndices = np.arange(params.numSamples)
-            currentNodes = np.zeros(params.numSamples, dtype=np.int32)
-            currentTimestep = 0
-            values = np.zeros(params.numSamples, dtype=np.float64)
-            isDones = np.zeros(params.numSamples, dtype=bool)
-            while not all(isDones) and currentTimestep < timeHorizon:
-                obs, rewards, isDones = multiEnv.step(sampledActions[currentNodes, sampleIndices])[:3]
-                currentNodes = sampledNodes[obs, currentNodes, sampleIndices]
-                values += rewards * (gamma ** currentTimestep)
-                currentTimestep += 1
+            values, stdDev = evaluateSamplesMultiEnv(MultiActionPOMDP(env,params.numSamples), timeHorizon, params.numSimulationsPerSample, sampledActions, sampledNodes)
 
         # Save values
         allValues[iteration, :] = values
+        allStdDev[iteration, :] = stdDev
 
         # Find N_b best policies
         bestSampleIndices = values.argsort()[-params.numBestSamples:]
         bestValues = values[bestSampleIndices]
+        sortedStdDev = stdDev[bestSampleIndices]
 
         # Save best policy (if better than overall previous)
         if bestValue < bestValues[-1]:
             bestValue = bestValues[-1]
+            bestValueVariance = sortedStdDev[-1]
             bestActionProbs = sampledActions[:, bestSampleIndices[-1]]
             bestNodeTransitionProbs = sampledNodes[:, :, bestSampleIndices[-1]]
 
@@ -196,10 +187,10 @@ def evaluateFSCOnEnvironment(env, controller, params, timeHorizon=50, parallel=N
 
         # For each node, update using best samples
         controller.updateProbabilitiesFromSamples(sampledActions[:,bestSampleIndices], sampledNodes[:,:,bestSampleIndices], params.learningRate)
-        print('After '+str(iteration+1) + ' iterations, best (discounted) value is ' + str(bestValue))
+        print('After '+str(iteration+1) + ' iterations, best (discounted) value is ' + str(bestValue) + 'with standard deviation '+str(bestValueVariance))
 
     # Return best policy, best value, updated controller
-    return bestValue, bestActionProbs, bestNodeTransitionProbs, controller
+    return bestValue, bestValueVariance, bestActionProbs, bestNodeTransitionProbs, controller
 
 
 # Evaluate a single sample, starting from first node
@@ -209,20 +200,53 @@ def evaluateFSCOnEnvironment(env, controller, params, timeHorizon=50, parallel=N
 #   actionTransitions: (numNodes,) int array of chosen actions for each node
 #   nodeObservationTransitions: (numObs, numNodes) int array of chosen node transitions for obs
 #  Output:
-#    value: Discounted total return over timeHorizon (or until episode is done)
-def evaluateSample(env, timeHorizon, actionTransitions, nodeObservationTransitions):
+#    value: Discounted total return over timeHorizon (or until episode is done), averaged over all simulations
+#    stdDev: Standard deviation of discounter total returns over all simulations
+def evaluateSample(env, timeHorizon, numSimulations, actionTransitions, nodeObservationTransitions):
     gamma = env.discount
-    currentNodeIndex = 0
-    currentTimestep = 0
-    isDone = False
-    value = 0.0
-    while not isDone and currentTimestep < timeHorizon:
-        obs, reward, isDone = env.step(actionTransitions[currentNodeIndex])
-        currentNodeIndex = nodeObservationTransitions[obs, currentNodeIndex]
-        value += reward * (gamma ** currentTimestep)
-        currentTimestep += 1
-    return value
+    values = np.zeros(numSimulations, dtype=np.float64)
+    for sim in numSimulations:
+        env.reset()
+        currentNodeIndex = 0
+        currentTimestep = 0
+        isDone = False
+        value = 0.0
+        while not isDone and currentTimestep < timeHorizon:
+            obs, reward, isDone = env.step(actionTransitions[currentNodeIndex])
+            currentNodeIndex = nodeObservationTransitions[obs, currentNodeIndex]
+            value += reward * (gamma ** currentTimestep)
+            currentTimestep += 1
+        values[sim] = value
+    return values.mean(), values.std()
 
+# Evaluate multiple samples, starting from first node
+# Inputs:
+#   env: MultiEnv environment in which to evaluate
+#   timeHorizon: Time horizon over which to evaluate
+#   actionTransitions: (numNodes,numSamples) int array of chosen actions for each node
+#   nodeObservationTransitions: (numObs, numNodes, numSamples) int array of chosen node transitions for obs
+#  Output:
+#    allSampleValues: Discounted total return over timeHorizon (or until episode is done), averaged over all simulations, for each sample (numSamples,)
+#    stdDevs: Standard deviation of discounted total returns over all simulations, for each sample (numSamples,)
+def evaluateSamplesMultiEnv(env, timeHorizon, numSimulations, actionTransitions, nodeObservationTransitions):
+    assert isinstance(env, MultiActionPOMDP)
+    gamma = env.discount
+    numSamples = actionTransitions.shape[-1]
+    sampleIndices = np.arange(numSamples)
+    allSampleValues = np.zeros((numSimulations, numSamples), dtype=np.float64)
+    for sim in range(numSimulations):
+        env.reset()
+        currentNodes = np.zeros(numSamples, dtype=np.int32)
+        currentTimestep = 0
+        values = np.zeros(numSamples, dtype=np.float64)
+        isDones = np.zeros(numSamples, dtype=bool)
+        while not all(isDones) and currentTimestep < timeHorizon:
+            obs, rewards, isDones = env.step(actionTransitions[currentNodes, sampleIndices])[:3]
+            currentNodes = nodeObservationTransitions[obs, currentNodes, sampleIndices]
+            values += rewards * (gamma ** currentTimestep)
+            currentTimestep += 1
+        allSampleValues[sim, :] = values
+    return allSampleValues.mean(axis=0), allSampleValues.std(axis=0)
 
 
 # GDICE parameter object
@@ -233,9 +257,10 @@ def evaluateSample(env, timeHorizon, actionTransitions, nodeObservationTransitio
 #   leareningRate: 0-1 alpha value, learning rate at which controller shifts probabilities
 #   valueThreshold: If not None, ignore all samples with worse values, even if that means there aren't numBestSamples
 class GDICEParams(object):
-    def __init__(self, numIterations=30, numSamples=50, numBestSamples=5, learningRate=0.1, valueThreshold=None):
+    def __init__(self, numIterations=30, numSamples=50, numSimulationsPerSample=1000, numBestSamples=5, learningRate=0.1, valueThreshold=None):
         self.numIterations = numIterations
         self.numSamples = numSamples
+        self.numSimulationsPerSample = numSimulationsPerSample
         self.numBestSamples = numBestSamples
         self.learningRate = learningRate
         self.valueThreshold = valueThreshold
@@ -296,7 +321,7 @@ class MultiActionPOMDP(gym.Wrapper):
         newStates[notDoneIndices], newStates[doneIndices] = validNewStates, -1
         obs[notDoneIndices], obs[doneIndices] = validObs, -1
         rewards[notDoneIndices], rewards[doneIndices] = validRewards, 0.0
-        self.states = newStates
+        self.state = newStates
 
         return obs, rewards, done, {}
 
@@ -326,8 +351,10 @@ class MultiActionPOMDP(gym.Wrapper):
 
 
 if __name__ == "__main__":
-    env = gym.make(list_pomdps()[4])  # POMDP-1d-episodic-v0
+    env = gym.make('POMDP-4x3-episodic-v0')  # POMDP-1d-episodic-v0
     controller = FiniteStateController(10, env.action_space.n, env.observation_space.n)
     testParams = GDICEParams()
-    #pool = Pool()  # Use a pool for parallel processing. Max # threads
-    evaluateFSCOnEnvironment(env, controller, testParams, timeHorizon=50, parallel=None)
+    pool = Pool()  # Use a pool for parallel processing. Max # threads
+    #pool = None  # use a multiEnv for vectorized processing
+    bestValue, besteValueStdDev, bestActionTransitions, bestNodeObservationTransitions, updatedController = \
+        runGDICEOnEnvironment(env, controller, testParams, timeHorizon=50, parallel=pool)
