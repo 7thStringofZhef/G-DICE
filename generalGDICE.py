@@ -1,11 +1,11 @@
-from gym_pomdps import list_pomdps, POMDP
+import os
 import gym
 import numpy as np
-import numpy.random as npr
 from multiprocessing import Pool
 from functools import partial
 from GDICE_Python.Domains import MultiActionPOMDP
 from GDICE_Python.Controllers import FiniteStateControllerDistribution, DeterministicFiniteStateController
+import pickle
 
 
 # Run GDICE with controller(s) on an environment, given
@@ -95,7 +95,8 @@ def runGDICEOnEnvironment(env, controller, params, timeHorizon=50, parallel=None
                 break
 
     # Return best policy, best value, updated controller
-    return bestValue, bestValueVariance, bestActionProbs, bestNodeTransitionProbs, controller, estimatedConvergenceIteration
+    return bestValue, bestValueVariance, bestActionProbs, bestNodeTransitionProbs, controller, \
+           estimatedConvergenceIteration, allValues, allStdDev
 
 
 # Evaluate a single sample, starting from first node
@@ -171,6 +172,13 @@ class GDICEParams(object):
         self.numBestSamples = numBestSamples
         self.learningRate = learningRate
         self.valueThreshold = valueThreshold
+        self.buildName()
+
+    # Name for use in saving files
+    def buildName(self):
+        self.name = 'K' + str(self.numIterations) + '_S' + str(self.numSamples) + '_sim' + \
+                    str(self.numSimulationsPerSample) + '_B' + str(self.numBestSamples) + '_lr' + \
+                    str(self.learningRate) + '_vT' + 'None' if self.valueThreshold is None else str(self.valueThreshold)
 
 
 if __name__ == "__main__":
@@ -182,8 +190,17 @@ if __name__ == "__main__":
 
     # Run GDICE. Return the best average value, its standard deviation,
     # tables of the best deterministic transitions, and the updated distribution of controllers
-    bestValue, bestValueStdDev, bestActionTransitions, bestNodeObservationTransitions, updatedControllerDistribution = \
+    bestValue, bestValueStdDev, bestActionTransitions, bestNodeObservationTransitions, updatedControllerDistribution, \
+    estimatedConvergenceIteration, allValues, allStdDev = \
         runGDICEOnEnvironment(env, controllerDistribution, testParams, timeHorizon=50, parallel=pool)
+
+    # Save
+    savePath = os.path.join('GDICEResults', 'POMDP-4x3-episodic-v0')  # relative to current path
+    os.mkdir(savePath)
+    np.savez(os.path.join(savePath, testParams.name)+'.npz', bestValue=bestValue, bestValueStdDev=bestValueStdDev,
+             bestActionTransitions=bestActionTransitions, bestNodeObservationTransitions=bestNodeObservationTransitions,
+             estimatedConvergenceIteration=estimatedConvergenceIteration, allValues=allValues, allStdDev=allStdDev)
+    pickle.dump(updatedControllerDistribution, os.path.join(savePath, testParams.name)+'.pkl', 'wb')
 
     # Create a deterministic controller from the tables above
     bestDeterministicController = DeterministicFiniteStateController(bestActionTransitions, bestNodeObservationTransitions)
