@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 import multiprocessing
 from functools import partial
 
-from G_DICE_Python.Policy import GraphPolicyController
-from G_DICE_Python.Domains.PackageDelivery.Domain import PackageDeliveryDomain as Domain
+from GDICEPythonOld.Policy import GraphPolicyController
+from GDICEPythonOld.Domains.PackageDelivery.Domain import PackageDeliveryDomain as Domain
 
 """
 Run G-Dice on the PackageDelivery domain with the given parameters
