@@ -35,7 +35,8 @@ def runGDICEOnEnvironment(env, controller, params, timeHorizon=50, parallel=None
     estimatedConvergenceIteration = 0
 
     for iteration in range(params.numIterations):
-        iterBestValue = np.NINF
+        controllerChange = False  # Did the controller change this iteration?
+        iterBestValue = np.NINF  # What is the most recently seen best controller value
         # For each node in controller, sample actions
         sampledActions = controller.sampleActionFromAllNodes(params.numSamples)  # numNodes*numSamples
 
@@ -61,6 +62,7 @@ def runGDICEOnEnvironment(env, controller, params, timeHorizon=50, parallel=None
 
         # Save best policy (if better than overall previous)
         if bestValue < bestValues[-1]:
+            controllerChange = True
             bestValue = bestValues[-1]
             bestValueVariance = sortedStdDev[-1]
             bestActionProbs = sampledActions[:, bestSampleIndices[-1]]
@@ -86,9 +88,10 @@ def runGDICEOnEnvironment(env, controller, params, timeHorizon=50, parallel=None
         if iterBestValue < bestValue+convergenceThreshold:
             iterBestValue = bestValue
         else:
+            iterBestValue = bestValue
             estimatedConvergenceIteration = iteration
             # if we're using a convergence threshold, can terminate early
-            if convergenceThreshold:
+            if convergenceThreshold and controllerChange:
                 break
 
     # Return best policy, best value, updated controller

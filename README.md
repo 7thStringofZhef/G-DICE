@@ -3,6 +3,7 @@
 The main script is generalGDICE.py. Running it as is will run GDICE on the 4x3 maze POMDP environment with some default parameters. You can alter the main script as follows:
 
 1. Choose the environment in the first line. Any POMDP registered in gym-pomdps is accessible, though some (e.g., rocksample) may cause memory errors. Reference them by name (i.e., "POMDP-4x3-episodic-v0")
+    * NOTE: Rocksample is too big to fit on a system with 32 GB of memory...
 2. Create a controller distribution for the agent in the second line, specifying the number of nodes in the first argument.
 3. Define your parameters with a GDICEParams object in the 3rd line. In the constructor, you can specify:
     1. Number of iterations
