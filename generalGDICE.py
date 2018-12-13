@@ -7,7 +7,7 @@ from functools import partial
 from inspect import isclass
 
 
-class FiniteStateController(object):
+class FiniteStateControllerDistribution(object):
     def __init__(self, numNodes, numActions, numObservations):
         self.numNodes = numNodes
         self.numActions = numActions
@@ -121,23 +121,33 @@ class FiniteStateController(object):
     def save(self):
         return self.actionProbabilities, self.nodeTransitionProbabilities
 
-# A deterministic variant of the above.
-# Construct from the returned action and node transitions from GDICE
-class DeterministicFiniteStateController(FiniteStateController):
+# A deterministic FSC that has one action for any node and one end node transition for any node-obs combination
+# Constructed using output policy from G-DICE
+class DeterministicFiniteStateController(object):
     def __init__(self, actionTransitions, nodeObservationTransitions):
-        self.numNodes = nodeObservationTransitions.shape[0]
-        self.numObservations = nodeObservationTransitions.shape[2]
-        self.numActions = actionTransitions.shape[1]
+        self.actionTransitions = actionTransitions
+        self.nodeObservationTransitions = nodeObservationTransitions
+        self.numNodes = self.actionTransitions.shape[0]
+        self.numActions = np.unique(self.actionTransitions)
+        self.numObservations = self.nodeObservationTransitions[0]
         self.currentNode = 0
-        self.actionProbabilities = np.zeros((self.numNodes, self.numActions))
-        self.nodeTransitionProbabilities = np.zeros((self.numNodes, self.numNodes, self.numObservations))
-        # Can vectorize later
-        for i in range(self.numNodes):
-            for j in range(self.numActions):
-                self.actionProbabilities[i,j] = 1.0
-            for j in range(self.numNodes):
-                for k in range(self.numObservations):
-                    self.nodeTransitionProbabilities[i,j,k] = 1.0
+
+    # Set current node to 0
+    def reset(self):
+        self.currentNode = 0
+
+    # Get action using current node
+    def getAction(self):
+        return self.actionTransitions[self.currentNodes]
+
+    # Set current node using observation
+    def processObservation(self, observationIndex):
+        self.currentNode = self.nodeObservationTransitions[observationIndex, self.currentNodes]
+
+    # return current node index
+    def getCurrentNode(self):
+        return self.currentNode
+
 
 # Run GDICE with controller(s) on an environment, given
 # Inputs:
@@ -376,10 +386,10 @@ class GDICEParams(object):
 
 if __name__ == "__main__":
     env = gym.make('POMDP-4x3-episodic-v0')  # Make a gym environment with POMDP-1d-episodic-v0
-    controller = FiniteStateController(10, env.action_space.n, env.observation_space.n)  # make a controller with 10 nodes, with #actions and observations from environment
+    controller = FiniteStateControllerDistribution(10, env.action_space.n, env.observation_space.n)  # make a controller with 10 nodes, with #actions and observations from environment
     testParams = GDICEParams()  # Choose G-DICE parameters (look above for explanation)
-    pool = Pool()  # Use a pool for parallel processing. Max # threads
-    #pool = None  # use a multiEnv for vectorized processing on computers with low memory or no core access
+    #pool = Pool()  # Use a pool for parallel processing. Max # threads
+    pool = None  # use a multiEnv for vectorized processing on computers with low memory or no core access
 
     # Run GDICE. Return the best average value, its standard deviation, tables of the best deterministic transitions, and the updated distribution of controllers
     bestValue, bestValueStdDev, bestActionTransitions, bestNodeObservationTransitions, updatedController = \
@@ -387,3 +397,6 @@ if __name__ == "__main__":
 
     # Create a deterministic controller from the tables above
     bestDeterministicController = DeterministicFiniteStateController(bestActionTransitions, bestNodeObservationTransitions)
+
+    # Test on environment
+
