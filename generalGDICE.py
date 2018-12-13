@@ -16,7 +16,7 @@ from GDICE_Python.Controllers import FiniteStateControllerDistribution, Determin
 #   timeHorizon: Number of timesteps to evaluate to. If None, run each sample until episode is finished
 #   parallel: Attempt to use python multiprocessing across samples. If not None, should be a Pool object
 
-def runGDICEOnEnvironment(env, controller, params, timeHorizon=50, parallel=None):
+def runGDICEOnEnvironment(env, controller, params, timeHorizon=50, parallel=None, convergenceThreshold=0):
     # Ensure controller matches environment
     assert env.action_space.n == controller.numActions
     assert env.observation_space.n == controller.numObservations
@@ -32,8 +32,10 @@ def runGDICEOnEnvironment(env, controller, params, timeHorizon=50, parallel=None
     worstValueOfPreviousIteration = np.NINF
     allValues = np.zeros((params.numIterations, params.numSamples), dtype=np.float64)
     allStdDev = np.zeros((params.numIterations, params.numSamples), dtype=np.float64)
+    estimatedConvergenceIteration = 0
 
     for iteration in range(params.numIterations):
+        iterBestValue = np.NINF
         # For each node in controller, sample actions
         sampledActions = controller.sampleActionFromAllNodes(params.numSamples)  # numNodes*numSamples
 
@@ -80,8 +82,17 @@ def runGDICEOnEnvironment(env, controller, params, timeHorizon=50, parallel=None
         controller.updateProbabilitiesFromSamples(sampledActions[:,bestSampleIndices], sampledNodes[:,:,bestSampleIndices], params.learningRate)
         print('After '+str(iteration+1) + ' iterations, best (discounted) value is ' + str(bestValue) + 'with standard deviation '+str(bestValueVariance))
 
+        # If the value stops improving, maybe we've converged?
+        if iterBestValue < bestValue+convergenceThreshold:
+            iterBestValue = bestValue
+        else:
+            estimatedConvergenceIteration = iteration
+            # if we're using a convergence threshold, can terminate early
+            if convergenceThreshold:
+                break
+
     # Return best policy, best value, updated controller
-    return bestValue, bestValueVariance, bestActionProbs, bestNodeTransitionProbs, controller
+    return bestValue, bestValueVariance, bestActionProbs, bestNodeTransitionProbs, controller, estimatedConvergenceIteration
 
 
 # Evaluate a single sample, starting from first node
