@@ -182,7 +182,8 @@ class GDICEParams(object):
 
 
 if __name__ == "__main__":
-    env = gym.make('POMDP-4x3-episodic-v0')  # Make a gym environment with POMDP-1d-episodic-v0
+    envName = 'POMDP-4x3-episodic-v0'
+    env = gym.make(envName)  # Make a gym environment with POMDP-1d-episodic-v0
     controllerDistribution = FiniteStateControllerDistribution(10, env.action_space.n, env.observation_space.n)  # make a controller with 10 nodes, with #actions and observations from environment
     testParams = GDICEParams()  # Choose G-DICE parameters (look above for explanation)
     #pool = Pool()  # Use a pool for parallel processing. Max # threads
@@ -195,12 +196,15 @@ if __name__ == "__main__":
         runGDICEOnEnvironment(env, controllerDistribution, testParams, timeHorizon=50, parallel=pool)
 
     # Save
-    savePath = os.path.join('GDICEResults', 'POMDP-4x3-episodic-v0')  # relative to current path
+    """
+    os.mkdir('GDICEresults')
+    savePath = os.path.join('GDICEResults', envName)  # relative to current path
     os.mkdir(savePath)
     np.savez(os.path.join(savePath, testParams.name)+'.npz', bestValue=bestValue, bestValueStdDev=bestValueStdDev,
              bestActionTransitions=bestActionTransitions, bestNodeObservationTransitions=bestNodeObservationTransitions,
              estimatedConvergenceIteration=estimatedConvergenceIteration, allValues=allValues, allStdDev=allStdDev)
     pickle.dump(updatedControllerDistribution, os.path.join(savePath, testParams.name)+'.pkl', 'wb')
+    """
 
     # Create a deterministic controller from the tables above
     bestDeterministicController = DeterministicFiniteStateController(bestActionTransitions, bestNodeObservationTransitions)

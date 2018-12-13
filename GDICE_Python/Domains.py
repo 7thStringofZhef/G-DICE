@@ -86,7 +86,7 @@ class MultiActionPOMDP(gym.Wrapper):
         return obs, reward, done, {}
 
 # For DPOMDPs
-#   Only difference is that everything now has an additional dimension for the number of agents
+#   Only difference is that everything now has an additional dimension for the number of agents (last dimension?)
 class MultiActionDPOMDP(MultiActionPOMDP):
     def __init__(self, env, numTrajectories):
         assert isinstance(env, POMDP)
