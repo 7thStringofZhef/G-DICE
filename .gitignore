@@ -2,3 +2,7 @@
 \.idea/
 
 GDICE_Python/__pycache__/
+
+*.npz
+*.npy
+*.pkl
