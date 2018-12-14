@@ -26,6 +26,8 @@ def runGDICEOnEnvironment(env, controller, params, parallel=None, convergenceThr
     bestActionProbs = None
     bestNodeTransitionProbs = None
     bestValue = np.NINF
+    bestValueAtEachIteration = np.full(params.numIterations, np.nan, dtype=np.float64)
+    bestStdDevAtEachIteration = np.full(params.numIterations, np.nan, dtype=np.float64)
     bestValueVariance = 0
     worstValueOfPreviousIteration = np.NINF
     allValues = np.zeros((params.numIterations, params.numSamples), dtype=np.float64)
@@ -81,7 +83,8 @@ def runGDICEOnEnvironment(env, controller, params, parallel=None, convergenceThr
         # For each node, update using best samples
         controller.updateProbabilitiesFromSamples(sampledActions[:,bestSampleIndices], sampledNodes[:,:,bestSampleIndices], params.learningRate)
         print('After '+str(iteration+1) + ' iterations, best (discounted) value is ' + str(bestValue) + 'with standard deviation '+str(bestValueVariance))
-
+        bestValueAtEachIteration[iteration] = bestValue
+        bestStdDevAtEachIteration[iteration] = bestValueVariance
         # If the value stops improving, maybe we've converged?
         if iterBestValue < bestValue+convergenceThreshold:
             iterBestValue = bestValue
@@ -95,12 +98,12 @@ def runGDICEOnEnvironment(env, controller, params, parallel=None, convergenceThr
         # Save occasionally so we don't lose everything in a crash. Saves relative to working dir
         if saveFrequency and iteration % saveFrequency == 0:
             saveResults('', env.spec.id, params, (bestValue, bestValueVariance, bestActionProbs, bestNodeTransitionProbs,
-                                               controller, estimatedConvergenceIteration, allValues, allStdDev))
+                                               controller, estimatedConvergenceIteration, allValues, allStdDev, bestValueAtEachIteration, bestStdDevAtEachIteration))
 
 
     # Return best policy, best value, updated controller
     return bestValue, bestValueVariance, bestActionProbs, bestNodeTransitionProbs, controller, \
-           estimatedConvergenceIteration, allValues, allStdDev
+           estimatedConvergenceIteration, allValues, allStdDev, bestValueAtEachIteration, bestStdDevAtEachIteration
 
 
 # Evaluate a single sample, starting from first node
