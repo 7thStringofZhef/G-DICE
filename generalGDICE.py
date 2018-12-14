@@ -1,5 +1,5 @@
 import gym
-import numpy as np
+import os
 from multiprocessing import Pool
 from GDICE_Python.Parameters import GDICEParams
 from GDICE_Python.Controllers import FiniteStateControllerDistribution, DeterministicFiniteStateController
@@ -26,7 +26,7 @@ def runBasic():
 
     # Test on environment
 
-def runGridSearchOnOneEnv(envName):
+def runGridSearchOnOneEnv(baseSavePath, envName):
     pool = Pool()
     GDICEList = getGridSearchGDICEParams()[1]
     env = gym.make(envName)
@@ -34,9 +34,9 @@ def runGridSearchOnOneEnv(envName):
         env.reset()
         FSCDist = FiniteStateControllerDistribution(params.numNodes, env.action_space.n, env.observation_space.n)
         results = runGDICEOnEnvironment(env, FSCDist, params, parallel=pool)
-        saveResults('EndResults', envName, params, results)
+        saveResults(os.path.join(baseSavePath, 'EndResults'), envName, params, results)
 
-def runGridSearchOnAllEnv():
+def runGridSearchOnAllEnv(baseSavePath):
     pool = Pool()
     envList, GDICEList = getGridSearchGDICEParams()
     for envStr in envList:
@@ -53,7 +53,7 @@ def runGridSearchOnAllEnv():
             except MemoryError:
                 print(envStr + ' too large for parallel processing. Switching to MultiEnv...')
                 results = runGDICEOnEnvironment(env, FSCDist, params, parallel=None)
-            saveResults(envStr, params, results)
+            saveResults(os.path.join(baseSavePath, 'EndResults'), envStr, params, results)
 
 
 
@@ -61,5 +61,7 @@ def runGridSearchOnAllEnv():
 
 
 if __name__ == "__main__":
+    baseSavePath = '/scratch/slayback.d/GDICE'
     # testres, testControllerDist, testParams = loadResults('GDICEResults/POMDP-hallway-episodic-v0/N5_K1000_S30_sim1000_B3_lr0.05_vTNone.npz')
-    runGridSearchOnOneEnv('POMDP-hallway-episodic-v0')
+    # runGridSearchOnOneEnv('POMDP-hallway-episodic-v0')
+    runGridSearchOnAllEnv(baseSavePath)
