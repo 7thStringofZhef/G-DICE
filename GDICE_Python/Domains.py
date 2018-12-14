@@ -1,11 +1,11 @@
-from gym_pomdps import list_pomdps, POMDP
+from gym_pomdps import POMDP
 import gym
 from gym import spaces
 from gym.utils import seeding
 import numpy as np
 
 # States, observations, rewards, actions, dones are now lists or np arrays
-class MultiActionPOMDP(gym.Wrapper):
+class MultiPOMDP(gym.Wrapper):
     def __init__(self, env, numTrajectories):
         assert isinstance(env, POMDP)
         super().__init__(env)
@@ -24,23 +24,33 @@ class MultiActionPOMDP(gym.Wrapper):
                 1, self.env.start/np.sum(self.env.start), size=self.numTrajectories).argmax(1)
 
     # Step given an nparray or list of actions
-    # If actions is a scalar, applies to all
+    # Input:
+    #   actions: If scalar, apply to all trajectories
+    #            If tuple, first item is action, second is trajectory index. Apply to one trajectory
+    #            If nparray, apply to all states
+    # Output:
+    #   obs: nparray of observation indices for each trajectory. -1 for completed trajectories
+    #   rewards: nparray of rewards for each trajectory
+    #   done: nparray of whether a particular trajectory is done
     def step(self, actions):
         # Scalar action given, apply to all
         if np.isscalar(actions):
             actions = np.full(self.numTrajectories, actions, dtype=np.int32)
 
-        # Tuple of (action, index) given, step for one worker only
+        # Tuple of (action, index) given, step for one worker only (for multithreaded applications)
         if isinstance(actions, tuple) and len(actions) == 2:
             return self._stepForSingleWorker(int(actions[0]), int(actions[1]))
+
+        # Make sure numpy array is appropriate size
+        assert actions.shape[0] == self.numTrajectories
 
         # For each agent that is done, return nothing
         doneIndices = np.nonzero(self.state == -1)[0]
         notDoneIndices = np.nonzero(self.state != -1)[0]
 
-        # Blank init
+        # Blank init. Invalid states/obs, 0 reward, all done
         newStates = np.zeros(self.numTrajectories, dtype=np.int32)
-        obs = np.zeros(self.numTrajectories, dtype=np.int32)
+        obs = np.zeros(self.numTrajectories,  dtype=np.int32)
         rewards = np.zeros(self.numTrajectories, dtype=np.float64)
         done = np.ones(self.numTrajectories, dtype=bool)
 
@@ -51,7 +61,7 @@ class MultiActionPOMDP(gym.Wrapper):
         validObs = np.array([self.np_random.multinomial(1, p).argmax() for p in self.env.O[validStates, validActions, validNewStates]])
         validRewards = np.array(self.env.R[validStates, validActions, validNewStates, validObs])
         if self.env.episodic:
-            done[notDoneIndices] = self.env.D[self.state, actions]
+            done[notDoneIndices] = self.env.D[validStates, actions]
         else:
             done *= False
 
@@ -63,8 +73,8 @@ class MultiActionPOMDP(gym.Wrapper):
         return obs, rewards, done, {}
 
     # If multiprocessing, each worker will provide its trajectory index and desired action
-    def _stepForSingleWorker(self, action, index):
-        currState = self.state[index]
+    def _stepForSingleWorker(self, action, trajectoryIndex):
+        currState = self.state[trajectoryIndex]
 
         # If this worker's episode is finished, return nothing
         if currState is None:
@@ -79,18 +89,18 @@ class MultiActionPOMDP(gym.Wrapper):
             done = False
 
         if done:
-            self.state[index] = -1
+            self.state[trajectoryIndex] = -1
         else:
-            self.state[index] = newState
+            self.state[trajectoryIndex] = newState
 
         return obs, reward, done, {}
 
 # For DPOMDPs
 #   Only difference is that everything now has an additional dimension for the number of agents (last dimension?)
-class MultiActionDPOMDP(MultiActionPOMDP):
+class MultiDPOMDP(MultiPOMDP):
     def __init__(self, env, numTrajectories):
         assert isinstance(env, POMDP)
-        super(MultiActionDPOMDP, self).__init__(env, numTrajectories)
+        super(MultiDPOMDP, self).__init__(env, numTrajectories)
         self.numAgents = env.numAgents  # ***Need to see what this will be
         self.reset()
 
@@ -133,8 +143,8 @@ class MultiActionDPOMDP(MultiActionPOMDP):
         return obs, rewards, done, {}
 
     # If multiprocessing, each worker will provide its trajectory index and desired action
-    def _stepForSingleWorker(self, action, index):
-        currState = self.state[index]
+    def _stepForSingleWorker(self, action, trajectoryIndex):
+        currState = self.state[trajectoryIndex]
 
         # If this worker's episode is finished, return nothing
         if currState is None:
@@ -151,9 +161,9 @@ class MultiActionDPOMDP(MultiActionPOMDP):
             done = False
 
         if done:
-            self.state[index] = -1
+            self.state[trajectoryIndex] = -1
         else:
-            self.state[index] = newState
+            self.state[trajectoryIndex] = newState
 
         return obs, reward, done, {}
 

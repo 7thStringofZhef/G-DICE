@@ -1,8 +1,8 @@
 import numpy as np
-import gym
 from gym_pomdps import list_pomdps
-from multiprocessing import Pool
-from GDICE_Python.Algorithms import GDICEParams
+from .Parameters import GDICEParams
+import os
+import pickle
 
 
 # Define a list of GDICE parameter objects that permute the variables across the possible values
@@ -21,3 +21,30 @@ def getGridSearchGDICEParams():
     paramList = [GDICEParams(n, N_k, j, N_sim, k, l, t, timeHorizon) for n in N_n for j in N_s for k in N_b for l in lr for t in vThresholds]
     return envStrings, paramList
 
+# Save the results of a run
+def saveResults(baseDir, envName, testParams, results):
+    print('Saving...')
+    savePath = os.path.join(baseDir, 'GDICEResults', envName)  # relative to current path
+    os.makedirs(savePath, exist_ok=True)
+    bestValue, bestValueStdDev, bestActionTransitions, bestNodeObservationTransitions, updatedControllerDistribution, \
+    estimatedConvergenceIteration, allValues, allStdDev = results
+    np.savez(os.path.join(savePath, testParams.name)+'.npz', bestValue=bestValue, bestValueStdDev=bestValueStdDev,
+             bestActionTransitions=bestActionTransitions, bestNodeObservationTransitions=bestNodeObservationTransitions,
+             estimatedConvergenceIteration=estimatedConvergenceIteration, allValues=allValues, allStdDev=allStdDev)
+    pickle.dump(updatedControllerDistribution, open(os.path.join(savePath, testParams.name)+'.pkl', 'wb'))
+    pickle.dump(testParams, open(os.path.join(savePath, testParams.name+'_params') + '.pkl', 'wb'))
+
+"""
+# Load the results of a run
+def loadResults(filePath):
+    baseName = os.path.splitext(filePath)[0]
+    print('Loading...')
+
+    bestValue, bestValueStdDev, bestActionTransitions, bestNodeObservationTransitions, updatedControllerDistribution, \
+    estimatedConvergenceIteration, allValues, allStdDev = np.load(baseName+'.npz')
+    np.savez(os.path.join(savePath, testParams.name) + '.npz', bestValue=bestValue, bestValueStdDev=bestValueStdDev,
+             bestActionTransitions=bestActionTransitions,
+             bestNodeObservationTransitions=bestNodeObservationTransitions,
+             estimatedConvergenceIteration=estimatedConvergenceIteration, allValues=allValues, allStdDev=allStdDev)
+    pickle.dump(updatedControllerDistribution, open(os.path.join(savePath, testParams.name) + '.pkl', 'wb'))
+"""

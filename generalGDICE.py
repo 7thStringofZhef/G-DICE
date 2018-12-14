@@ -1,26 +1,10 @@
-import os
 import gym
 import numpy as np
 from multiprocessing import Pool
+from GDICE_Python.Parameters import GDICEParams
 from GDICE_Python.Controllers import FiniteStateControllerDistribution, DeterministicFiniteStateController
-from GDICE_Python.Algorithms import runGDICEOnEnvironment, GDICEParams
-from GDICE_Python.Scripts import getGridSearchGDICEParams
-import pickle
-from os.path import isdir
-
-
-def saveResults(envName, testParams, results):
-    if not isdir('GDICEResults'):
-        os.mkdir('GDICEResults')
-    savePath = os.path.join('GDICEResults', envName)  # relative to current path
-    if not isdir(savePath):
-        os.mkdir(savePath)
-    bestValue, bestValueStdDev, bestActionTransitions, bestNodeObservationTransitions, updatedControllerDistribution, \
-    estimatedConvergenceIteration, allValues, allStdDev = results
-    np.savez(os.path.join(savePath, testParams.name)+'.npz', bestValue=bestValue, bestValueStdDev=bestValueStdDev,
-             bestActionTransitions=bestActionTransitions, bestNodeObservationTransitions=bestNodeObservationTransitions,
-             estimatedConvergenceIteration=estimatedConvergenceIteration, allValues=allValues, allStdDev=allStdDev)
-    pickle.dump(updatedControllerDistribution, os.path.join(savePath, testParams.name)+'.pkl', 'wb')
+from GDICE_Python.Algorithms import runGDICEOnEnvironment
+from GDICE_Python.Scripts import getGridSearchGDICEParams, saveResults
 
 
 def runBasic():
@@ -50,7 +34,7 @@ def runGridSearchOnOneEnv(envName):
         env.reset()
         FSCDist = FiniteStateControllerDistribution(params.numNodes, env.action_space.n, env.observation_space.n)
         results = runGDICEOnEnvironment(env, FSCDist, params, parallel=pool)
-        saveResults(envName, params, results)
+        saveResults('EndResults', envName, params, results)
 
 def runGridSearchOnAllEnv():
     pool = Pool()

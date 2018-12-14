@@ -1,7 +1,8 @@
 import numpy as np
 from functools import partial
 from multiprocessing import Pool
-from .Domains import MultiActionPOMDP
+from .Domains import MultiPOMDP
+from .Scripts import saveResults
 
 # Run GDICE with controller(s) on an environment, given
 # Inputs:
@@ -10,8 +11,9 @@ from .Domains import MultiActionPOMDP
 #   params: GDICEParams object
 #   timeHorizon: Number of timesteps to evaluate to. If None, run each sample until episode is finished
 #   parallel: Attempt to use python multiprocessing across samples. If not None, should be a Pool object
-
-def runGDICEOnEnvironment(env, controller, params, parallel=None, convergenceThreshold=0):
+#   convergenceThreshold: If set, attempts to detect early convergence within a run and stop before all iterations are done
+#   saveFrequency: How frequently to save results in the middle of a run (numIterations between saves)
+def runGDICEOnEnvironment(env, controller, params, parallel=None, convergenceThreshold=0, saveFrequency=50):
     # Ensure controller matches environment
     assert env.action_space.n == controller.numActions
     assert env.observation_space.n == controller.numObservations
@@ -45,7 +47,7 @@ def runGDICEOnEnvironment(env, controller, params, parallel=None, convergenceThr
             envEvalFn = partial(evaluateSample, timeHorizon=timeHorizon, numSimulations=params.numSimulationsPerSample)
             values, stdDev = [(np.array(res[0]), np.array(res[1])) for res in parallel.starmap(envEvalFn, [(env, sampledActions[:,i], sampledNodes[:,:,i]) for i in range(params.numSamples)])]
         else:
-            values, stdDev = evaluateSamplesMultiEnv(MultiActionPOMDP(env,params.numSamples), timeHorizon, params.numSimulationsPerSample, sampledActions, sampledNodes)
+            values, stdDev = evaluateSamplesMultiEnv(MultiPOMDP(env, params.numSamples), timeHorizon, params.numSimulationsPerSample, sampledActions, sampledNodes)
 
         # Save values
         allValues[iteration, :] = values
@@ -90,6 +92,12 @@ def runGDICEOnEnvironment(env, controller, params, parallel=None, convergenceThr
             if convergenceThreshold and controllerChange:
                 break
 
+        # Save occasionally so we don't lose everything in a crash. Saves relative to working dir
+        if saveFrequency and iteration % saveFrequency == 0:
+            saveResults('', env.spec.id, params, (bestValue, bestValueVariance, bestActionProbs, bestNodeTransitionProbs,
+                                               controller, estimatedConvergenceIteration, allValues, allStdDev))
+
+
     # Return best policy, best value, updated controller
     return bestValue, bestValueVariance, bestActionProbs, bestNodeTransitionProbs, controller, \
            estimatedConvergenceIteration, allValues, allStdDev
@@ -131,7 +139,7 @@ def evaluateSample(env, timeHorizon, numSimulations, actionTransitions, nodeObse
 #    allSampleValues: Discounted total return over timeHorizon (or until episode is done), averaged over all simulations, for each sample (numSamples,)
 #    stdDevs: Standard deviation of discounted total returns over all simulations, for each sample (numSamples,)
 def evaluateSamplesMultiEnv(env, timeHorizon, numSimulations, actionTransitions, nodeObservationTransitions):
-    assert isinstance(env, MultiActionPOMDP)
+    assert isinstance(env, MultiPOMDP)
     gamma = env.discount
     numSamples = actionTransitions.shape[-1]
     sampleIndices = np.arange(numSamples)
@@ -149,33 +157,3 @@ def evaluateSamplesMultiEnv(env, timeHorizon, numSimulations, actionTransitions,
             currentTimestep += 1
         allSampleValues[sim, :] = values
     return allSampleValues.mean(axis=0), allSampleValues.std(axis=0)
-
-
-
-# GDICE parameter object
-# Inputs:
-#   numNodes: N_n number of nodes for the FSC used by GDICE
-#   numIterations: N_k number of iterations of GDICE to perform
-#   numSamples: N_s number of samples to take for each iteration from each node
-#   numSimulationsPerSample: Number of times to run the environment for each sampled controller. Values will be averaged over these runs
-#   numBestSamples: N_b number of samples to keep from each set of samples
-#   learningRate: 0-1 alpha value, learning rate at which controller shifts probabilities
-#   valueThreshold: If not None, ignore all samples with worse values, even if that means there aren't numBestSamples
-class GDICEParams(object):
-    def __init__(self, numNodes=10, numIterations=30, numSamples=50, numSimulationsPerSample=1000, numBestSamples=5, learningRate=0.1, valueThreshold=None, timeHorizon=100):
-        self.numNodes = numNodes
-        self.numIterations = numIterations
-        self.numSamples = numSamples
-        self.numSimulationsPerSample = numSimulationsPerSample
-        self.numBestSamples = numBestSamples
-        self.learningRate = learningRate
-        self.valueThreshold = valueThreshold
-        self.timeHorizon = timeHorizon
-        self.buildName()
-
-    # Name for use in saving files
-    def buildName(self):
-        self.name = 'N' + str(self.numNodes) + '_K' + str(self.numIterations) + '_S' + str(self.numSamples) + '_sim' + \
-                    str(self.numSimulationsPerSample) + '_B' + str(self.numBestSamples) + '_lr' + \
-                    str(self.learningRate) + '_vT' + 'None' if self.valueThreshold is None else str(self.valueThreshold) + \
-                                                                                                '_tH' + str(self.timeHorizon)
