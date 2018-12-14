@@ -4,7 +4,7 @@ from multiprocessing import Pool
 from GDICE_Python.Parameters import GDICEParams
 from GDICE_Python.Controllers import FiniteStateControllerDistribution, DeterministicFiniteStateController
 from GDICE_Python.Algorithms import runGDICEOnEnvironment
-from GDICE_Python.Scripts import getGridSearchGDICEParams, saveResults
+from GDICE_Python.Scripts import getGridSearchGDICEParams, saveResults, loadResults
 
 
 def runBasic():
@@ -61,4 +61,5 @@ def runGridSearchOnAllEnv():
 
 
 if __name__ == "__main__":
+    # testres, testControllerDist, testParams = loadResults('GDICEResults/POMDP-hallway-episodic-v0/N5_K1000_S30_sim1000_B3_lr0.05_vTNone.npz')
     runGridSearchOnOneEnv('POMDP-hallway-episodic-v0')

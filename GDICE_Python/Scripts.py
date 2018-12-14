@@ -35,17 +35,22 @@ def saveResults(baseDir, envName, testParams, results):
     pickle.dump(updatedControllerDistribution, open(os.path.join(savePath, testParams.name)+'.pkl', 'wb'))
     pickle.dump(testParams, open(os.path.join(savePath, testParams.name+'_params') + '.pkl', 'wb'))
 
-"""
+
 # Load the results of a run
+# Inputs:
+#   filePath: Path to any of the files.
+# Outputs:
+#   All the results generated
+#   The updated controller distribution
+#   The GDICE params object
 def loadResults(filePath):
     baseName = os.path.splitext(filePath)[0]
     print('Loading...')
-
-    bestValue, bestValueStdDev, bestActionTransitions, bestNodeObservationTransitions, updatedControllerDistribution, \
-    estimatedConvergenceIteration, allValues, allStdDev = np.load(baseName+'.npz')
-    np.savez(os.path.join(savePath, testParams.name) + '.npz', bestValue=bestValue, bestValueStdDev=bestValueStdDev,
-             bestActionTransitions=bestActionTransitions,
-             bestNodeObservationTransitions=bestNodeObservationTransitions,
-             estimatedConvergenceIteration=estimatedConvergenceIteration, allValues=allValues, allStdDev=allStdDev)
-    pickle.dump(updatedControllerDistribution, open(os.path.join(savePath, testParams.name) + '.pkl', 'wb'))
-"""
+    fileDict = np.load(baseName+'.npz')
+    keys = ('bestValue', 'bestValueStdDev', 'bestActionTransitions', 'bestNodeObservationTransitions',
+            'estimatedConvergenceIteration', 'allValues', 'allStdDev', 'bestValueAtEachIteration',
+            'bestStdDevAtEachIteration')
+    results = tuple([fileDict[key] for key in keys])
+    updatedControllerDistribution = pickle.load(open(baseName+'.pkl', 'rb'))
+    params = pickle.load(open(baseName + '_params.pkl', 'rb'))
+    return results, updatedControllerDistribution, params
