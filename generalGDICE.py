@@ -1,6 +1,7 @@
 import gym
 import os
 import argparse
+import sys
 from multiprocessing import Pool
 from GDICE_Python.Parameters import GDICEParams
 from GDICE_Python.Controllers import FiniteStateControllerDistribution, DeterministicFiniteStateController
@@ -44,7 +45,10 @@ def runGridSearchOnAllEnv(baseSavePath):
         try:
             env = gym.make(envStr)
         except MemoryError:
-            print(envStr + ' too large for memory')
+            print(envStr + ' too large for memory', file=sys.stderr)
+            continue
+        except Exception:
+            print(envStr + ' encountered error in creation, skipping', file=sys.stderr)
             continue
         for params in GDICEList:
             env.reset()
@@ -52,8 +56,12 @@ def runGridSearchOnAllEnv(baseSavePath):
             try:
                 results = runGDICEOnEnvironment(env, FSCDist, params, parallel=pool)
             except MemoryError:
-                print(envStr + ' too large for parallel processing. Switching to MultiEnv...')
+                print(envStr + ' too large for parallel processing. Switching to MultiEnv...', file=sys.stderr)
                 results = runGDICEOnEnvironment(env, FSCDist, params, parallel=None)
+            except Exception:
+                print(envStr + ' encountered error in runnning' + params.name + ', skipping to next param', file=sys.stderr)
+                continue
+
             saveResults(os.path.join(baseSavePath, 'EndResults'), envStr, params, results)
 
 
