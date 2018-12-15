@@ -23,5 +23,5 @@ class GDICEParams(object):
     def buildName(self):
         self.name = 'N' + str(self.numNodes) + '_K' + str(self.numIterations) + '_S' + str(self.numSamples) + '_sim' + \
                     str(self.numSimulationsPerSample) + '_B' + str(self.numBestSamples) + '_lr' + \
-                    str(self.learningRate) + '_vT' + 'None' if self.valueThreshold is None else str(self.valueThreshold) + \
+                    str(self.learningRate) + '_vT' + ('None' if self.valueThreshold is None else str(self.valueThreshold)) + \
                                                                                                 '_tH' + str(self.timeHorizon)
