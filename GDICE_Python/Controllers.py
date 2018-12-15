@@ -75,7 +75,7 @@ class FiniteStateControllerDistribution(object):
                          for obsIndex in obsIndices], dtype=np.int32)
 
     def updateProbabilitiesFromSamples(self, actions, nodeObs, learningRate):
-        if len(actions) == 0:  # No samples, no update
+        if actions.size == 0:  # No samples, no update
             return
         assert actions.shape[-1] == nodeObs.shape[-1]  # Same # samples
         if len(actions.shape) == 1:  # 1 sample

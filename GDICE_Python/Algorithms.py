@@ -116,7 +116,7 @@ def runGDICEOnEnvironment(env, controller, params, parallel=None, convergenceThr
 #    value: Discounted total return over timeHorizon (or until episode is done), averaged over all simulations
 #    stdDev: Standard deviation of discounter total returns over all simulations
 def evaluateSample(env, timeHorizon, numSimulations, actionTransitions, nodeObservationTransitions):
-    gamma = env.discount
+    gamma = env.discount if env.discount is not None else 1
     values = np.zeros(numSimulations, dtype=np.float64)
     for sim in numSimulations:
         env.reset()
@@ -143,7 +143,7 @@ def evaluateSample(env, timeHorizon, numSimulations, actionTransitions, nodeObse
 #    stdDevs: Standard deviation of discounted total returns over all simulations, for each sample (numSamples,)
 def evaluateSamplesMultiEnv(env, timeHorizon, numSimulations, actionTransitions, nodeObservationTransitions):
     assert isinstance(env, MultiPOMDP)
-    gamma = env.discount
+    gamma = env.discount if env.discount is not None else 1
     numSamples = actionTransitions.shape[-1]
     sampleIndices = np.arange(numSamples)
     allSampleValues = np.zeros((numSimulations, numSamples), dtype=np.float64)

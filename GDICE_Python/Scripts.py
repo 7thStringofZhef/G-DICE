@@ -17,7 +17,7 @@ def getGridSearchGDICEParams():
     timeHorizon = 100  # Each simulation goes for 100 steps (or until episode ends)
 
     # All registered Pomdp environments, only the episodic versions, no rocksample
-    envStrings = [pomdp for pomdp in list_pomdps() if 'episodic' in pomdp and 'rock' not in pomdp]
+    envStrings = [pomdp for pomdp in list_pomdps() if 'episodic' not in pomdp and 'rock' not in pomdp]
     paramList = [GDICEParams(n, N_k, j, N_sim, k, l, t, timeHorizon) for n in N_n for j in N_s for k in N_b for l in lr for t in vThresholds]
     return envStrings, paramList
 
