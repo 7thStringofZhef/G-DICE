@@ -31,11 +31,39 @@ def runBasic():
 def runGridSearchOnOneEnv(baseSavePath, envName):
     pool = Pool()
     GDICEList = getGridSearchGDICEParams()[1]
-    env = gym.make(envName)
+    try:
+        env = gym.make(envName)
+    except MemoryError:
+        print(envName + ' too large for memory', file=sys.stderr)
+        return
+    except Exception as e:
+        print(envName + ' encountered error in creation', file=sys.stderr)
+        print(e, file=sys.stderr)
+        return
+
     for params in GDICEList:
+        # Skip this permutation if we already have final results
+        if checkIfFinished(envName, params.name)[0]:
+            print(params.name + ' already finished for ' + envName + ', skipping...', file=sys.stderr)
+            continue
+        wasPartiallyRun, npzFilename = checkIfPartial(envName, params.name)
+        prevResults = None
+        if wasPartiallyRun:
+            print(params.name + ' partially finished for ' + envName + ', loading...', file=sys.stderr)
+            prevResults, FSCDist = loadResults(npzFilename)[:2]
+        else:
+            FSCDist = FiniteStateControllerDistribution(params.numNodes, env.action_space.n,
+                                                        env.observation_space.n)
         env.reset()
-        FSCDist = FiniteStateControllerDistribution(params.numNodes, env.action_space.n, env.observation_space.n)
-        results = runGDICEOnEnvironment(env, FSCDist, params, parallel=pool)
+        try:
+            results = runGDICEOnEnvironment(env, FSCDist, params, parallel=pool, results=prevResults)
+        except MemoryError:
+            print(envName + ' too large for parallel processing. Switching to MultiEnv...', file=sys.stderr)
+            results = runGDICEOnEnvironment(env, FSCDist, params, parallel=None, results=prevResults)
+        except Exception as e:
+            print(envName + ' encountered error in runnning' + params.name + ', skipping to next param', file=sys.stderr)
+            print(e, file=sys.stderr)
+            continue
         saveResults(os.path.join(baseSavePath, 'EndResults'), envName, params, results)
 
 
