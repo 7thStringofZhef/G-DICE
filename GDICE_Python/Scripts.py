@@ -54,3 +54,17 @@ def loadResults(filePath):
     updatedControllerDistribution = pickle.load(open(baseName+'.pkl', 'rb'))
     params = pickle.load(open(baseName + '_params.pkl', 'rb'))
     return results, updatedControllerDistribution, params
+
+# Check if a particular permutation is finished
+#   It's finished if its files can be found in the end results directory (instead of the temp)
+#   Returns whether it's finished as well as the filename
+def checkIfFinished(envStr, paramsName, endDir='EndResults', baseDir=''):
+    npzName = os.path.join(baseDir, endDir, envStr, paramsName+'.npz')
+    return os.path.isfile(npzName), npzName
+
+# Check if a particular permutation is partially run
+#   It's partially run if its files can be found in the end results directory (instead of the temp)
+#   Returns whether it's started as well as the filename
+def checkIfPartial(envStr, paramsName, tempDir='GDICEResults', baseDir=''):
+    npzName = os.path.join(baseDir, tempDir, envStr, paramsName+'.npz')
+    return os.path.isfile(npzName), npzName

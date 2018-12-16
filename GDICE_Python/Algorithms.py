@@ -13,28 +13,45 @@ from .Scripts import saveResults
 #   parallel: Attempt to use python multiprocessing across samples. If not None, should be a Pool object
 #   convergenceThreshold: If set, attempts to detect early convergence within a run and stop before all iterations are done
 #   saveFrequency: How frequently to save results in the middle of a run (numIterations between saves)
-def runGDICEOnEnvironment(env, controller, params, parallel=None, convergenceThreshold=0, saveFrequency=50):
+def runGDICEOnEnvironment(env, controller, params, parallel=None, results=None, convergenceThreshold=0, saveFrequency=50):
     # Ensure controller matches environment
     assert env.action_space.n == controller.numActions
     assert env.observation_space.n == controller.numObservations
 
-    # Reset controller
-    controller.reset()
     timeHorizon = params.timeHorizon
+    if results is None:  # Not continuing previous results
+        # Reset controller
+        controller.reset()
 
-    # Start variables
-    bestActionProbs = None
-    bestNodeTransitionProbs = None
-    bestValue = np.NINF
-    bestValueAtEachIteration = np.full(params.numIterations, np.nan, dtype=np.float64)
-    bestStdDevAtEachIteration = np.full(params.numIterations, np.nan, dtype=np.float64)
-    bestValueVariance = 0
-    worstValueOfPreviousIteration = np.NINF
-    allValues = np.zeros((params.numIterations, params.numSamples), dtype=np.float64)
-    allStdDev = np.zeros((params.numIterations, params.numSamples), dtype=np.float64)
-    estimatedConvergenceIteration = 0
+        # Start variables
+        bestActionProbs = None
+        bestNodeTransitionProbs = None
+        bestValue = np.NINF
+        bestValueAtEachIteration = np.full(params.numIterations, np.nan, dtype=np.float64)
+        bestStdDevAtEachIteration = np.full(params.numIterations, np.nan, dtype=np.float64)
+        bestValueVariance = 0
+        worstValueOfPreviousIteration = np.NINF
+        allValues = np.zeros((params.numIterations, params.numSamples), dtype=np.float64)
+        allStdDev = np.zeros((params.numIterations, params.numSamples), dtype=np.float64)
+        estimatedConvergenceIteration = 0
+        startIter = 0
+    else:  # Continuing
+        bestValue, bestValueVariance, bestActionProbs, bestNodeTransitionProbs, estimatedConvergenceIteration, \
+        allValues, allStdDev, bestValueAtEachIteration, bestStdDevAtEachIteration = results
+        startIter = np.where(np.isnan(bestValueAtEachIteration))[0][0]  # Start after last calculated value
+        worstValueOfPreviousIteration = allValues[startIter-1, (np.argsort(allValues[startIter-1, :])[-params.numBestSamples:])]
+        if params.valueThreshold is None:
+            worstValueOfPreviousIteration = np.min(worstValueOfPreviousIteration)
+        else:
+            wTemp = np.min(worstValueOfPreviousIteration)
+            if wTemp < params.valueThreshold:  # If the worst value is below threshold, set to -inf
+                worstValueOfPreviousIteration = np.NINF
+            else:
+                worstValueOfPreviousIteration = \
+                    np.min(worstValueOfPreviousIteration[worstValueOfPreviousIteration >= params.valueThreshold])
 
-    for iteration in range(params.numIterations):
+
+    for iteration in range(startIter, params.numIterations):
         controllerChange = False  # Did the controller change this iteration?
         iterBestValue = np.NINF  # What is the most recently seen best controller value
         # For each node in controller, sample actions

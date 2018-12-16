@@ -6,7 +6,7 @@ from multiprocessing import Pool
 from GDICE_Python.Parameters import GDICEParams
 from GDICE_Python.Controllers import FiniteStateControllerDistribution, DeterministicFiniteStateController
 from GDICE_Python.Algorithms import runGDICEOnEnvironment
-from GDICE_Python.Scripts import getGridSearchGDICEParams, saveResults
+from GDICE_Python.Scripts import getGridSearchGDICEParams, saveResults, loadResults, checkIfFinished, checkIfPartial
 
 
 def runBasic():
@@ -38,6 +38,8 @@ def runGridSearchOnOneEnv(baseSavePath, envName):
         results = runGDICEOnEnvironment(env, FSCDist, params, parallel=pool)
         saveResults(os.path.join(baseSavePath, 'EndResults'), envName, params, results)
 
+
+# Run a grid search on all registered environments
 def runGridSearchOnAllEnv(baseSavePath):
     pool = Pool()
     envList, GDICEList = getGridSearchGDICEParams()
@@ -47,26 +49,36 @@ def runGridSearchOnAllEnv(baseSavePath):
         except MemoryError:
             print(envStr + ' too large for memory', file=sys.stderr)
             continue
-        except Exception:
+        except Exception as e:
             print(envStr + ' encountered error in creation, skipping', file=sys.stderr)
+            print(e, file=sys.stderr)
             continue
         for params in GDICEList:
+            # Skip this permutation if we already have final results
+            if checkIfFinished(envStr, params.name)[0]:
+                print(params.name +' already finished for ' +envStr+ ', skipping...', file=sys.stderr)
+                continue
+
+            wasPartiallyRun, npzFilename = checkIfPartial(envStr, params.name)
+            prevResults = None
+            if wasPartiallyRun:
+                print(params.name + ' partially finished for ' + envStr + ', loading...', file=sys.stderr)
+                prevResults, FSCDist = loadResults(npzFilename)[:2]
+            else:
+                FSCDist = FiniteStateControllerDistribution(params.numNodes, env.action_space.n,
+                                                            env.observation_space.n)
             env.reset()
-            FSCDist = FiniteStateControllerDistribution(params.numNodes, env.action_space.n, env.observation_space.n)
             try:
-                results = runGDICEOnEnvironment(env, FSCDist, params, parallel=pool)
+                results = runGDICEOnEnvironment(env, FSCDist, params, parallel=pool, results=prevResults)
             except MemoryError:
                 print(envStr + ' too large for parallel processing. Switching to MultiEnv...', file=sys.stderr)
-                results = runGDICEOnEnvironment(env, FSCDist, params, parallel=None)
-            except Exception:
+                results = runGDICEOnEnvironment(env, FSCDist, params, parallel=None, results=prevResults)
+            except Exception as e:
                 print(envStr + ' encountered error in runnning' + params.name + ', skipping to next param', file=sys.stderr)
+                print(e, file=sys.stderr)
                 continue
 
             saveResults(os.path.join(baseSavePath, 'EndResults'), envStr, params, results)
-
-
-
-
 
 
 if __name__ == "__main__":
