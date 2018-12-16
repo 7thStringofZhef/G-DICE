@@ -110,17 +110,13 @@ def runGridSearchOnAllEnv(baseSavePath):
 
 
 if __name__ == "__main__":
-    """
+    test = getGridSearchGDICEParams()[0]
     parser = argparse.ArgumentParser(description='Choose save dir and environment')
-    parser.add_argument('--save_path', type=str, nargs=1,
-                        help='End result save path')
-    parser.add_argument('--env-name', action='store_const', default='',
-                        help='Environment to run')
-
+    parser.add_argument('--save_path', type=str, default='/scratch/slayback.d/GDICE', help='Base save path')
+    parser.add_argument('--env_name', type=str, default='', help='Environment to run')
     args = parser.parse_args()
-    """
-    #baseSavePath = ''
-    baseSavePath = '/scratch/slayback.d/GDICE'
-    # testres, testControllerDist, testParams = loadResults('GDICEResults/POMDP-hallway-episodic-v0/N5_K1000_S30_sim1000_B3_lr0.05_vTNone.npz')
-    # runGridSearchOnOneEnv('POMDP-hallway-episodic-v0')
-    runGridSearchOnAllEnv(baseSavePath)
+    baseSavePath = args.save_path
+    if not args.env_name:
+        runGridSearchOnAllEnv(baseSavePath)
+    else:
+        runGridSearchOnOneEnv(baseSavePath, args.env_name)
