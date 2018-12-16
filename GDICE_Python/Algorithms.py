@@ -1,6 +1,6 @@
 import numpy as np
 from functools import partial
-from multiprocessing import Pool
+from multiprocessing.pool import Pool
 from .Domains import MultiPOMDP
 from .Scripts import saveResults
 
@@ -62,13 +62,20 @@ def runGDICEOnEnvironment(env, controller, params, parallel=None, results=None, 
 
         # For each sampled action, evaluate in environment
         # For parallel, parallelize across simulations
-        if parallel is not None and isinstance(parallel, type(Pool)):
-            envEvalFn = partial(evaluateSample, timeHorizon=timeHorizon, numSimulations=params.numSimulationsPerSample)
-            values, stdDev = [(np.array(res[0]), np.array(res[1])) for res in parallel.starmap(envEvalFn, [(env, sampledActions[:,i], sampledNodes[:,:,i]) for i in range(params.numSamples)])]
-        else:
-            # envEvalFn = partial(evaluateSamplesMultiEnv, timeHorizon=timeHorizon, numSimulations=params.numSimulationsPerSample)
-            res = parallel.starmap(evaluateSamplesMultiEnv, [(MultiPOMDP(env, params.numSimulationsPerSample), timeHorizon, params.numSimulationsPerSample, sampledActions[:,i], sampledNodes[:,:,i]) for i in range(params.numSamples)])
+        if parallel is not None:
+            res = parallel.starmap(evaluateSamplesMultiEnv, [(MultiPOMDP(env, params.numSimulationsPerSample),
+                                                              timeHorizon, sampledActions[:, i],
+                                                              sampledNodes[:, :, i]) for i in range(params.numSamples)])
             values, stdDev = (np.array([ent[0] for ent in res]), np.array([ent[1] for ent in res]))
+            # envEvalFn = partial(evaluateSample, timeHorizon=timeHorizon, numSimulations=params.numSimulationsPerSample)
+            # values, stdDev = [(np.array(res[0]), np.array(res[1])) for res in parallel.starmap(envEvalFn, [(env, sampledActions[:,i], sampledNodes[:,:,i]) for i in range(params.numSamples)])]
+        else:
+            multiEnv = MultiPOMDP(env, params.numSimulationsPerSample)
+            res = [evaluateSamplesMultiEnv(multiEnv, timeHorizon, sampledActions[:,i], sampledNodes[:,:,i]) for i in range(params.numSamples)]
+            values, stdDev = (np.array([ent[0] for ent in res]), np.array([ent[1] for ent in res]))
+            # envEvalFn = partial(evaluateSamplesMultiEnv, timeHorizon=timeHorizon, numSimulations=params.numSimulationsPerSample)
+            #res = parallel.starmap(evaluateSamplesMultiEnv, [(MultiPOMDP(env, params.numSimulationsPerSample), timeHorizon, sampledActions[:,i], sampledNodes[:,:,i]) for i in range(params.numSamples)])
+            #values, stdDev = (np.array([ent[0] for ent in res]), np.array([ent[1] for ent in res]))
             #values, stdDev = [(np.array(res[0]), np.array(res[1])) for res in parallel.starmap(evaluateSamplesMultiEnv, [(MultiPOMDP(env, params.numSimulationsPerSample), timeHorizon, params.numSimulationsPerSample, sampledActions[:,i], sampledNodes[:,:,i]) for i in range(params.numSamples)])]
             # values, stdDev = evaluateSamplesMultiEnv(MultiPOMDP(env, params.numSamples), timeHorizon, params.numSimulationsPerSample, sampledActions, sampledNodes)
 
@@ -162,12 +169,10 @@ def evaluateSample(env, timeHorizon, numSimulations, actionTransitions, nodeObse
 #  Output:
 #    allSampleValues: Discounted total return over timeHorizon (or until episode is done), averaged over all simulations, for each sample (numSamples,)
 #    stdDevs: Standard deviation of discounted total returns over all simulations, for each sample (numSamples,)
-def evaluateSamplesMultiEnv(env, timeHorizon, numSimulations, actionTransitions, nodeObservationTransitions):
+def evaluateSamplesMultiEnv(env, timeHorizon, actionTransitions, nodeObservationTransitions):
     assert isinstance(env, MultiPOMDP)
     numTrajectories = env.numTrajectories
     gamma = env.discount if env.discount is not None else 1
-    trajectoryIndices = np.arange(numTrajectories)
-    allTrajectoryValues = np.zeros(numTrajectories, dtype=np.float64)
     env.reset()
     currentNodes = np.zeros(numTrajectories, dtype=np.int32)
     currentTimestep = 0

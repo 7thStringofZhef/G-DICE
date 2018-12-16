@@ -29,6 +29,7 @@ def runBasic():
     # Test on environment
 
 def runGridSearchOnOneEnv(baseSavePath, envName):
+    #pool = None
     pool = Pool()
     GDICEList = getGridSearchGDICEParams()[1]
     try:
