@@ -61,12 +61,16 @@ def runGDICEOnEnvironment(env, controller, params, parallel=None, results=None, 
         sampledNodes = controller.sampleAllObservationTransitionsFromAllNodes(params.numSamples)  # numObs*numBeginNodes*numSamples
 
         # For each sampled action, evaluate in environment
-        # For parallel, try single environment. For single core (or low memory), use MultiEnv
+        # For parallel, parallelize across simulations
         if parallel is not None and isinstance(parallel, type(Pool)):
             envEvalFn = partial(evaluateSample, timeHorizon=timeHorizon, numSimulations=params.numSimulationsPerSample)
             values, stdDev = [(np.array(res[0]), np.array(res[1])) for res in parallel.starmap(envEvalFn, [(env, sampledActions[:,i], sampledNodes[:,:,i]) for i in range(params.numSamples)])]
         else:
-            values, stdDev = evaluateSamplesMultiEnv(MultiPOMDP(env, params.numSamples), timeHorizon, params.numSimulationsPerSample, sampledActions, sampledNodes)
+            # envEvalFn = partial(evaluateSamplesMultiEnv, timeHorizon=timeHorizon, numSimulations=params.numSimulationsPerSample)
+            res = parallel.starmap(evaluateSamplesMultiEnv, [(MultiPOMDP(env, params.numSimulationsPerSample), timeHorizon, params.numSimulationsPerSample, sampledActions[:,i], sampledNodes[:,:,i]) for i in range(params.numSamples)])
+            values, stdDev = (np.array([ent[0] for ent in res]), np.array([ent[1] for ent in res]))
+            #values, stdDev = [(np.array(res[0]), np.array(res[1])) for res in parallel.starmap(evaluateSamplesMultiEnv, [(MultiPOMDP(env, params.numSimulationsPerSample), timeHorizon, params.numSimulationsPerSample, sampledActions[:,i], sampledNodes[:,:,i]) for i in range(params.numSamples)])]
+            # values, stdDev = evaluateSamplesMultiEnv(MultiPOMDP(env, params.numSamples), timeHorizon, params.numSimulationsPerSample, sampledActions, sampledNodes)
 
         # Save values
         allValues[iteration, :] = values
@@ -149,31 +153,30 @@ def evaluateSample(env, timeHorizon, numSimulations, actionTransitions, nodeObse
         values[sim] = value
     return values.mean(), values.std()
 
-# Evaluate multiple samples, starting from first node
+# Evaluate multiple trajectories for a sample, starting from first node
 # Inputs:
 #   env: MultiEnv environment in which to evaluate
 #   timeHorizon: Time horizon over which to evaluate
-#   actionTransitions: (numNodes,numSamples) int array of chosen actions for each node
-#   nodeObservationTransitions: (numObs, numNodes, numSamples) int array of chosen node transitions for obs
+#   actionTransitions: (numNodes,) int array of chosen actions for each node
+#   nodeObservationTransitions: (numObs, numNodes) int array of chosen node transitions for obs
 #  Output:
 #    allSampleValues: Discounted total return over timeHorizon (or until episode is done), averaged over all simulations, for each sample (numSamples,)
 #    stdDevs: Standard deviation of discounted total returns over all simulations, for each sample (numSamples,)
 def evaluateSamplesMultiEnv(env, timeHorizon, numSimulations, actionTransitions, nodeObservationTransitions):
     assert isinstance(env, MultiPOMDP)
+    numTrajectories = env.numTrajectories
     gamma = env.discount if env.discount is not None else 1
-    numSamples = actionTransitions.shape[-1]
-    sampleIndices = np.arange(numSamples)
-    allSampleValues = np.zeros((numSimulations, numSamples), dtype=np.float64)
-    for sim in range(numSimulations):
-        env.reset()
-        currentNodes = np.zeros(numSamples, dtype=np.int32)
-        currentTimestep = 0
-        values = np.zeros(numSamples, dtype=np.float64)
-        isDones = np.zeros(numSamples, dtype=bool)
-        while not all(isDones) and currentTimestep < timeHorizon:
-            obs, rewards, isDones = env.step(actionTransitions[currentNodes, sampleIndices])[:3]
-            currentNodes = nodeObservationTransitions[obs, currentNodes, sampleIndices]
-            values += rewards * (gamma ** currentTimestep)
-            currentTimestep += 1
-        allSampleValues[sim, :] = values
-    return allSampleValues.mean(axis=0), allSampleValues.std(axis=0)
+    trajectoryIndices = np.arange(numTrajectories)
+    allTrajectoryValues = np.zeros(numTrajectories, dtype=np.float64)
+    env.reset()
+    currentNodes = np.zeros(numTrajectories, dtype=np.int32)
+    currentTimestep = 0
+    values = np.zeros(numTrajectories, dtype=np.float64)
+    isDones = np.zeros(numTrajectories, dtype=bool)
+    while not all(isDones) and currentTimestep < timeHorizon:
+        obs, rewards, isDones = env.step(actionTransitions[currentNodes])[:3]
+        currentNodes = nodeObservationTransitions[obs, currentNodes]
+        values += rewards * (gamma ** currentTimestep)
+        currentTimestep += 1
+
+    return values.mean(axis=0), values.std(axis=0)
