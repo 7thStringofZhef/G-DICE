@@ -7,6 +7,7 @@
 #   numBestSamples: N_b number of samples to keep from each set of samples
 #   learningRate: 0-1 alpha value, learning rate at which controller shifts probabilities
 #   valueThreshold: If not None, ignore all samples with worse values, even if that means there aren't numBestSamples
+#   timeHorizon: If not None, run each sampled policy on the environment for this number of timesteps
 class GDICEParams(object):
     def __init__(self, numNodes=10, numIterations=30, numSamples=50, numSimulationsPerSample=1000, numBestSamples=5, learningRate=0.1, valueThreshold=None, timeHorizon=100):
         self.numNodes = numNodes
