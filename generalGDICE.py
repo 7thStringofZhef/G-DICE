@@ -60,7 +60,7 @@ def runGridSearchOnOneEnv(baseSavePath, envName):
             results = runGDICEOnEnvironment(env, FSCDist, params, parallel=pool, results=prevResults)
         except MemoryError:
             print(envName + ' too large for parallel processing. Switching to MultiEnv...', file=sys.stderr)
-            results = runGDICEOnEnvironment(env, FSCDist, params, parallel=None, results=prevResults)
+            results = runGDICEOnEnvironment(env, FSCDist, params, parallel=None, results=prevResults, baseDir=baseSavePath)
         except Exception as e:
             print(envName + ' encountered error in runnning' + params.name + ', skipping to next param', file=sys.stderr)
             print(e, file=sys.stderr)
@@ -101,7 +101,7 @@ def runGridSearchOnAllEnv(baseSavePath):
                 results = runGDICEOnEnvironment(env, FSCDist, params, parallel=pool, results=prevResults)
             except MemoryError:
                 print(envStr + ' too large for parallel processing. Switching to MultiEnv...', file=sys.stderr)
-                results = runGDICEOnEnvironment(env, FSCDist, params, parallel=None, results=prevResults)
+                results = runGDICEOnEnvironment(env, FSCDist, params, parallel=None, results=prevResults, baseDir=baseSavePath)
             except Exception as e:
                 print(envStr + ' encountered error in runnning' + params.name + ', skipping to next param', file=sys.stderr)
                 print(e, file=sys.stderr)

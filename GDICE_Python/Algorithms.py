@@ -11,7 +11,7 @@ from .Scripts import saveResults
 #   parallel: Attempt to use python multiprocessing across samples. If not None, should be a Pool object
 #   convergenceThreshold: If set, attempts to detect early convergence within a run and stop before all iterations are done
 #   saveFrequency: How frequently to save results in the middle of a run (numIterations between saves)
-def runGDICEOnEnvironment(env, controller, params, parallel=None, results=None, convergenceThreshold=0, saveFrequency=50):
+def runGDICEOnEnvironment(env, controller, params, parallel=None, results=None, convergenceThreshold=0, saveFrequency=50, baseDir=''):
     # Ensure controller matches environment
     assert env.action_space.n == controller.numActions
     assert env.observation_space.n == controller.numObservations
@@ -98,7 +98,7 @@ def runGDICEOnEnvironment(env, controller, params, parallel=None, results=None, 
 
         # Save occasionally so we don't lose everything in a crash. Saves relative to working dir
         if saveFrequency and iteration % saveFrequency == 0:
-            saveResults('', env.spec.id, params, (bestValue, bestValueVariance, bestActionProbs, bestNodeTransitionProbs,
+            saveResults(baseDir, env.spec.id, params, (bestValue, bestValueVariance, bestActionProbs, bestNodeTransitionProbs,
                                                controller, estimatedConvergenceIteration, allValues, allStdDev, bestValueAtEachIteration, bestStdDevAtEachIteration))
 
 
