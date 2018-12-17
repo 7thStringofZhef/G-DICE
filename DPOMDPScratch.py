@@ -35,7 +35,6 @@ class DPOMDP(gym.Env):
             self.D = model.reset.T.copy()  # only if episodic
 
         self.state = None
-        self._normalizeInit()
 
     def seed(self, seed):
         self.np_random, seed_ = seeding.np_random(seed)
