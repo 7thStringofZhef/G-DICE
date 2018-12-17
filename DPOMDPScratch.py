@@ -8,10 +8,12 @@ from gym import spaces
 class DPOMDP(gym.Env):
     """Environment specified by DPOMDP file"""
     def __init__(self, path, episodic=False, seed=None):
+        debug=False
+        #debug = True if 'skewed' in path else False
         self.episodic = episodic
         self.seed(seed)
         with open(path) as f:
-            model = parse(f.read())
+            model = parse(f.read(), debug=debug)
 
         self.discount = model.discount
         self.agents = len(model.agents)
@@ -73,11 +75,9 @@ class DPOMDP(gym.Env):
 if __name__=="__main__":
     pathToDPOMDPs = 'DPOMDPs'
     DPOMDPFileList = [os.path.join(pathToDPOMDPs, file) for file in os.listdir(pathToDPOMDPs)]
-    for dpom in DPOMDPFileList[1:]:
-        try:
-            testDPOMDP = DPOMDP(dpom, episodic=True)
-            testDPOMDP.reset()
-            testDPOMDP.step(np.arange(2))
-        except Exception as e:
-            print(dpom)
-            print(e)
+    for dpom in DPOMDPFileList:
+        if 'tiger' in dpom or 'example' in dpom:
+            continue
+        testDPOMDP = DPOMDP(dpom, episodic=True)
+        testDPOMDP.reset()
+        testDPOMDP.step(np.arange(2))

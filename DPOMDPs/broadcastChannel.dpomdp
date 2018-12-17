@@ -1,6 +1,5 @@
 # This is a Dec-POMDP (.dpomdp) file for the broadcast channel problem.
 # For more detailed documentation, see example.dpomdp
-
 # Allright, here we go!
 #
 #The agents. 
@@ -203,5 +202,3 @@ R: wait send : S11 : * : * : 1
 R: wait send : S10 : * : * : 0
 R: wait send : S01 : * : * : 1
 R: wait send : S00 : * : * : 0
-#
-

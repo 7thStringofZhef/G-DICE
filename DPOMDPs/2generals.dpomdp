@@ -1,7 +1,6 @@
 # This is a Dec-POMDP (.dpomdp) file for the Dec-Tiger problem.
 # For more detailed documentation, see test.dpomdp in the parser subdirectory 
 # (src/parser).
-
 # Allright, here we go!
 #
 #The agents. 

@@ -2,7 +2,6 @@
 # skewed meaning that the start distribution is 80%/20%
 # For more detailed documentation, see test.dpomdp in the parser subdirectory 
 # (src/parser).
-
 # Allright, here we go!
 #
 #The agents. 
