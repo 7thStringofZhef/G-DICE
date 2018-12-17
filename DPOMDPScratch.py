@@ -35,7 +35,7 @@ class DPOMDP(gym.Env):
             self.D = model.reset.T.copy()  # only if episodic
 
         self.state = None
-        #self._normalizeInit()
+        self._normalizeInit()
 
     def seed(self, seed):
         self.np_random, seed_ = seeding.np_random(seed)
@@ -69,17 +69,6 @@ class DPOMDP(gym.Env):
             self.state = state1
 
         return obs, reward, done, {}
-
-    # Some dpomdp files have rounding errors that mean probabilities don't sum to 1
-    # This fixes them
-    def _normalizeInit(self):
-        stateIndices = np.arange(self.state_space.n)
-        actionIndices = tuple([np.arange(aAct.n) for aAct in self.action_space])
-        self.T[stateIndices, (*actionIndices)] /= self.T[stateIndices, (*actionIndices)].sum()
-        self.O[stateIndices, (*actionIndices), stateIndices] /= self.O[stateIndices, (*actionIndices), stateIndices].sum()
-        
-
-
 
 
 if __name__=="__main__":
