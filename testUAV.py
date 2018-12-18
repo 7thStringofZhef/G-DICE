@@ -19,7 +19,7 @@ def runSimpleDomain():
     # tables of the best deterministic transitions, and the updated distribution of controllers
     bestValue, bestValueStdDev, bestActionTransitions, bestNodeObservationTransitions, updatedControllerDistribution, \
     estimatedConvergenceIteration, allValues, allStdDev = \
-        runGDICEOnEnvironment(env, controllerDistribution, testParams, parallel=pool)
+        runGDICEOnEnvironment(env, controllerDistribution, testParams, parallel=pool, envType=1)
 
     # Create a deterministic controller from the tables above
     bestDeterministicController = DeterministicFiniteStateController(bestActionTransitions,

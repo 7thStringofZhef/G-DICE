@@ -1,5 +1,6 @@
 import numpy as np
 from .Domains import MultiPOMDP
+from .GDICEEnvWrapper import GDICEEnvWrapper
 from .Scripts import saveResults
 
 # Run GDICE with controller(s) on an environment, given
@@ -11,10 +12,15 @@ from .Scripts import saveResults
 #   parallel: Attempt to use python multiprocessing across samples. If not None, should be a Pool object
 #   convergenceThreshold: If set, attempts to detect early convergence within a run and stop before all iterations are done
 #   saveFrequency: How frequently to save results in the middle of a run (numIterations between saves)
-def runGDICEOnEnvironment(env, controller, params, parallel=None, results=None, convergenceThreshold=0, saveFrequency=50, baseDir=''):
+#   baseDir: Where to save temp results relative to. Defaults to current directory
+#   envType: 0 if standard MultiPOMDP, anything else for GDICEEnvWrapper
+def runGDICEOnEnvironment(env, controller, params, parallel=None, results=None, convergenceThreshold=0, saveFrequency=50, baseDir='', envType=0):
     # Ensure controller matches environment
     assert env.action_space.n == controller.numActions
     assert env.observation_space.n == controller.numObservations
+
+    # Swap the wrapper function if using other type of environment
+    MultiEnvWrapper = GDICEEnvWrapper if envType else MultiPOMDP
 
     timeHorizon = params.timeHorizon
     if results is None:  # Not continuing previous results
@@ -43,12 +49,12 @@ def runGDICEOnEnvironment(env, controller, params, parallel=None, results=None, 
         # For each sampled action, evaluate in environment
         # For parallel, parallelize across simulations
         if parallel is not None:
-            res = parallel.starmap(evaluateSamplesMultiEnv, [(MultiPOMDP(env, params.numSimulationsPerSample),
+            res = parallel.starmap(evaluateSamplesMultiEnv, [(MultiEnvWrapper(env, params.numSimulationsPerSample),
                                                               timeHorizon, sampledActions[:, i],
                                                               sampledNodes[:, :, i]) for i in range(params.numSamples)])
             values, stdDev = (np.array([ent[0] for ent in res]), np.array([ent[1] for ent in res]))
         else:
-            multiEnv = MultiPOMDP(env, params.numSimulationsPerSample)
+            multiEnv = MultiEnvWrapper(env, params.numSimulationsPerSample)
             res = [evaluateSamplesMultiEnv(multiEnv, timeHorizon, sampledActions[:,i], sampledNodes[:,:,i]) for i in range(params.numSamples)]
             values, stdDev = (np.array([ent[0] for ent in res]), np.array([ent[1] for ent in res]))
 
@@ -179,7 +185,7 @@ def evaluateSample(env, timeHorizon, numSimulations, actionTransitions, nodeObse
 #    allSampleValues: Discounted total return over timeHorizon (or until episode is done), averaged over all simulations, for each sample (numSamples,)
 #    stdDevs: Standard deviation of discounted total returns over all simulations, for each sample (numSamples,)
 def evaluateSamplesMultiEnv(env, timeHorizon, actionTransitions, nodeObservationTransitions):
-    assert isinstance(env, MultiPOMDP)
+    # assert isinstance(env, MultiPOMDP)
     numTrajectories = env.numTrajectories
     gamma = env.discount if env.discount is not None else 1
     env.reset()
