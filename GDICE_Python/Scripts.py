@@ -80,7 +80,7 @@ def deleteFinishedTempResults(basedirs=np.arange(1,11,dtype=int)):
                 if checkIfFinished(envStr, params.name, baseDir=rundir):  # if run is finished
                     # Delete the temp results
                     try:
-                        for filename in glob.glob(os.path.join(rundir, 'GDICEResults', params.name) + '*'):
+                        for filename in glob.glob(os.path.join(str(rundir), 'GDICEResults', params.name) + '*'):
                             os.remove(filename)
                     except:
                         continue
