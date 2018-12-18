@@ -70,14 +70,3 @@ class DPOMDP(gym.Env):
             self.state = state1
 
         return obs, reward, done, {}
-
-
-if __name__=="__main__":
-    pathToDPOMDPs = 'DPOMDPs'
-    DPOMDPFileList = [os.path.join(pathToDPOMDPs, file) for file in os.listdir(pathToDPOMDPs)]
-    for dpom in DPOMDPFileList:
-        if 'example' in dpom:
-            continue
-        testDPOMDP = DPOMDP(dpom, episodic=True)
-        testDPOMDP.reset()
-        testDPOMDP.step(np.arange(2))
