@@ -3,6 +3,8 @@ import unittest
 import gym
 import gym_dpomdps
 
+import numpy as np
+
 
 class GymDPOMDPs_Test(unittest.TestCase):
     def test_list_dpomdps(self):
@@ -27,9 +29,7 @@ class GymDPOMDPs_Test(unittest.TestCase):
         env = gym.make('DPOMDP-dectiger-v0')
 
         seed = 17
-        actions = []
         actions = [(i,j) for i in range(env.action_space[0].n) for j in range(env.action_space[1].n)]*10
-        #actions = [list(range(env.action_space[0].n)), list(range(env.action_space[1].n))] * 10
 
         env.seed(seed)
         env.reset()
@@ -39,3 +39,12 @@ class GymDPOMDPs_Test(unittest.TestCase):
         env.reset()
         outputs2 = list(map(env.step, actions))
         self.assertEqual(outputs, outputs2)
+
+    def test_multi(self):
+        env = gym.make('DPOMDP-recycling-v0')
+        multiEnv = gym_dpomdps.MultiDPOMDP(env, 50)
+        for timestep in range(50):
+            agent1Actions = np.random.choice(np.arange(env.action_space[0].n, dtype=int), 50)
+            agent2Actions = np.random.choice(np.arange(env.action_space[1].n, dtype=int), 50)
+            actions = np.stack((agent1Actions, agent2Actions), axis=1)
+            obs, rewards, done, _ = multiEnv.step(actions)

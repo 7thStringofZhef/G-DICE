@@ -48,25 +48,20 @@ class MultiDPOMDP(gym.Wrapper):
         # Reduced list based on which workers are done. If env is not episodic, this will still work
         validStates = self.state[notDoneIndices]
         validActions = actions[notDoneIndices, :]
-        validActionIndices = tuple(np.split(validActions, self.nAgents, axis=1))
+        validActionIndices = tuple(aAct.flatten() for aAct in np.split(validActions, self.nAgents, axis=1))
         validNewStates = np.array([self.np_random.multinomial(1, p).argmax()
-                                   for p in self.env.T[validStates,
-                                                       (*validActionIndices)]])
-        validObs = np.array([self.np_random.multinomial(1, p).argmax()
-                             for p in self.env.O[validStates,
-                                                 (*validActionIndices),
-                                                 validNewStates]])
-        validRewards = np.array(self.env.R[validStates,
-                                           (*validActionIndices),
-                                           validNewStates,
-                                           (*tuple(np.split(validObs, self.nAgents, axis=1)))])
+                                   for p in self.env.T[validStates, (*validActionIndices)]])
+        validObs = np.array([self.np_random.multinomial(1, p.flatten()).argmax()
+                             for p in self.env.O[validStates, (*validActionIndices), validNewStates]])
+        validObs = np.unravel_index(validObs, self.env.O.shape[-self.nAgents:])  # Convert back to indices for each observation
+        validRewards = np.array(self.env.R[validStates, (*validActionIndices), validNewStates, (*validObs)])
         if self.env.episodic:
-            done[notDoneIndices] = self.env.D[self.state, (*tuple(np.split(actions, self.nAgents, axis=1)))]
+            done[notDoneIndices] = self.env.D[self.state, (*validActionIndices)]
         else:
             done *= False
 
         newStates[notDoneIndices], newStates[doneIndices] = validNewStates, -1
-        obs[notDoneIndices, :], obs[doneIndices, :] = validObs, -1
+        obs[notDoneIndices, :], obs[doneIndices, :] = np.array(validObs).T, -1
         rewards[notDoneIndices], rewards[doneIndices] = validRewards, 0.0
         self.state = newStates
 

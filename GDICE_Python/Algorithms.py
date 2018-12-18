@@ -168,7 +168,7 @@ def evaluateSample(env, timeHorizon, numSimulations, actionTransitions, nodeObse
         isDone = False
         value = 0.0
         while not isDone and currentTimestep < timeHorizon:
-            obs, reward, isDone = env.step(actionTransitions[currentNodeIndex])
+            obs, reward, isDone = env.step(actionTransitions[currentNodeIndex])[:3]
             currentNodeIndex = nodeObservationTransitions[obs, currentNodeIndex]
             value += reward * (gamma ** currentTimestep)
             currentTimestep += 1
