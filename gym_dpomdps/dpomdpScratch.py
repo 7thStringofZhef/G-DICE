@@ -68,17 +68,19 @@ def _initGDICERunVariables(params):
 #    allSampleValues: Discounted total return over timeHorizon (or until episode is done), averaged over all simulations, for each sample (numSamples,)
 #    stdDevs: Standard deviation of discounted total returns over all simulations, for each sample (numSamples,)
 def evaluateSamplesMultiEnv(env, timeHorizon, actionTransitions, nodeObservationTransitions):
-    # assert isinstance(env, MultiPOMDP)
+    assert isinstance(env, MultiDPOMDP)
     nTrajectories = env.nTrajectories
+    nAgents = env.agents
     gamma = env.discount if env.discount is not None else 1
     env.reset()
-    currentNodes = np.zeros(nTrajectories, dtype=np.int32)
+    currentNodes = [np.zeros(nTrajectories, dtype=np.int32) for _ in range(nAgents)]  # 50*2
     currentTimestep = 0
     values = np.zeros(nTrajectories, dtype=np.float64)
     isDones = np.zeros(nTrajectories, dtype=bool)
     while not all(isDones) and currentTimestep < timeHorizon:
-        obs, rewards, isDones = env.step(actionTransitions[currentNodes])[:3]
-        currentNodes = nodeObservationTransitions[obs, currentNodes]
+        jointActions = np.stack([actionTransitions[currentNodes[i], i] for i in range(nAgents)], axis=1)
+        obs, rewards, isDones = env.step(jointActions)[:3]  # Want a 50*2
+        currentNodes = [nodeObservationTransitions[obs[:,i], currentNodes[i], i] for i in range(nAgents)]
         values += rewards * (gamma ** currentTimestep)
         currentTimestep += 1
 
@@ -86,6 +88,15 @@ def evaluateSamplesMultiEnv(env, timeHorizon, actionTransitions, nodeObservation
 
 if __name__=="__main__":
     env = gym.make(list_dpomdps()[1])
+    multiEnv = MultiDPOMDP(env, 50)
     controller1 = FiniteStateControllerDistribution(10, env.action_space[0].n, env.observation_space[0].n)
     controller2 = FiniteStateControllerDistribution(10, env.action_space[1].n, env.observation_space[1].n)
+    controllers = [controller1, controller2]
+
+    sampledActions = np.stack([controller.sampleActionFromAllNodes(50) for controller in controllers], axis=-1)  # numNodes*numSamples*numAgents
+    sampledNodes = np.stack([controller.sampleAllObservationTransitionsFromAllNodes(50) for controller in controllers], axis=-1)  # numObs*numBeginNodes*numSamples*numAgents
+    iterActions = sampledActions[:, 0, :]  # numNodes*numAgents (10*2)
+    iterObs = sampledNodes[:, :, 0, :]  # numobs*numStartNodes*numAgents
+    test = evaluateSamplesMultiEnv(multiEnv, 50, iterActions, iterObs)
+    pass
 
