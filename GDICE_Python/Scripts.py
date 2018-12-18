@@ -61,7 +61,7 @@ def loadResults(filePath):
 #   It's finished if its files can be found in the end results directory (instead of the temp)
 #   Returns whether it's finished as well as the filename
 def checkIfFinished(envStr, paramsName, endDir='EndResults', baseDir=''):
-    npzName = os.path.join(baseDir, endDir, envStr, paramsName+'.npz')
+    npzName = os.path.join(baseDir, endDir, 'GDICEResults', envStr, paramsName+'.npz')
     return os.path.isfile(npzName), npzName
 
 # Check if a particular permutation is partially run
@@ -77,12 +77,20 @@ def deleteFinishedTempResults(basedirs=np.arange(1,11,dtype=int)):
     for rundir in basedirs:
         for envStr in envList:
             for params in GDICEList:
-                if checkIfFinished(envStr, params.name, baseDir=str(rundir)):  # if run is finished
+                if checkIfFinished(envStr, params.name, baseDir=str(rundir))[0]:  # if run is finished
                     # Delete the temp results
                     try:
                         for filename in glob.glob(os.path.join(str(rundir), 'GDICEResults', params.name) + '*'):
                             os.remove(filename)
                     except:
                         continue
+
+def replaceResultsWithDummyFiles(baseDirs = np.arange(1,11,dtype=int), endDir='EndResults'):
+    for dir in baseDirs:
+        startPath = os.path.join(str(dir), endDir, 'GDICEResults')
+        for envDir in os.listdir(startPath):
+            envPath = os.path.join(startPath, envDir)
+            for file in os.listdir(envPath):
+                open(file, 'w').close()  # replace with blank file of same name
 
 

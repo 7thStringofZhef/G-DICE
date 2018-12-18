@@ -69,7 +69,7 @@ def runGridSearchOnOneEnv(baseSavePath, envName):
         saveResults(os.path.join(baseSavePath, 'EndResults'), envName, params, results)
         # Delete the temp results
         try:
-            for filename in glob.glob(os.path.join(baseSavePath, 'GDICEResults', params.name)+'*'):
+            for filename in glob.glob(os.path.join(baseSavePath, 'GDICEResults', envName, params.name)+'*'):
                 os.remove(filename)
         except:
             continue
@@ -117,7 +117,7 @@ def runGridSearchOnAllEnv(baseSavePath):
             saveResults(os.path.join(baseSavePath, 'EndResults'), envStr, params, results)
             # Delete the temp results
             try:
-                for filename in glob.glob(os.path.join(baseSavePath, 'GDICEResults', params.name) + '*'):
+                for filename in glob.glob(os.path.join(baseSavePath, 'GDICEResults', envStr, params.name) + '*'):
                     os.remove(filename)
             except:
                 continue
