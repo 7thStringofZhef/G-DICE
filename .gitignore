@@ -11,3 +11,5 @@ GDICE_Python/__pycache__/
 *.eps
 *.jpg
 
+
+gym_dpomdps/\.cache/v/cache/
