@@ -58,7 +58,7 @@ def runGridSearchOnOneEnv(baseSavePath, envName):
                                                         env.observation_space.n)
         env.reset()
         try:
-            results = runGDICEOnEnvironment(env, FSCDist, params, parallel=pool, results=prevResults)
+            results = runGDICEOnEnvironment(env, FSCDist, params, parallel=pool, results=prevResults, baseDir=baseSavePath)
         except MemoryError:
             print(envName + ' too large for parallel processing. Switching to MultiEnv...', file=sys.stderr)
             results = runGDICEOnEnvironment(env, FSCDist, params, parallel=None, results=prevResults, baseDir=baseSavePath)
@@ -105,7 +105,7 @@ def runGridSearchOnAllEnv(baseSavePath):
                                                             env.observation_space.n)
             env.reset()
             try:
-                results = runGDICEOnEnvironment(env, FSCDist, params, parallel=pool, results=prevResults)
+                results = runGDICEOnEnvironment(env, FSCDist, params, parallel=pool, results=prevResults, baseDir=baseSavePath)
             except MemoryError:
                 print(envStr + ' too large for parallel processing. Switching to MultiEnv...', file=sys.stderr)
                 results = runGDICEOnEnvironment(env, FSCDist, params, parallel=None, results=prevResults, baseDir=baseSavePath)
