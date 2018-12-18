@@ -186,7 +186,7 @@ def evaluateSample(env, timeHorizon, numSimulations, actionTransitions, nodeObse
 #    stdDevs: Standard deviation of discounted total returns over all simulations, for each sample (numSamples,)
 def evaluateSamplesMultiEnv(env, timeHorizon, actionTransitions, nodeObservationTransitions):
     # assert isinstance(env, MultiPOMDP)
-    numTrajectories = env.numTrajectories
+    numTrajectories = env.nTrajectories
     gamma = env.discount if env.discount is not None else 1
     env.reset()
     currentNodes = np.zeros(numTrajectories, dtype=np.int32)

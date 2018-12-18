@@ -9,7 +9,7 @@ class MultiPOMDP(gym.Wrapper):
     def __init__(self, env, numTrajectories):
         assert isinstance(env, POMDP)
         super().__init__(env)
-        self.numTrajectories = numTrajectories
+        self.nTrajectories = numTrajectories
         self.reset()
 
     def __getattr__(self, attr):
@@ -18,41 +18,31 @@ class MultiPOMDP(gym.Wrapper):
     def reset(self):
         if self.env.start is None:
             self.state = self.np_random.randint(
-                self.state_space.n, size=self.numTrajectories)
+                self.state_space.n, size=self.nTrajectories)
         else:
             self.state = self.np_random.multinomial(
-                1, self.env.start/np.sum(self.env.start), size=self.numTrajectories).argmax(1)
+                1, self.env.start/np.sum(self.env.start), size=self.nTrajectories).argmax(1)
 
-    # Step given an nparray or list of actions
+    # Step given an nparray of actions
     # Input:
-    #   actions: If scalar, apply to all trajectories
-    #            If tuple, first item is action, second is trajectory index. Apply to one trajectory
-    #            If nparray, apply to all states
+    #   actions: nparray, apply to all states
     # Output:
     #   obs: nparray of observation indices for each trajectory. -1 for completed trajectories
     #   rewards: nparray of rewards for each trajectory
     #   done: nparray of whether a particular trajectory is done
     def step(self, actions):
-        # Scalar action given, apply to all
-        if np.isscalar(actions):
-            actions = np.full(self.numTrajectories, actions, dtype=np.int32)
-
-        # Tuple of (action, index) given, step for one worker only (for multithreaded applications)
-        if isinstance(actions, tuple) and len(actions) == 2:
-            return self._stepForSingleWorker(int(actions[0]), int(actions[1]))
-
         # Make sure numpy array is appropriate size
-        assert actions.shape[0] == self.numTrajectories
+        assert actions.shape[0] == self.nTrajectories
 
         # For each agent that is done, return nothing
         doneIndices = np.nonzero(self.state == -1)[0]
         notDoneIndices = np.nonzero(self.state != -1)[0]
 
         # Blank init. Invalid states/obs, 0 reward, all done
-        newStates = np.zeros(self.numTrajectories, dtype=np.int32)
-        obs = np.zeros(self.numTrajectories,  dtype=np.int32)
-        rewards = np.zeros(self.numTrajectories, dtype=np.float64)
-        done = np.ones(self.numTrajectories, dtype=bool)
+        newStates = np.zeros(self.nTrajectories, dtype=np.int32)
+        obs = np.zeros(self.nTrajectories, dtype=np.int32)
+        rewards = np.zeros(self.nTrajectories, dtype=np.float64)
+        done = np.ones(self.nTrajectories, dtype=bool)
 
         # Reduced list based on which workers are done. If env is not episodic, this will still work
         validStates = self.state[notDoneIndices]
@@ -71,29 +61,6 @@ class MultiPOMDP(gym.Wrapper):
         self.state = newStates
 
         return obs, rewards, done, {}
-
-    # If multiprocessing, each worker will provide its trajectory index and desired action
-    def _stepForSingleWorker(self, action, trajectoryIndex):
-        currState = self.state[trajectoryIndex]
-
-        # If this worker's episode is finished, return nothing
-        if currState is None:
-            return -1, 0.0, True, {}
-
-        newState = self.np_random.multinomial(1, self.env.T[currState, action]).argmax()
-        obs = self.np_random.multinomial(1, self.env.O[currState, action, newState]).argmax()
-        reward = self.env.R[currState, action, newState, obs]
-        if self.env.episodic:
-            done = self.env.D[currState, action]
-        else:
-            done = False
-
-        if done:
-            self.state[trajectoryIndex] = -1
-        else:
-            self.state[trajectoryIndex] = newState
-
-        return obs, reward, done, {}
 
 
 class PackageDeliveryEnvironment(gym.Env):
