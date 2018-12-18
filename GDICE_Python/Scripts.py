@@ -3,6 +3,7 @@ from gym_pomdps import list_pomdps
 from .Parameters import GDICEParams
 import os
 import pickle
+import glob
 
 
 # Define a list of GDICE parameter objects that permute the variables across the possible values
@@ -69,3 +70,19 @@ def checkIfFinished(envStr, paramsName, endDir='EndResults', baseDir=''):
 def checkIfPartial(envStr, paramsName, tempDir='GDICEResults', baseDir=''):
     npzName = os.path.join(baseDir, tempDir, envStr, paramsName+'.npz')
     return os.path.isfile(npzName), npzName
+
+# Attempt to delete all temp results for runs that are finished
+def deleteFinishedTempResults(basedirs=np.arange(1,11,dtype=int)):
+    envList, GDICEList = getGridSearchGDICEParams()
+    for rundir in basedirs:
+        for envStr in envList:
+            for params in GDICEList:
+                if checkIfFinished(envStr, params.name, baseDir=rundir):  # if run is finished
+                    # Delete the temp results
+                    try:
+                        for filename in glob.glob(os.path.join(rundir, 'GDICEResults', params.name) + '*'):
+                            os.remove(filename)
+                    except:
+                        continue
+
+

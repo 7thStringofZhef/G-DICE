@@ -7,6 +7,7 @@ from GDICE_Python.Parameters import GDICEParams
 from GDICE_Python.Controllers import FiniteStateControllerDistribution, DeterministicFiniteStateController
 from GDICE_Python.Algorithms import runGDICEOnEnvironment
 from GDICE_Python.Scripts import getGridSearchGDICEParams, saveResults, loadResults, checkIfFinished, checkIfPartial
+import glob
 
 
 def runBasic():
@@ -66,6 +67,12 @@ def runGridSearchOnOneEnv(baseSavePath, envName):
             print(e, file=sys.stderr)
             continue
         saveResults(os.path.join(baseSavePath, 'EndResults'), envName, params, results)
+        # Delete the temp results
+        try:
+            for filename in glob.glob(os.path.join(baseSavePath, 'GDICEResults', params.name)+'*'):
+                os.remove(filename)
+        except:
+            continue
 
 
 # Run a grid search on all registered environments
@@ -108,6 +115,13 @@ def runGridSearchOnAllEnv(baseSavePath):
                 continue
 
             saveResults(os.path.join(baseSavePath, 'EndResults'), envStr, params, results)
+            # Delete the temp results
+            try:
+                for filename in glob.glob(os.path.join(baseSavePath, 'GDICEResults', params.name) + '*'):
+                    os.remove(filename)
+            except:
+                continue
+
 
 
 if __name__ == "__main__":
