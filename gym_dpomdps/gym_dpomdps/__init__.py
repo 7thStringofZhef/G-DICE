@@ -4,7 +4,7 @@ from .wrappers import MultiDPOMDP
 from .envs.registration import register, env_list
 
 
-def list_pomdps():
+def list_dpomdps():
     return list(env_list)
 
 
@@ -20,7 +20,7 @@ for fname in fnames:
 
     register(
         id=f'DPOMDP-{name}-v0',
-        entry_point='gym_dpomdps.envs:dPOMDP',
+        entry_point='gym_dpomdps.envs:DPOMDP',
         kwargs=dict(path=fpath, episodic=False),
     )
 

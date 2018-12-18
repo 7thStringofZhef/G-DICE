@@ -48,7 +48,10 @@ class DPOMDP(gym.Env):
     # Take an nparray or tuple of actions, not just 1
     def step(self, actions):
         assert self.state is not None, 'State has not been initialized'
-        assert actions.shape[0] == self.agents, 'Must provide joint action'
+        if isinstance(actions, (list, tuple)):
+            assert len(actions) == self.agents, 'Must provide joint action'
+        else:
+            assert actions.shape[0] == self.agents, 'Must provide joint action'
 
         state1 = self.np_random.multinomial(
             1, self.T[self.state, (*actions)]).argmax().item()
