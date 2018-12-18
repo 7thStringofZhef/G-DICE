@@ -76,7 +76,7 @@ if __name__=="__main__":
     pathToDPOMDPs = 'DPOMDPs'
     DPOMDPFileList = [os.path.join(pathToDPOMDPs, file) for file in os.listdir(pathToDPOMDPs)]
     for dpom in DPOMDPFileList:
-        if 'tiger' in dpom or 'example' in dpom:
+        if 'example' in dpom:
             continue
         testDPOMDP = DPOMDP(dpom, episodic=True)
         testDPOMDP.reset()
