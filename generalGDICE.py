@@ -16,7 +16,7 @@ def runBasicDPOMDP():
     controllers = [FiniteStateControllerDistribution(testParams.numNodes[a], env.action_space[a].n, env.observation_space[a].n) for a in range(env.agents)]
     pool = Pool()
     bestValue, bestValueStdDev, bestActionTransitions, bestNodeObservationTransitions, updatedControllerDistribution, \
-    estimatedConvergenceIteration, allValues, allStdDev = \
+    estimatedConvergenceIteration, allValues, allStdDev, bestValueAtEachIteration, bestStdDevAtEachIteration = \
         runGDICEOnEnvironment(env, controllers, testParams, parallel=pool)
 
 def runBasic():
@@ -30,7 +30,7 @@ def runBasic():
     # Run GDICE. Return the best average value, its standard deviation,
     # tables of the best deterministic transitions, and the updated distribution of controllers
     bestValue, bestValueStdDev, bestActionTransitions, bestNodeObservationTransitions, updatedControllerDistribution, \
-    estimatedConvergenceIteration, allValues, allStdDev = \
+    estimatedConvergenceIteration, allValues, allStdDev, bestValueAtEachIteration, bestStdDevAtEachIteration = \
         runGDICEOnEnvironment(env, controllerDistribution, testParams, parallel=pool)
 
     # Create a deterministic controller from the tables above

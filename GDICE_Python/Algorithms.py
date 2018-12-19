@@ -83,7 +83,7 @@ def runGDICEOnEnvironment(env, controller, params, parallel=None, results=None, 
 
 
         # For each controller, for each node, update using best samples
-        updateControllerDistribution(controller, sampledActions[:,bestSampleIndices], sampledNodes[:,:,bestSampleIndices], params.learningRate)
+        updateControllerDistribution(controller, sampledActions[:,bestSampleIndices, :], sampledNodes[:,:,bestSampleIndices, :], params.learningRate)
         print('After '+str(iteration+1) + ' iterations, best (discounted) value is ' + str(bestValue) + ' with standard deviation ' +str(bestValueVariance))
         bestValueAtEachIteration[iteration] = bestValue
         bestStdDevAtEachIteration[iteration] = bestValueVariance

@@ -14,13 +14,13 @@ from multiprocessing import Pool
 import gym
 
 def runBasicDPOMDP():
-    envName = 'DPOMDP-recycling-v0'
+    envName = 'DPOMDP-dectiger-v0'
     env = gym.make(envName)
     testParams = GDICEParams([10, 10])
     controllers = [FiniteStateControllerDistribution(testParams.numNodes[a], env.action_space[a].n, env.observation_space[a].n) for a in range(env.agents)]
     pool = Pool()
     bestValue, bestValueStdDev, bestActionTransitions, bestNodeObservationTransitions, updatedControllerDistribution, \
-    estimatedConvergenceIteration, allValues, allStdDev = \
+    estimatedConvergenceIteration, allValues, allStdDev, bestValueAtEachIteration, bestStdDevAtEachIteration = \
         runGDICEOnEnvironment(env, controllers, testParams, parallel=pool)
 
 def _initGDICERunVariables(params):

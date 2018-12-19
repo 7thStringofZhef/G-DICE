@@ -18,7 +18,7 @@ def sampleFromControllerDistribution(controller, numSamples):
 def updateControllerDistribution(controller, sActions, sNodeObs, lr):
     if isinstance(controller, (list, tuple)):
         for a in range(len(controller)):
-            controller[a].updateProbabilitiesFromSamples(sActions[:, a], sNodeObs[:, a], lr)
+            controller[a].updateProbabilitiesFromSamples(sActions[:, a], sNodeObs[:, :, a], lr)
     else:
         controller.updateProbabilitiesFromSamples(sActions, sNodeObs, lr)
 
