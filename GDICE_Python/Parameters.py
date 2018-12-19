@@ -1,6 +1,6 @@
 # GDICE parameter object
 # Inputs:
-#   numNodes: N_n number of nodes for the FSC used by GDICE
+#   numNodes: N_n number of nodes for the FSC used by GDICE. Can also be a list/tuple/ndarray for each controller
 #   numIterations: N_k number of iterations of GDICE to perform
 #   numSamples: N_s number of samples to take for each iteration from each node
 #   numSimulationsPerSample: Number of times to run the environment for each sampled controller. Values will be averaged over these runs
@@ -22,7 +22,14 @@ class GDICEParams(object):
 
     # Name for use in saving files
     def buildName(self):
-        self.name = 'N' + str(self.numNodes) + '_K' + str(self.numIterations) + '_S' + str(self.numSamples) + '_sim' + \
+        # use this for DPOMDPs
+        nodeStr = ''
+        if isinstance(self.numNodes, (list, tuple)):
+            nodeStr += '[' + '_'.join([str(n) for n in self.numNodes]) + ']'
+        else:
+            nodeStr += str(self.numNodes)
+
+        self.name = 'N' + nodeStr + '_K' + str(self.numIterations) + '_S' + str(self.numSamples) + '_sim' + \
                     str(self.numSimulationsPerSample) + '_B' + str(self.numBestSamples) + '_lr' + \
                     str(self.learningRate) + '_vT' + ('None' if self.valueThreshold is None else str(self.valueThreshold)) + \
                                                                                                 '_tH' + str(self.timeHorizon)

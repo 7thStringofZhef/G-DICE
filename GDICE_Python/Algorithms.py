@@ -1,7 +1,11 @@
 import numpy as np
 from .Domains import MultiPOMDP
+from gym_dpomdps import MultiDPOMDP
 from .GDICEEnvWrapper import GDICEEnvWrapper
 from .Scripts import saveResults
+from .Evaluation import *
+from .Utils import _initGDICERunVariables, _parsePartialResultsToGDICERunVariables, _checkEnv, _checkControllerDist, \
+    sampleFromControllerDistribution, updateControllerDistribution
 
 # Run GDICE with controller(s) on an environment, given
 # Inputs:
@@ -15,18 +19,25 @@ from .Scripts import saveResults
 #   baseDir: Where to save temp results relative to. Defaults to current directory
 #   envType: 0 if standard MultiPOMDP, anything else for GDICEEnvWrapper
 def runGDICEOnEnvironment(env, controller, params, parallel=None, results=None, convergenceThreshold=0, saveFrequency=50, baseDir='', envType=0):
+    nAgents, nActions, nObs = _checkEnv(env)
+    nNodes, nActionsC, nObsC = _checkControllerDist(controller)
     # Ensure controller matches environment
-    assert env.action_space.n == controller.numActions
-    assert env.observation_space.n == controller.numObservations
+    assert nActions == nActionsC and nObs == nObsC
+    # Ensure params match controllers
+    if isinstance(nNodes, int): assert nNodes == params.numNodes
+    else: assert tuple(nNodes) == tuple(params.numNodes)
+
+    # Choose appropriate evaluation function
+    envEvalFn = evaluateSampleMultiDPOMDP if nAgents > 1 else evaluateSampleMultiPOMDP
 
     # Swap the wrapper function if using other type of environment
-    MultiEnvWrapper = GDICEEnvWrapper if envType else MultiPOMDP
+    MultiEnvWrapper = GDICEEnvWrapper if envType else MultiPOMDP if nAgents==1 else MultiDPOMDP
 
     timeHorizon = params.timeHorizon
     if results is None:  # Not continuing previous results
         # Reset controller
-        controller.reset()
-
+        if nAgents == 1: controller.reset()
+        else: [c.reset() for c in controller]
         # Start variables
         bestValue, bestValueVariance, bestActionProbs, bestNodeTransitionProbs, estimatedConvergenceIteration, \
         allValues, allStdDev, bestValueAtEachIteration, bestStdDevAtEachIteration, startIter, \
@@ -34,28 +45,23 @@ def runGDICEOnEnvironment(env, controller, params, parallel=None, results=None, 
     else:  # Continuing
         bestValue, bestValueVariance, bestActionProbs, bestNodeTransitionProbs, estimatedConvergenceIteration, \
         allValues, allStdDev, bestValueAtEachIteration, bestStdDevAtEachIteration, startIter, \
-        worstValueOfPreviousIteration =_parsePartialResultsToVars(params, results)
+        worstValueOfPreviousIteration =_parsePartialResultsToGDICERunVariables(params, results)
 
 
+    iterBestValue = np.NINF  # What is the most recently seen best controller value
     for iteration in range(startIter, params.numIterations):
-        controllerChange = False  # Did the controller change this iteration?
-        iterBestValue = np.NINF  # What is the most recently seen best controller value
-        # For each node in controller, sample actions
-        sampledActions = controller.sampleActionFromAllNodes(params.numSamples)  # numNodes*numSamples
-
-        # For each node, observation in controller, sample next node
-        sampledNodes = controller.sampleAllObservationTransitionsFromAllNodes(params.numSamples)  # numObs*numBeginNodes*numSamples
+        sampledActions, sampledNodes = sampleFromControllerDistribution(controller, params.numSamples)
 
         # For each sampled action, evaluate in environment
         # For parallel, parallelize across simulations
         if parallel is not None:
-            res = parallel.starmap(evaluateSamplesMultiEnv, [(MultiEnvWrapper(env, params.numSimulationsPerSample),
+            res = parallel.starmap(envEvalFn, [(MultiEnvWrapper(env, params.numSimulationsPerSample),
                                                               timeHorizon, sampledActions[:, i],
                                                               sampledNodes[:, :, i]) for i in range(params.numSamples)])
             values, stdDev = (np.array([ent[0] for ent in res]), np.array([ent[1] for ent in res]))
         else:
             multiEnv = MultiEnvWrapper(env, params.numSimulationsPerSample)
-            res = [evaluateSamplesMultiEnv(multiEnv, timeHorizon, sampledActions[:,i], sampledNodes[:,:,i]) for i in range(params.numSamples)]
+            res = [envEvalFn(multiEnv, timeHorizon, sampledActions[:,i], sampledNodes[:,:,i]) for i in range(params.numSamples)]
             values, stdDev = (np.array([ent[0] for ent in res]), np.array([ent[1] for ent in res]))
 
         # Save values
@@ -63,33 +69,22 @@ def runGDICEOnEnvironment(env, controller, params, parallel=None, results=None, 
         allStdDev[iteration, :] = stdDev
 
         # Find N_b best policies
-        bestSampleIndices = values.argsort()[-params.numBestSamples:]
-        bestValues = values[bestSampleIndices]
-        sortedStdDev = stdDev[bestSampleIndices]
+        bestValues, bestSampleIndices, bestValue, bestValueVariance, controllerChange = \
+            _reduceSamplesToBest(values, stdDev, bestValue, bestValueVariance, params.numBestSamples, worstValueOfPreviousIteration)
 
-        # Save best policy (if better than overall previous)
-        if bestValue < bestValues[-1]:
-            controllerChange = True
-            bestValue = bestValues[-1]
-            bestValueVariance = sortedStdDev[-1]
+        # Update latest controller if best value changed
+        if controllerChange:
             bestActionProbs = sampledActions[:, bestSampleIndices[-1]]
             bestNodeTransitionProbs = sampledNodes[:, :, bestSampleIndices[-1]]
 
-        # Throw away policies below value threshold (worst best value of previous iteration)
-        keepIndices = np.where(bestValues >= worstValueOfPreviousIteration)[0]
-        bestValues = bestValues[keepIndices]
-        bestSampleIndices = bestSampleIndices[keepIndices]
-
         #If we're using a value threshold, also throw away iterations below that
         if params.valueThreshold is not None:
-            keepIndices = np.where(bestValues >= params.valueThreshold)[0]
-            bestValues = bestValues[keepIndices]
-            bestSampleIndices = bestSampleIndices[keepIndices]
+            bestSampleIndices = _applyValueThreshold(params.valueThreshold, bestValues, bestSampleIndices)
 
 
-        # For each node, update using best samples
-        controller.updateProbabilitiesFromSamples(sampledActions[:,bestSampleIndices], sampledNodes[:,:,bestSampleIndices], params.learningRate)
-        print('After '+str(iteration+1) + ' iterations, best (discounted) value is ' + str(bestValue) + 'with standard deviation '+str(bestValueVariance))
+        # For each controller, for each node, update using best samples
+        updateControllerDistribution(controller, sampledActions[:,bestSampleIndices], sampledNodes[:,:,bestSampleIndices], params.learningRate)
+        print('After '+str(iteration+1) + ' iterations, best (discounted) value is ' + str(bestValue) + ' with standard deviation ' +str(bestValueVariance))
         bestValueAtEachIteration[iteration] = bestValue
         bestStdDevAtEachIteration[iteration] = bestValueVariance
         # If the value stops improving, maybe we've converged?
@@ -112,91 +107,33 @@ def runGDICEOnEnvironment(env, controller, params, parallel=None, results=None, 
     return bestValue, bestValueVariance, bestActionProbs, bestNodeTransitionProbs, controller, \
            estimatedConvergenceIteration, allValues, allStdDev, bestValueAtEachIteration, bestStdDevAtEachIteration
 
-def _initGDICERunVariables(params):
-    # Start variables
-    bestActionProbs = None
-    bestNodeTransitionProbs = None
-    bestValue = np.NINF
-    bestValueAtEachIteration = np.full(params.numIterations, np.nan, dtype=np.float64)
-    bestStdDevAtEachIteration = np.full(params.numIterations, np.nan, dtype=np.float64)
-    bestValueVariance = 0
-    worstValueOfPreviousIteration = np.NINF
-    allValues = np.zeros((params.numIterations, params.numSamples), dtype=np.float64)
-    allStdDev = np.zeros((params.numIterations, params.numSamples), dtype=np.float64)
-    estimatedConvergenceIteration = 0
-    startIter = 0
-    return bestValue, bestValueVariance, bestActionProbs, bestNodeTransitionProbs, estimatedConvergenceIteration, \
-    allValues, allStdDev, bestValueAtEachIteration, bestStdDevAtEachIteration, startIter, worstValueOfPreviousIteration
+
+# Return the best N_b samples. Update the best value if it changes, return whether best tables need to be updated
+def _reduceSamplesToBest(sampleValues, sampleStdDev, bestValue, bestValueVariance, numBestSamples, worstValueOfPreviousIteration):
+    # Find N_b best policies
+    bestSampleIndices = sampleValues.argsort()[-numBestSamples:]
+    bestValues = sampleValues[bestSampleIndices]
+    sortedStdDev = sampleStdDev[bestSampleIndices]
+
+    # Save best policy (if better than overall previous)
+    controllerChange = False
+    if bestValue < bestValues[-1]:
+        controllerChange = True
+        bestValue = bestValues[-1]
+        bestValueVariance = sortedStdDev[-1]
+
+    # Throw away policies below value threshold (worst best value of previous iteration)
+    keepIndices = np.where(bestValues >= worstValueOfPreviousIteration)[0]
+    bestValues = bestValues[keepIndices]
+    bestSampleIndices = bestSampleIndices[keepIndices]
+    return bestValues, bestSampleIndices, bestValue, bestValueVariance, controllerChange
+
+# If we're using a value threshold, also throw away iterations below that
+def _applyValueThreshold(valueThreshold, bestValues, bestSampleIndices):
+    if valueThreshold is not None:
+        keepIndices = np.where(bestValues >= valueThreshold)[0]
+        bestSampleIndices = bestSampleIndices[keepIndices]
+    return bestSampleIndices
 
 
-def _parsePartialResultsToVars(params, results):
-    bestValue, bestValueVariance, bestActionProbs, bestNodeTransitionProbs, estimatedConvergenceIteration, \
-    allValues, allStdDev, bestValueAtEachIteration, bestStdDevAtEachIteration = results
-    startIter = np.where(np.isnan(bestValueAtEachIteration))[0][0]  # Start after last calculated value
-    worstValueOfPreviousIteration = allValues[
-        startIter - 1, (np.argsort(allValues[startIter - 1, :])[-params.numBestSamples:])]
-    if params.valueThreshold is None:
-        worstValueOfPreviousIteration = np.min(worstValueOfPreviousIteration)
-    else:
-        wTemp = np.min(worstValueOfPreviousIteration)
-        if wTemp < params.valueThreshold:  # If the worst value is below threshold, set to -inf
-            worstValueOfPreviousIteration = np.NINF
-        else:
-            worstValueOfPreviousIteration = \
-                np.min(worstValueOfPreviousIteration[worstValueOfPreviousIteration >= params.valueThreshold])
 
-    return bestValue, bestValueVariance, bestActionProbs, bestNodeTransitionProbs, estimatedConvergenceIteration, \
-    allValues, allStdDev, bestValueAtEachIteration, bestStdDevAtEachIteration, startIter, worstValueOfPreviousIteration
-
-
-# Evaluate a single sample, starting from first node
-# Inputs:
-#   env: Environment in which to evaluate
-#   timeHorizon: Time horizon over which to evaluate
-#   actionTransitions: (numNodes,) int array of chosen actions for each node
-#   nodeObservationTransitions: (numObs, numNodes) int array of chosen node transitions for obs
-#  Output:
-#    value: Discounted total return over timeHorizon (or until episode is done), averaged over all simulations
-#    stdDev: Standard deviation of discounter total returns over all simulations
-def evaluateSample(env, timeHorizon, numSimulations, actionTransitions, nodeObservationTransitions):
-    gamma = env.discount if env.discount is not None else 1
-    values = np.zeros(numSimulations, dtype=np.float64)
-    for sim in range(numSimulations):
-        env.reset()
-        currentNodeIndex = 0
-        currentTimestep = 0
-        isDone = False
-        value = 0.0
-        while not isDone and currentTimestep < timeHorizon:
-            obs, reward, isDone = env.step(actionTransitions[currentNodeIndex])[:3]
-            currentNodeIndex = nodeObservationTransitions[obs, currentNodeIndex]
-            value += reward * (gamma ** currentTimestep)
-            currentTimestep += 1
-        values[sim] = value
-    return values.mean(), values.std()
-
-# Evaluate multiple trajectories for a sample, starting from first node
-# Inputs:
-#   env: MultiEnv environment in which to evaluate
-#   timeHorizon: Time horizon over which to evaluate
-#   actionTransitions: (numNodes,) int array of chosen actions for each node
-#   nodeObservationTransitions: (numObs, numNodes) int array of chosen node transitions for obs
-#  Output:
-#    allSampleValues: Discounted total return over timeHorizon (or until episode is done), averaged over all simulations, for each sample (numSamples,)
-#    stdDevs: Standard deviation of discounted total returns over all simulations, for each sample (numSamples,)
-def evaluateSamplesMultiEnv(env, timeHorizon, actionTransitions, nodeObservationTransitions):
-    # assert isinstance(env, MultiPOMDP)
-    numTrajectories = env.nTrajectories
-    gamma = env.discount if env.discount is not None else 1
-    env.reset()
-    currentNodes = np.zeros(numTrajectories, dtype=np.int32)
-    currentTimestep = 0
-    values = np.zeros(numTrajectories, dtype=np.float64)
-    isDones = np.zeros(numTrajectories, dtype=bool)
-    while not all(isDones) and currentTimestep < timeHorizon:
-        obs, rewards, isDones = env.step(actionTransitions[currentNodes])[:3]
-        currentNodes = nodeObservationTransitions[obs, currentNodes]
-        values += rewards * (gamma ** currentTimestep)
-        currentTimestep += 1
-
-    return values.mean(axis=0), values.std(axis=0)

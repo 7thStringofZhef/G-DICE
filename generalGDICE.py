@@ -9,6 +9,15 @@ from GDICE_Python.Algorithms import runGDICEOnEnvironment
 from GDICE_Python.Scripts import getGridSearchGDICEParams, saveResults, loadResults, checkIfFinished, checkIfPartial
 import glob
 
+def runBasicDPOMDP():
+    envName = 'DPOMDP-recycling-v0'
+    env = gym.make(envName)
+    testParams = GDICEParams([10, 10])
+    controllers = [FiniteStateControllerDistribution(testParams.numNodes[a], env.action_space[a].n, env.observation_space[a].n) for a in range(env.agents)]
+    pool = Pool()
+    bestValue, bestValueStdDev, bestActionTransitions, bestNodeObservationTransitions, updatedControllerDistribution, \
+    estimatedConvergenceIteration, allValues, allStdDev = \
+        runGDICEOnEnvironment(env, controllers, testParams, parallel=pool)
 
 def runBasic():
     envName = 'POMDP-4x3-episodic-v0'
