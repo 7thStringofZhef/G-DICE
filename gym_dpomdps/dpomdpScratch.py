@@ -1,7 +1,7 @@
 #import sys
 #sys.path.append('gym_dpomdps/')
 import numpy as np
-from gym_dpomdps import list_dpomdps, MultiDPOMDP
+from gym_dpomdps import list_dpomdps, MultiDPOMDP, DPOMDP
 import os
 import pickle
 from GDICE_Python.Controllers import FiniteStateControllerDistribution
@@ -60,34 +60,64 @@ def _initGDICERunVariables(params):
 
 # Evaluate multiple trajectories for a sample, starting from first node
 # Inputs:
-#   env: MultiEnv environment in which to evaluate
+#   env: MultiDPOMDP environment in which to evaluate (numTrajectories is number of simulations)
 #   timeHorizon: Time horizon over which to evaluate
-#   actionTransitions: (numNodes,) int array of chosen actions for each node
-#   nodeObservationTransitions: (numObs, numNodes) int array of chosen node transitions for obs
+#   actionTransitions: (numNodes, numAgents) int array of chosen actions for each node
+#   nodeObservationTransitions: (numObs, numNodes, numAgents) int array of chosen node transitions for obs
 #  Output:
-#    allSampleValues: Discounted total return over timeHorizon (or until episode is done), averaged over all simulations, for each sample (numSamples,)
-#    stdDevs: Standard deviation of discounted total returns over all simulations, for each sample (numSamples,)
-def evaluateSamplesMultiEnv(env, timeHorizon, actionTransitions, nodeObservationTransitions):
+#    value: Discounted total return over timeHorizon (or until episode is done), averaged over all simulations
+#    stdDev: Standard deviation of discounter total returns over all simulations
+
+def evaluateSampleMultiDPOMDP(env, timeHorizon, actionTransitions, nodeObservationTransitions):
     assert isinstance(env, MultiDPOMDP)
     nTrajectories = env.nTrajectories
     nAgents = env.agents
+    agentIndices = tuple(np.full(nTrajectories, a, dtype=np.int32) for a in range(nAgents))
     gamma = env.discount if env.discount is not None else 1
     env.reset()
-    currentNodes = [np.zeros(nTrajectories, dtype=np.int32) for _ in range(nAgents)]  # 50*2
+    currentNodes = tuple(np.zeros(nTrajectories, dtype=np.int32) for _ in range(nAgents))
     currentTimestep = 0
     values = np.zeros(nTrajectories, dtype=np.float64)
     isDones = np.zeros(nTrajectories, dtype=bool)
     while not all(isDones) and currentTimestep < timeHorizon:
-        jointActions = np.stack([actionTransitions[currentNodes[i], i] for i in range(nAgents)], axis=1)
-        obs, rewards, isDones = env.step(jointActions)[:3]  # Want a 50*2
-        currentNodes = [nodeObservationTransitions[obs[:,i], currentNodes[i], i] for i in range(nAgents)]
+        obs, rewards, isDones = env.step(actionTransitions[currentNodes, agentIndices].T)[:3]
+        currentNodes = nodeObservationTransitions[tuple(obs[:, i] for i in range(nAgents)), currentNodes, agentIndices]
         values += rewards * (gamma ** currentTimestep)
         currentTimestep += 1
 
     return values.mean(axis=0), values.std(axis=0)
 
+# Evaluate a single sample, starting from first node
+# Inputs:
+#   env: DPOMDP environment in which to evaluate
+#   timeHorizon: Time horizon over which to evaluate
+#   actionTransitions: (numNodes, ) int array of chosen actions for each node
+#   nodeObservationTransitions: (numObs, numNodes) int array of chosen node transitions for obs
+#  Output:
+#    value: Discounted total return over timeHorizon (or until episode is done), averaged over all simulations
+#    stdDev: Standard deviation of discounter total returns over all simulations
+def evaluateSampleDPOMDP(env, timeHorizon, actionTransitions, nodeObservationTransitions, numSimulations):
+    assert isinstance(env, DPOMDP)
+    nAgents = env.agents
+    agentIndices = np.arange(nAgents, dtype=int)
+    gamma = env.discount if env.discount is not None else 1
+    values = np.zeros(numSimulations, dtype=np.float64)
+    for sim in range(numSimulations):
+        env.reset()
+        currentNodeIndex = [0 for _ in range(nAgents)]
+        currentTimestep = 0
+        isDone = False
+        value = 0.0
+        while not isDone and currentTimestep < timeHorizon:
+            obs, reward, isDone = env.step(actionTransitions[currentNodeIndex, agentIndices])[:3]
+            currentNodeIndex = nodeObservationTransitions[obs, currentNodeIndex, agentIndices]
+            value += reward * (gamma ** currentTimestep)
+            currentTimestep += 1
+        values[sim] = value
+    return values.mean(), values.std()
+
 if __name__=="__main__":
-    env = gym.make(list_dpomdps()[1])
+    env = gym.make(list_dpomdps()[2])
     multiEnv = MultiDPOMDP(env, 50)
     controller1 = FiniteStateControllerDistribution(10, env.action_space[0].n, env.observation_space[0].n)
     controller2 = FiniteStateControllerDistribution(10, env.action_space[1].n, env.observation_space[1].n)
@@ -97,6 +127,7 @@ if __name__=="__main__":
     sampledNodes = np.stack([controller.sampleAllObservationTransitionsFromAllNodes(50) for controller in controllers], axis=-1)  # numObs*numBeginNodes*numSamples*numAgents
     iterActions = sampledActions[:, 0, :]  # numNodes*numAgents (10*2)
     iterObs = sampledNodes[:, :, 0, :]  # numobs*numStartNodes*numAgents
-    test = evaluateSamplesMultiEnv(multiEnv, 50, iterActions, iterObs)
+    #test1 = evaluateSampleDPOMDP(env, 50, iterActions, iterObs, 1)
+    test = evaluateSampleMultiDPOMDP(multiEnv, 50, iterActions, iterObs)
     pass
 

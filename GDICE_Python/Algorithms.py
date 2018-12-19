@@ -161,7 +161,7 @@ def _parsePartialResultsToVars(params, results):
 def evaluateSample(env, timeHorizon, numSimulations, actionTransitions, nodeObservationTransitions):
     gamma = env.discount if env.discount is not None else 1
     values = np.zeros(numSimulations, dtype=np.float64)
-    for sim in numSimulations:
+    for sim in range(numSimulations):
         env.reset()
         currentNodeIndex = 0
         currentTimestep = 0
