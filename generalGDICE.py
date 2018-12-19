@@ -45,7 +45,7 @@ def runGridSearchOnOneEnv(baseSavePath, envName):
 
     for params in GDICEList:
         # Skip this permutation if we already have final results
-        if checkIfFinished(envName, params.name)[0]:
+        if checkIfFinished(envName, params.name, baseDir=baseSavePath)[0]:
             print(params.name + ' already finished for ' + envName + ', skipping...', file=sys.stderr)
             continue
         wasPartiallyRun, npzFilename = checkIfPartial(envName, params.name)
@@ -91,7 +91,7 @@ def runGridSearchOnAllEnv(baseSavePath):
             continue
         for params in GDICEList:
             # Skip this permutation if we already have final results
-            if checkIfFinished(envStr, params.name)[0]:
+            if checkIfFinished(envStr, params.name, baseDir=baseSavePath)[0]:
                 print(params.name +' already finished for ' +envStr+ ', skipping...', file=sys.stderr)
                 continue
 
