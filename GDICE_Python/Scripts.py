@@ -39,7 +39,7 @@ def getGridSearchGDICEParamsDPOMDP():
     # All registered dpomdp environments, only the non-episodic versions
     envStrings = [dpomdp for dpomdp in list_dpomdps() if 'episodic' not in dpomdp]
     # Currently using just learning rate of 0.1
-    paramList = [GDICEParams((n, n), N_k, j, N_sim, k, lr[1], t, timeHorizon) for n in N_n for j in N_s for k in N_b for l in lr for t in vThresholds]
+    paramList = [GDICEParams((n, n), N_k, j, N_sim, k, 0.1, t, timeHorizon) for n in N_n for j in N_s for k in N_b for t in vThresholds]
     return envStrings, paramList
 
 # Save the results of a run
