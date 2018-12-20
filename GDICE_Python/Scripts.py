@@ -114,11 +114,16 @@ def replaceResultsWithDummyFiles(baseDirs = np.arange(1,11,dtype=int), endDir='E
 
 # Script to get me the results from all the runs beneath a directory
 # Structure is basePath/<1,2,3,4,5,6,7,8,9,10>/EndResults/GDICEResults/envName/<params>
-def extractResultsFromAllRuns(basePath, saveSeparate=False):
+def extractResultsFromAllRuns(basePath, saveSeparate=False, saveDummyList=True):
     # List environments I actually did runs for
     baseEnvNames = ['1d', '4x3', 'cheese', 'concert', 'hallway', 'heavenhell', 'loadunload', 'network', 'shopping_5', 'tiger', 'voicemail']
     envNames = ['POMDP-' + base + '-v0' for base in baseEnvNames]
     runDirs = np.arange(1, 11, dtype=int)
+    f = None
+
+    if saveDummyList:
+        f = open("FilesToGenList.txt", 'w')
+
 
     # Get list of grid search params
     paramList = getGridSearchGDICEParams()[1]
@@ -146,6 +151,9 @@ def extractResultsFromAllRuns(basePath, saveSeparate=False):
                         iterStdDev[runDir-1, envIndex, paramIndex, :] = fileResults['bestStdDevAtEachIteration']
                         runResultsFound[runDir-1, envIndex, paramIndex] = True
                         fileResults.close()
+                        if saveDummyList:
+                            strippedPath = filePath[filePath.find('/'+str(runDir))+1:]
+                            f.write(strippedPath + '\n')
                     except:
                         print('Load failed for env ' + envName + ' params ' + os.path.basename(filePath))
                         continue
@@ -160,6 +168,20 @@ def extractResultsFromAllRuns(basePath, saveSeparate=False):
             print('Save failed')
 
     return runResultsFound, iterValues, iterStdDev, envNames, paramList, runDirs
+
+# Generate dummy files from a text list
+def genDummyFilesFromList(pathToList, baseGenPath='/scratch/slayback.d/GDICE'):
+    pathToList = 'FilesToGenList.txt'
+    baseGenPath = ''
+    listF = open(pathToList, 'r')
+    for f in listF.readlines()[:50]:
+        filepath = os.path.join(baseGenPath, f)
+        try:
+            if not (os.path.exists(os.path.dirname(filepath))):
+                os.makedirs(os.path.dirname(filepath))
+            open(filepath, 'w').close()
+        except:
+            continue
 
 
 
