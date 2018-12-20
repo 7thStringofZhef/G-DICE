@@ -132,13 +132,13 @@ def extractResultsFromAllRuns(basePath, saveSeparate=False):
 
     # Start digging!
     for runDir in runDirs:
-        currPath = os.path.join(basePath, str(runDir), 'EndResults', 'GDICEResults')
+        runPath = os.path.join(basePath, str(runDir), 'EndResults', 'GDICEResults')
         for envIndex in range(len(envNames)):
             envName = envNames[envIndex]
-            currPath = os.path.join(currPath, envName)
+            envPath = os.path.join(runPath, envName)
             for paramIndex in range(len(paramList)):
                 param = paramList[paramIndex]
-                filePath = os.path.join(currPath, param.name+'.npz')
+                filePath = os.path.join(envPath, param.name+'.npz')
                 if os.path.isfile(filePath):
                     try:
                         fileResults = np.load(filePath)
