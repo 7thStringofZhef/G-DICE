@@ -124,7 +124,7 @@ def extractResultsFromAllRuns(basePath, saveSeparate=False):
     paramList = getGridSearchGDICEParams()[1]
 
     # Keep track of which run results we actually found
-    runResultsFound = np.zeros((len(runDirs), len(envNames), len(paramList)), dtype=np.uint8)
+    runResultsFound = np.zeros((len(runDirs), len(envNames), len(paramList)), dtype=bool)
 
     # I just want the best value (and its stddev) at each iteration
     iterValues = np.full((len(runDirs), len(envNames), len(paramList), paramList[0].numIterations), np.nan, dtype=np.float64)
@@ -144,12 +144,10 @@ def extractResultsFromAllRuns(basePath, saveSeparate=False):
                         fileResults = np.load(filePath)
                         iterValues[runDir-1, envIndex, paramIndex, :] = fileResults['bestValueAtEachIteration']
                         iterStdDev[runDir-1, envIndex, paramIndex, :] = fileResults['bestStdDevAtEachIteration']
-                        runResultsFound[runDir-1, envIndex, paramIndex] = 1
+                        runResultsFound[runDir-1, envIndex, paramIndex] = True
                         fileResults.close()
                     except:
-                        traceback.print_exc()
                         print('Load failed for env ' + envName + ' params ' + os.path.basename(filePath))
-                        runResultsFound[runDir-1, envIndex, paramIndex] = 2  # Specifically keep track of failures
                         continue
     # Save the extracted results in a single file for easier access later
     if saveSeparate:
