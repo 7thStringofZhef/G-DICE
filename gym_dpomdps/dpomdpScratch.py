@@ -70,7 +70,7 @@ def runGridSearchOnOneEnvDPOMDP(baseSavePath, envName):
 def runGridSearchOnAllEnvDPOMDP(baseSavePath):
     pool = Pool()
     envList, GDICEList = getGridSearchGDICEParamsDPOMDP()
-    for envStr in envList:
+    for envStr in envList[1:]:
         try:
             env = gym.make(envStr)
         except MemoryError:

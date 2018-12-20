@@ -1,10 +1,11 @@
 import numpy as np
 from gym_pomdps import list_pomdps
-from gym_dpomdps import list_dpomdps
+#from gym_dpomdps import list_dpomdps
 from .Parameters import GDICEParams
 import os
 import pickle
 import glob
+import traceback
 
 
 # Define a list of GDICE parameter objects that permute the variables across the possible values
@@ -21,7 +22,7 @@ def getGridSearchGDICEParams():
     # All registered Pomdp environments, only the non-episodic versions, no rocksample
     envStrings = [pomdp for pomdp in list_pomdps() if 'episodic' not in pomdp and 'rock' not in pomdp]
     # Currently using just learning rate of 0.1
-    paramList = [GDICEParams(n, N_k, j, N_sim, k, lr[1], t, timeHorizon) for n in N_n for j in N_s for k in N_b for l in lr for t in vThresholds]
+    paramList = [GDICEParams(n, N_k, j, N_sim, k, 0.1, t, timeHorizon) for n in N_n for j in N_s for k in N_b for t in vThresholds]
     return envStrings, paramList
 
 # Define a list of GDICE parameter objects that permute the variables across the possible values
@@ -110,5 +111,58 @@ def replaceResultsWithDummyFiles(baseDirs = np.arange(1,11,dtype=int), endDir='E
             envPath = os.path.join(startPath, envDir)
             for file in os.listdir(envPath):
                 open(file, 'w').close()  # replace with blank file of same name
+
+# Script to get me the results from all the runs beneath a directory
+# Structure is basePath/<1,2,3,4,5,6,7,8,9,10>/EndResults/GDICEResults/envName/<params>
+def extractResultsFromAllRuns(basePath, saveSeparate=False):
+    # List environments I actually did runs for
+    baseEnvNames = ['1d', '4x3', 'cheese', 'concert', 'hallway', 'heavenhell', 'loadunload', 'network', 'shopping_5', 'tiger', 'voicemail']
+    envNames = ['POMDP-' + base + '-v0' for base in baseEnvNames]
+    runDirs = np.arange(1, 11, dtype=int)
+
+    # Get list of grid search params
+    paramList = getGridSearchGDICEParams()[1]
+
+    # Keep track of which run results we actually found
+    runResultsFound = np.zeros((len(runDirs), len(envNames), len(paramList)), dtype=np.uint8)
+
+    # I just want the best value (and its stddev) at each iteration
+    iterValues = np.full((len(runDirs), len(envNames), len(paramList), paramList[0].numIterations), np.nan, dtype=np.float64)
+    iterStdDev = np.full((len(runDirs), len(envNames), len(paramList), paramList[0].numIterations), np.nan, dtype=np.float64)
+
+    # Start digging!
+    for runDir in runDirs:
+        currPath = os.path.join(basePath, str(runDir), 'EndResults', 'GDICEResults')
+        for envIndex in range(len(envNames)):
+            envName = envNames[envIndex]
+            currPath = os.path.join(currPath, envName)
+            for paramIndex in range(len(paramList)):
+                param = paramList[paramIndex]
+                filePath = os.path.join(currPath, param.name+'.npz')
+                if os.path.isfile(filePath):
+                    try:
+                        fileResults = np.load(filePath)
+                        iterValues[runDir-1, envIndex, paramIndex, :] = fileResults['bestValueAtEachIteration']
+                        iterStdDev[runDir-1, envIndex, paramIndex, :] = fileResults['bestStdDevAtEachIteration']
+                        runResultsFound[runDir-1, envIndex, paramIndex] = 1
+                        fileResults.close()
+                    except:
+                        traceback.print_exc()
+                        print('Load failed for env ' + envName + ' params ' + os.path.basename(filePath))
+                        runResultsFound[runDir-1, envIndex, paramIndex] = 2  # Specifically keep track of failures
+                        continue
+    # Save the extracted results in a single file for easier access later
+    if saveSeparate:
+        try:
+            np.savez('compiledValues.npz', runResultsFound=runResultsFound, iterValue=iterValues, iterStdDev=iterStdDev, runs=runDirs)
+            pickle.dump({'envs': envNames, 'params': paramList}, open('compiledValueLabels.pkl', 'wb'))
+        except Exception as e:
+            traceback.print_exc()
+            print(e)
+            print('Save failed')
+
+    return runResultsFound, iterValues, iterStdDev, envNames, paramList, runDirs
+
+
 
 
