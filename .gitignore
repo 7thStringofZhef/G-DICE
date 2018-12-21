@@ -13,3 +13,5 @@ GDICE_Python/__pycache__/
 
 
 gym_dpomdps/\.cache/v/cache/
+
+*.pyc
