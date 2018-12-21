@@ -1,5 +1,5 @@
-from GDICEPython.GDICE_Python import *
-from GDICEPython.GDICE_Python import extractResultsFromAllRuns
+from GDICE_Python.Plotting import *
+from GDICE_Python.Scripts import extractResultsFromAllRuns
 import os
 import pickle
 import numpy as np
