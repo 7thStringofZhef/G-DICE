@@ -3,10 +3,10 @@ import numpy as np
 from gym_dpomdps import list_dpomdps, MultiDPOMDP, DPOMDP
 import os
 import pickle
-from GDICE_Python.Controllers import FiniteStateControllerDistribution
-from GDICE_Python.Scripts import saveResults, loadResults, getGridSearchGDICEParamsDPOMDP, checkIfFinished, checkIfPartial
-from GDICE_Python.Algorithms import runGDICEOnEnvironment
-from GDICE_Python.Parameters import GDICEParams
+from GDICEPython.GDICE_Python import FiniteStateControllerDistribution
+from GDICEPython.GDICE_Python import saveResults, loadResults, getGridSearchGDICEParamsDPOMDP, checkIfFinished, checkIfPartial
+from GDICEPython.GDICE_Python import runGDICEOnEnvironment
+from GDICEPython.GDICE_Python import GDICEParams
 from multiprocessing import Pool
 import gym
 import glob

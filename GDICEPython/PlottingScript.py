@@ -1,5 +1,5 @@
-from GDICE_Python.Plotting import *
-from GDICE_Python.Scripts import extractResultsFromAllRuns
+from GDICEPython.GDICE_Python import *
+from GDICEPython.GDICE_Python import extractResultsFromAllRuns
 import os
 import pickle
 import numpy as np
@@ -16,10 +16,14 @@ if __name__ == "__main__":
         basePath = '/media/david/USB STICK/EndResCombined'
         runResultsFound, iterValues, iterStdDev, envNames, paramList, runDirs = extractResultsFromAllRuns(basePath, True)
 
+    noValueThresholdIndices = np.array([i for i in range(len(paramList)) if paramList[i].valueThreshold is None],dtype=np.int16)
+    ntIterValues, ntIterStdDev, ntRunResultsFound = iterValues[:, :, noValueThresholdIndices, :], \
+                                                    iterStdDev[:, :, noValueThresholdIndices, :], \
+                                                    runResultsFound[:, :, noValueThresholdIndices]
     # numEnvs*numParams*numIters
-    meanVals, meanStdDev, runStdDev, runRange = \
-        np.nanmean(iterValues, axis=0), np.nanmean(iterStdDev, axis=0), np.nanstd(iterValues, axis=0), \
-        (np.nanmin(iterValues, axis=0), np.nanmax(iterValues, axis=0))
+    meanVals, meanStdDev, runStdDev, runRange, numValues = \
+        np.nanmean(ntIterValues, axis=0), np.nanmean(ntIterStdDev, axis=0), np.nanstd(ntIterValues, axis=0), \
+        (np.nanmin(ntIterValues, axis=0), np.nanmax(ntIterValues, axis=0)), np.count_nonzero(ntRunResultsFound, axis=0)
 
     for envIndex in range(meanVals.shape[0]):
         pass

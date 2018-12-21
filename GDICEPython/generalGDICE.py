@@ -3,10 +3,10 @@ import os
 import argparse
 import sys
 from multiprocessing import Pool
-from GDICE_Python.Parameters import GDICEParams
-from GDICE_Python.Controllers import FiniteStateControllerDistribution, DeterministicFiniteStateController
-from GDICE_Python.Algorithms import runGDICEOnEnvironment
-from GDICE_Python.Scripts import getGridSearchGDICEParams, saveResults, loadResults, checkIfFinished, checkIfPartial
+from GDICEPython.GDICE_Python import GDICEParams
+from GDICEPython.GDICE_Python import FiniteStateControllerDistribution, DeterministicFiniteStateController
+from GDICEPython.GDICE_Python import runGDICEOnEnvironment
+from GDICEPython.GDICE_Python import getGridSearchGDICEParams, saveResults, loadResults, checkIfFinished, checkIfPartial
 import glob
 
 def runBasicDPOMDP():

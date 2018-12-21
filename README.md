@@ -15,6 +15,11 @@ The main script is generalGDICE.py. Running it as is will run GDICE on the 4x3 m
     6. A value threshold which additionally filters out samples below a certain value. By default, this is off (None)
 4. Define a pool object in the 4th line if you want parallel processing.
 
+## Install
+I added a setup.py script, and I also took the step of building a source distribution.
+
+To install, just install the dependencies (listed below), then install using the included tar.gz file. Scripts will automatically go to your /bin folder, and the rest of the package will be installed as other packages are.
+
 ## Dependencies
 * Python 3
 * Numpy
@@ -22,10 +27,11 @@ The main script is generalGDICE.py. Running it as is will run GDICE on the 4x3 m
 * Andrea's repositories, rl_parsers and gym_pomdps. These are expected to be pip installed with their included script
     * https://github.ccs.neu.edu/abaisero/gym-pomdps
     * https://github.com/abaisero/rl_parsers
+* gym_dpomdps (included in repo, "pip install gym_dpomdps/dist/gym_dpomdps-0.1.0.tar.gz"
 
 ## Future work
 * ~~Create a grid search function to automatically work through environments to determine the best G-DICE parameters~~
-* Extend to DPOMDPs with a parser
+* ~~Extend to DPOMDPs with a parser~~
 * Make the parallel approach more memory efficient
 * Extend to continuous observation domains
 * Apply to gym-minigrid
