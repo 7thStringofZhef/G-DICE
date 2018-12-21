@@ -123,6 +123,7 @@ def extractResultsFromAllRuns(basePath, saveSeparate=False, saveDummyList=True):
 
     if saveDummyList:
         f = open("FilesToGenList.txt", 'w')
+        f2 = open("UnfinishedRuns.txt", 'w')
 
 
     # Get list of grid search params
@@ -157,6 +158,9 @@ def extractResultsFromAllRuns(basePath, saveSeparate=False, saveDummyList=True):
                     except:
                         print('Load failed for env ' + envName + ' params ' + os.path.basename(filePath))
                         continue
+                else:
+                    strippedPath = filePath[filePath.find('/'+str(runDir))+1:]
+                    f2.write(strippedPath+'\n')
     # Save the extracted results in a single file for easier access later
     if saveSeparate:
         try:
