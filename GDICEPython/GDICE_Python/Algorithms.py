@@ -81,9 +81,13 @@ def runGDICEOnEnvironment(env, controller, params, parallel=None, results=None, 
         if params.valueThreshold is not None:
             bestSampleIndices = _applyValueThreshold(params.valueThreshold, bestValues, bestSampleIndices)
 
-
         # For each controller, for each node, update using best samples
-        updateControllerDistribution(controller, sampledActions[:,bestSampleIndices, :], sampledNodes[:,:,bestSampleIndices, :], params.learningRate)
+        if nAgents == 1:
+            updateControllerDistribution(controller, sampledActions[:, bestSampleIndices], sampledNodes[:, :, bestSampleIndices], params.learningRate)
+        else:
+            updateControllerDistribution(controller, sampledActions[:, bestSampleIndices, :],
+                                         sampledNodes[:, :, bestSampleIndices, :], params.learningRate)
+
         print('After '+str(iteration+1) + ' iterations, best (discounted) value is ' + str(bestValue) + ' with standard deviation ' +str(bestValueVariance))
         bestValueAtEachIteration[iteration] = bestValue
         bestStdDevAtEachIteration[iteration] = bestValueVariance
