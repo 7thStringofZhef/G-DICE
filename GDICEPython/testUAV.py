@@ -1,10 +1,10 @@
 from GDICE_Python.Parameters import GDICEParams
 from GDICE_Python.Controllers import FiniteStateControllerDistribution, DeterministicFiniteStateController
 from GDICE_Python.Algorithms import runGDICEOnEnvironment
-from GDICE_Python.UAVDomains import UAVSimpleDomain
+from GDICE_Python.Scripts import getGridSearchGDICEParams, saveResults
+from GDICE_Python.UAVDomains import UAVSimpleDomain, UAVSingleAgentStaticTargetDomain
 
-def runSimpleDomain():
-    env = UAVSimpleDomain()
+def runDomain(env):
     testParams = GDICEParams(numSamples=10,
                              numSimulationsPerSample=10)
 
@@ -17,7 +17,7 @@ def runSimpleDomain():
     # Run GDICE. Return the best average value, its standard deviation,
     # tables of the best deterministic transitions, and the updated distribution of controllers
     bestValue, bestValueStdDev, bestActionTransitions, bestNodeObservationTransitions, updatedControllerDistribution, \
-    estimatedConvergenceIteration, allValues, allStdDev = \
+    estimatedConvergenceIteration, allValues, allStdDev, bestValueAtEachIteration, bestStdDevAtEachIteration = \
         runGDICEOnEnvironment(env, controllerDistribution, testParams, parallel=pool, envType=1)
 
     # Create a deterministic controller from the tables above
@@ -27,4 +27,5 @@ def runSimpleDomain():
     # Test on environment
 
 if __name__ == "__main__":
-    runSimpleDomain()
+    #runDomain(UAVSimpleDomain())
+    runDomain(UAVSingleAgentStaticTargetDomain(seed=0))
