@@ -106,3 +106,20 @@ def evaluateSampleMultiDPOMDP(env, timeHorizon, actionTransitions, nodeObservati
         currentTimestep += 1
 
     return values.mean(axis=0), values.std(axis=0)
+
+def runDeterministicControllerOnEnvironment(env, controller, timeHorizon, printMsgs=False):
+    gamma = env.discount if env.discount is not None else 1
+    env.reset(print=print)
+    currentTimestep = 0
+    isDone = False
+    value = 0.0
+    while not isDone and currentTimestep < timeHorizon:
+        action = controller.getAction()
+        if printMsgs:
+            print('Timestep', currentTimestep)
+            print('action', action)
+        obs, reward, isDone = env.step(action, printEnv=printMsgs)[:3]
+        controller.processObservation(obs)
+        value += reward * (gamma ** currentTimestep)
+        currentTimestep += 1
+    return value
