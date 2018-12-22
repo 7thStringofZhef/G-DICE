@@ -6,7 +6,7 @@ import numpy as np
 class GDICEEnvWrapper(gym.Wrapper):
     def __init__(self, env, numTrajectories):
         super().__init__(env)
-        self.numTrajectories = numTrajectories
+        self.nTrajectories = numTrajectories
         self.reset()
 
     def __getattr__(self, attr):
@@ -14,7 +14,7 @@ class GDICEEnvWrapper(gym.Wrapper):
 
     def reset(self):
         self.env.reset()
-        self.states = [self.env.state] * self.numTrajectories
+        self.states = [self.env.state] * self.nTrajectories
         self.doneIndices = []  # states are not indices here, thus we need a separate list
                                # to keep the indices the states that are done
 
@@ -40,7 +40,7 @@ class GDICEEnvWrapper(gym.Wrapper):
         #    return self._stepForSingleWorker(int(actions[0]), int(actions[1]))
 
         # Make sure numpy array is of appropriate size
-        assert actions.shape[0] == self.numTrajectories
+        assert actions.shape[0] == self.nTrajectories
 
         newStates = []
         observations = []
@@ -59,7 +59,7 @@ class GDICEEnvWrapper(gym.Wrapper):
             state = self.states[i]
             action = actions[i]
 
-            obs, reward, done, params = self.env.step(action, state)
+            obs, reward, done, params = self.env.step(action, state=state)
 
             newState = params['new_state']
             newStates.append(newState)
