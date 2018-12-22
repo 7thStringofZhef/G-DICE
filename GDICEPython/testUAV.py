@@ -1,12 +1,13 @@
 from GDICE_Python.Parameters import GDICEParams
 from GDICE_Python.Controllers import FiniteStateControllerDistribution, DeterministicFiniteStateController
 from GDICE_Python.Algorithms import runGDICEOnEnvironment
-from GDICE_Python.Scripts import getGridSearchGDICEParams, saveResults
+from GDICE_Python.Evaluation import runDeterministicControllerOnEnvironment
 from GDICE_Python.UAVDomains import UAVSimpleDomain, UAVSingleAgentStaticTargetDomain
 
 def runDomain(env):
     testParams = GDICEParams(numSamples=10,
-                             numSimulationsPerSample=10)
+                             numSimulationsPerSample=10,
+                             numIterations=30)
 
     controllerDistribution = FiniteStateControllerDistribution(testParams.numNodes, env.action_space.n,
                                                                env.observation_space.n)  # make a controller with 10 nodes, with #actions and observations from environment
@@ -25,7 +26,12 @@ def runDomain(env):
                                                                      bestNodeObservationTransitions)
 
     # Test on environment
+    finalValue = runDeterministicControllerOnEnvironment(env, bestDeterministicController,
+                                                         testParams.timeHorizon, printMsgs=True)
+    print('Final value:', finalValue)
+
+
 
 if __name__ == "__main__":
     #runDomain(UAVSimpleDomain())
-    runDomain(UAVSingleAgentStaticTargetDomain(seed=0))
+    runDomain(UAVSingleAgentStaticTargetDomain(seed=0, n_rows=5, n_columns=5))
