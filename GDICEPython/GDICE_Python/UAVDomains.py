@@ -37,6 +37,10 @@ class Observation(IntEnum):
     TARGET_RIGHT = 3
     NEITHER = 4
 
+class Cell(IntEnum):
+    FREE = 0
+    OBSTACLE = 1
+
 class EnvSpec(object):
     pass
 
@@ -49,15 +53,16 @@ class UAVSingleAgentStaticTargetDomain(gym.Env):
 
         self.agents = 1
         self.discount = 0.99
-        #self.grid = np.array([[0, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 0]])
         self.n_rows = n_rows
         self.n_columns = n_columns
         self.grid_size = self.n_rows * self.n_columns
         self.obstacle_ratio = obstacle_ratio
-        self.uav_location = (0, 0)
-        self.target_location = (self.n_rows - 1, self.n_columns - 1)
-        self.create_env()
-        self.print_env()
+
+        uav_location = (0, 0)
+        target_location = (self.n_rows - 1, self.n_columns - 1)
+        self.state = (uav_location, target_location)
+        self.create_env(uav_location, target_location)
+        self.print_env(uav_location, target_location)
 
         self.action_space = spaces.Discrete(4)  # 4 actions
         self.observation_space = spaces.Discrete(5)  # 5 observations
@@ -75,39 +80,50 @@ class UAVSingleAgentStaticTargetDomain(gym.Env):
         self.np_random, seed_ = seeding.np_random(seed)
         return [seed_]
 
-    def create_env(self):
+    def create_env(self, uav_location, target_location):
         self.grid = np.zeros((self.n_rows, self.n_columns), dtype=np.uint8)
 
         # Generate an array of tuples of all possible cells
         cells = [(i, j) for i in range(self.n_rows - 1) for j in range(self.n_columns)]
-        cells.remove(self.uav_location)
+        cells.remove(uav_location)
         n_obstacles = int(self.obstacle_ratio * self.grid_size)
         idx = self.np_random.choice(len(cells), n_obstacles)
         cells = np.array(cells)
         obstacle_locations = cells[idx]
         for location in obstacle_locations:
-            self.grid[location[0], location[1]] = 1
+            self.grid[location[0], location[1]] = Cell.OBSTACLE
 
         # TODO: Check that there is a path from the UAV's initial location to the target
 
-    def print_env(self):
-        print("The environment:")
+    def print_env(self, uav_location, target_location):
         for i in range(self.n_rows):
             for j in range(self.n_columns):
-                print(str(self.grid[i][j]) + ' ', end='')
+                if (i, j) == uav_location:
+                    print('A', end='')
+                elif (i, j) == target_location:
+                    print('T', end='')
+                elif self.grid[i][j] == Cell.OBSTACLE:
+                    print('X', end='')
+                else:
+                    print('.', end='')
             print()
+        print()
 
-    def reset(self):
-        self.uav_location = (0, 0)
-        self.target_location = (self.n_rows - 1, self.n_columns - 1)
-        self.state = (self.uav_location, self.target_location)
+    def reset(self, print=False):
+        uav_location = (0, 0)
+        target_location = (self.n_rows - 1, self.n_columns - 1)
+        self.state = (uav_location, target_location)
+        if print:
+            self.print_env(uav_location, target_location)
 
-    def step(self, action, state=None):
+    def step(self, action, **kwargs):
         # The state argument allows us to simulate many states in parallel
         assert self.action_space.contains(action), "%r (%s) invalid" % (action, type(action))
 
         # In GDICE we simulate many states in parallel
-        if state is None:
+        if 'state' in kwargs:
+            state = kwargs['state']
+        else:
             state = self.state
 
         # Extract the state components
@@ -130,14 +146,15 @@ class UAVSingleAgentStaticTargetDomain(gym.Env):
         elif action == Action.WEST:
             new_location = (uav_location[0], uav_location[1] - 1)
 
-        # If the new location is out of boundary, then stay in place
+        # If the new location is out of boundary or hits an obstacle, then stay in place
         if new_location[0] >= 0 and new_location[0] < self.n_rows and \
-            new_location[1] >= 0 and new_location[1] < self.n_columns:
+            new_location[1] >= 0 and new_location[1] < self.n_columns and \
+            self.grid[new_location[0], new_location[1]] == Cell.FREE:
             uav_location = new_location
 
         # Update the state
         new_state = (uav_location, target_location)
-        if state is None:
+        if 'state' not in kwargs:
             self.state = new_state
 
         # Check if the UAV reached the target
@@ -163,6 +180,9 @@ class UAVSingleAgentStaticTargetDomain(gym.Env):
             obs = Observation.TARGET_RIGHT
         else:
             obs = Observation.NEITHER
+
+        if 'printEnv' in kwargs:
+            self.print_env(uav_location, target_location)
 
         return obs, reward, done, { 'new_state': new_state }
 
