@@ -7,4 +7,4 @@
 #SBATCH --mem=32Gb
 #SBATCH --partition=general
 
-srun python /scratch/slayback.d/GDICE/G-DICE/generalGDICE.py $1 $2 $3 $4
+srun python /scratch/slayback.d/GDICE/G-DICE/GDICEPython/generalGDICE.py $1 $2 $3 $4
