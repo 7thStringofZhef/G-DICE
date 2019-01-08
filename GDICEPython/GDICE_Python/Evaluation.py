@@ -109,7 +109,7 @@ def evaluateSampleMultiDPOMDP(env, timeHorizon, actionTransitions, nodeObservati
 
 def runDeterministicControllerOnEnvironment(env, controller, timeHorizon, printMsgs=False):
     gamma = env.discount if env.discount is not None else 1
-    env.reset(print=print)
+    env.reset(printEnv=print)
     currentTimestep = 0
     isDone = False
     value = 0.0
