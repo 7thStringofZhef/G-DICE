@@ -4,6 +4,14 @@ import os
 import pickle
 import numpy as np
 
+def getParamIndices(uniqueVals, field, paramList):
+    indices = [[] for _ in uniqueVals]
+    for valIndex, val in enumerate(paramList):
+        indices[np.where(getattr(paramList[valIndex], field) == uniqueVals)[0][0]].append(valIndex)
+
+    indices = tuple(np.array(indexSet, dtype=int) for indexSet in indices)
+    return indices
+
 if __name__ == "__main__":
     plotDir = 'Plots'
 
@@ -16,15 +24,23 @@ if __name__ == "__main__":
         basePath = '/media/david/USB STICK/EndResCombined'
         runResultsFound, iterValues, iterStdDev, envNames, paramList, runDirs = extractResultsFromAllRuns(basePath, True)
 
-    noValueThresholdIndices = np.array([i for i in range(len(paramList)) if paramList[i].valueThreshold is None],dtype=np.int16)
-    ntIterValues, ntIterStdDev, ntRunResultsFound = iterValues[:, :, noValueThresholdIndices, :], \
-                                                    iterStdDev[:, :, noValueThresholdIndices, :], \
-                                                    runResultsFound[:, :, noValueThresholdIndices]
+    nVTIndices = np.array([i for i in range(len(paramList)) if paramList[i].valueThreshold is None], dtype=int)
+    ntIterValues, ntIterStdDev, ntRunResultsFound = iterValues[:, :, nVTIndices, :], \
+                                                    iterStdDev[:, :, nVTIndices, :], \
+                                                    runResultsFound[:, :, nVTIndices]
+    nVTParams = [paramList[i] for i in nVTIndices]
     # numEnvs*numParams*numIters
     meanVals, meanStdDev, runStdDev, runRange, numValues = \
         np.nanmean(ntIterValues, axis=0), np.nanmean(ntIterStdDev, axis=0), np.nanstd(ntIterValues, axis=0), \
         (np.nanmin(ntIterValues, axis=0), np.nanmax(ntIterValues, axis=0)), np.count_nonzero(ntRunResultsFound, axis=0)
 
+    # Figure out what the values are for each parameter we're talking about
+    numNodeValues = np.unique(np.array([p.numNodes for p in nVTParams], dtype=int))
+    numNodeIndices = getParamIndices(numNodeValues, 'numNodes', nVTParams)
+    numSampleValues = np.unique(np.array([p.numSamples for p in nVTParams], dtype=int))
+    numSampleIndices = getParamIndices(numSampleValues, 'numSamples', nVTParams)
+    numBestSampleValues = np.unique(np.array([p.numBestSamples for p in nVTParams], dtype=int))
+    numBestSampleIndices = getParamIndices(numBestSampleValues, 'numBestSamples', nVTParams)
     for envIndex in range(meanVals.shape[0]):
         pass
         """
