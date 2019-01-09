@@ -140,11 +140,11 @@ class DeterministicFiniteStateController(object):
 
     # Get action using current node
     def getAction(self):
-        return self.actionTransitions[self.currentNodes]
+        return self.actionTransitions[self.currentNode]
 
     # Set current node using observation
     def processObservation(self, observationIndex):
-        self.currentNode = self.nodeObservationTransitions[observationIndex, self.currentNodes]
+        self.currentNode = self.nodeObservationTransitions[observationIndex, self.currentNode]
 
     # return current node index
     def getCurrentNode(self):
