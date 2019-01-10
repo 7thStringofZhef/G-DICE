@@ -1,5 +1,6 @@
 import gym
 import numpy as np
+from scipy.stats import entropy
 from .Controllers import FiniteStateControllerDistribution
 
 
@@ -95,6 +96,16 @@ def _parsePartialResultsToGDICERunVariables(params, results):
 
     return bestValue, bestValueVariance, bestActionProbs, bestNodeTransitionProbs, estimatedConvergenceIteration, \
     allValues, allStdDev, bestValueAtEachIteration, bestStdDevAtEachIteration, startIter, worstValueOfPreviousIteration
+
+# Get columnwise entropy for a probability table
+def getColumnwiseEntropy(pTable, nCols):
+    return np.array([entropy(pTable[:, col]) for col in range(nCols)])
+
+
+# Get maximum entropy value for a number of rows
+def getMaximalEntropy(nRows):
+    return entropy(np.ones(nRows)/nRows)
+
 
 
 
