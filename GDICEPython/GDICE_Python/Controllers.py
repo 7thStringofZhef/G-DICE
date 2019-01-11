@@ -144,14 +144,15 @@ class FiniteStateControllerDistribution(object):
             maxEntropy = getMaximalEntropy(self.numNodes)  # Maximum entropy for categorical pdf
             noiseInjectionRate = self.noiseInjectionRate  # Rate (0 to 1) at which to inject noise
             entropyFractionForInjection = self.entFraction  # Threshold of max entropy required to inject
-            # Inject entropy into action probabilities
+            # Inject entropy into action probabilities. Does this make sense for moore machines?
             actionEntropy = entropy(self.actionProbabilities[:, actionIndices], base=2)
             nIndices = actionEntropy < maxEntropy*entropyFractionForInjection  # numNodes,
             self.actionProbabilities[nIndices, :] = (1-noiseInjectionRate)*self.actionProbabilities[nIndices, :] + \
                                                     noiseInjectionRate*np.ones(np.sum(nIndices), self.numActions)/self.numActions
 
             # Inject entropy into node transition probabilities
-            nodeEntropy = np.array([entropy(self.nodeTransitionProbabilities[nIdx, :, obsIndices], base=2) for nIdx in nodeIndices])
+            perNodeTable = np.array([self.nodeTransitionProbabilities[nIdx, :, :] for nIdx in nodeIndices])
+            nodeEntropy = np.array([entropy(tTable[:, obsIndices], base=2) for tTable in perNodeTable])
             ntIndices = nodeEntropy < maxEntropy*entropyFractionForInjection  # numNodes, numNodes
             for startNodeIdx in nodeIndices:
                 self.nodeTransitionProbabilities[startNodeIdx, ntIndices[startNodeIdx, :], :]
