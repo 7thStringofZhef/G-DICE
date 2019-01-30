@@ -3,6 +3,9 @@ from GDICE_Python.Scripts import extractResultsFromAllRuns
 import os
 import pickle
 import numpy as np
+import seaborn as sns
+sns.set()
+import matplotlib.pyplot as plt
 
 def getParamIndices(uniqueVals, field, paramList):
     indices = [[] for _ in uniqueVals]
@@ -24,11 +27,13 @@ if __name__ == "__main__":
         basePath = '/media/david/USB STICK/EndResCombined'
         runResultsFound, iterValues, iterStdDev, envNames, paramList, runDirs = extractResultsFromAllRuns(basePath, True)
 
+    # Scrap value threshold for now
     nVTIndices = np.array([i for i in range(len(paramList)) if paramList[i].valueThreshold is None], dtype=int)
     ntIterValues, ntIterStdDev, ntRunResultsFound = iterValues[:, :, nVTIndices, :], \
                                                     iterStdDev[:, :, nVTIndices, :], \
                                                     runResultsFound[:, :, nVTIndices]
     nVTParams = [paramList[i] for i in nVTIndices]
+
     # numEnvs*numParams*numIters
     meanVals, meanStdDev, runStdDev, runRange, numValues = \
         np.nanmean(ntIterValues, axis=0), np.nanmean(ntIterStdDev, axis=0), np.nanstd(ntIterValues, axis=0), \
@@ -41,8 +46,47 @@ if __name__ == "__main__":
     numSampleIndices = getParamIndices(numSampleValues, 'numSamples', nVTParams)
     numBestSampleValues = np.unique(np.array([p.numBestSamples for p in nVTParams], dtype=int))
     numBestSampleIndices = getParamIndices(numBestSampleValues, 'numBestSamples', nVTParams)
+    iterations = np.arange(meanVals.shape[-1])
+    os.makedirs('Figures', exist_ok=True)
     for envIndex in range(meanVals.shape[0]):
-        pass
+        # num nodes
+        nodeMeanVals = [np.nanmean(meanVals[envIndex, nodeValIndex, :], axis=0) for nodeValIndex in numNodeIndices]  # 1000
+        plt.plot(iterations, nodeMeanVals[0], label=str(numNodeValues[0]))
+        plt.plot(iterations, nodeMeanVals[1], label=str(numNodeValues[1]))
+        plt.plot(iterations, nodeMeanVals[2], label=str(numNodeValues[2]))
+        plt.xlabel("Iterations")
+        plt.ylabel("Performance")
+        plt.title(envNames[envIndex] + ' number of nodes average performance')
+        plt.legend()
+        plt.savefig('Figures/'+envNames[envIndex]+'Nodes.png')
+        plt.cla()
+
+        # num samples per iteration
+        sampleMeanVals = [np.nanmean(meanVals[envIndex, numSampleIndex, :], axis=0) for numSampleIndex in numSampleIndices]  # 1000
+        plt.plot(iterations, sampleMeanVals[0], label=str(numSampleValues[0]))
+        plt.plot(iterations, sampleMeanVals[1], label=str(numSampleValues[1]))
+        plt.plot(iterations, sampleMeanVals[2], label=str(numSampleValues[2]))
+        plt.plot(iterations, sampleMeanVals[3], label=str(numSampleValues[3]))
+        plt.plot(iterations, sampleMeanVals[4], label=str(numSampleValues[4]))
+        plt.xlabel("Iterations")
+        plt.ylabel("Performance")
+        plt.title(envNames[envIndex] + ' number of samples average performance')
+        plt.legend()
+        plt.savefig('Figures/'+envNames[envIndex]+'Samples.png')
+        plt.cla()
+
+        # num best samples per iteration
+        bestSampleMeanVals = [np.nanmean(meanVals[envIndex, numBSampleIndex, :], axis=0) for numBSampleIndex in numBestSampleIndices]  # 1000
+        plt.plot(iterations, bestSampleMeanVals[0], label=str(numBestSampleValues[0]))
+        plt.plot(iterations, bestSampleMeanVals[1], label=str(numBestSampleValues[1]))
+        plt.plot(iterations, bestSampleMeanVals[2], label=str(numBestSampleValues[2]))
+        plt.plot(iterations, bestSampleMeanVals[3], label=str(numBestSampleValues[3]))
+        plt.xlabel("Iterations")
+        plt.ylabel("Performance")
+        plt.title(envNames[envIndex] + ' number of best samples average performance')
+        plt.legend()
+        plt.savefig('Figures/'+envNames[envIndex]+'BestSamples.png')
+        plt.cla()
         """
         What should I plot for each environment?
         Honestly, probably need to choose these params AND THEN do mean, std, range, etc calculations
