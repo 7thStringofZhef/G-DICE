@@ -24,7 +24,7 @@ def runGDICEOnEnvironment(env, controller, params, parallel=None, results=None, 
     # Ensure controller matches environment
     assert nActions == nActionsC and nObs == nObsC
     # Ensure params match controllers
-    if isinstance(nNodes, int): assert nNodes == params.numNodes
+    if isinstance(nNodes, (int, np.integer)): assert nNodes == params.numNodes
     else: assert tuple(nNodes) == tuple(params.numNodes)
 
     # Choose appropriate evaluation function

@@ -15,14 +15,14 @@ def getGridSearchGDICEParams():
     N_s = np.arange(30, 71, 10)  # 30-70 samples per iteration (by 5)
     N_b = np.arange(3, 10, 2)  # Keep best 3, 5, 7, 9 samples
     N_sim = 1000  # 1000 simulations per sampled controller
-    lr = np.array([0.05, 0.1, 0.2])  # Learning rate .05, .1, or .2
-    vThresholds = [None, 0]  # Either no threshold or no non-negative values
+    lr = [0.05, 0.1, 0.2]  # Learning rate .05, .1, or .2
+    vThresholds = [None, 0]  # Either no threshold or no non-negative values. Not using
     timeHorizon = 100  # Each simulation goes for 100 steps (or until episode ends)
 
     # All registered Pomdp environments, only the non-episodic versions, no rocksample
     envStrings = [pomdp for pomdp in list_pomdps() if 'episodic' not in pomdp and 'rock' not in pomdp]
     # Currently using just learning rate of 0.1
-    paramList = [GDICEParams(n, N_k, j, N_sim, k, 0.1, t, timeHorizon) for n in N_n for j in N_s for k in N_b for t in vThresholds]
+    paramList = [GDICEParams(n, N_k, j, N_sim, k, l, None, timeHorizon) for n in N_n for j in N_s for l in lr for k in N_b]
     return envStrings, paramList
 
 # Define a list of GDICE parameter objects that permute the variables across the possible values
