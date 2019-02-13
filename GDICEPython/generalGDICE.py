@@ -2,6 +2,8 @@ import gym
 import os
 import argparse
 import sys
+from gym_dpomdps import list_dpomdps
+from gym_pomdps import list_pomdps
 from multiprocessing import Pool
 from GDICE_Python.Parameters import GDICEParams
 from GDICE_Python.Controllers import FiniteStateControllerDistribution, DeterministicFiniteStateController
@@ -131,16 +133,118 @@ def runGridSearchOnAllEnv(baseSavePath):
             except:
                 continue
 
+def runGridSearchOnOneEnvDPOMDP(baseSavePath, envName):
+    #pool = None
+    pool = Pool()
+    GDICEList = getGridSearchGDICEParams()[1]
+    try:
+        env = gym.make(envName)
+    except MemoryError:
+        print(envName + ' too large for memory', file=sys.stderr)
+        return
+    except Exception as e:
+        print(envName + ' encountered error in creation', file=sys.stderr)
+        print(e, file=sys.stderr)
+        return
+
+    for params in GDICEList:
+        # Skip this permutation if we already have final results
+        if checkIfFinished(envName, params.name, baseDir=baseSavePath)[0]:
+            print(params.name + ' already finished for ' + envName + ', skipping...', file=sys.stderr)
+            continue
+        wasPartiallyRun, npzFilename = checkIfPartial(envName, params.name)
+        prevResults = None
+        if wasPartiallyRun:
+            print(params.name + ' partially finished for ' + envName + ', loading...', file=sys.stderr)
+            prevResults, FSCDist = loadResults(npzFilename)[:2]
+        else:
+            if params.centralized:
+                FSCDist = FiniteStateControllerDistribution(params.numNodes, env.action_space[0].n,
+                                                            env.observation_space[0].n)
+            else:
+                FSCDist = [FiniteStateControllerDistribution(params.numNodes, env.action_space[a].n,
+                                                            env.observation_space[a].n) for a in range(env.agents)]
+        env.reset()
+        try:
+            results = runGDICEOnEnvironment(env, FSCDist, params, parallel=pool, results=prevResults, baseDir=baseSavePath)
+        except MemoryError:
+            print(envName + ' too large for parallel processing. Switching to MultiEnv...', file=sys.stderr)
+            results = runGDICEOnEnvironment(env, FSCDist, params, parallel=None, results=prevResults, baseDir=baseSavePath)
+        except Exception as e:
+            print(envName + ' encountered error in runnning' + params.name + ', skipping to next param', file=sys.stderr)
+            print(e, file=sys.stderr)
+            continue
+        saveResults(os.path.join(baseSavePath, 'EndResults'), envName, params, results)
+        # Delete the temp results
+        try:
+            for filename in glob.glob(os.path.join(baseSavePath, 'GDICEResults', envName, params.name)+'*'):
+                os.remove(filename)
+        except:
+            continue
+
+
+# Run a grid search on all registered environments
+def runGridSearchOnAllEnvDPOMDP(baseSavePath):
+    pool = Pool()
+    envList, GDICEList = getGridSearchGDICEParams()
+    for envStr in envList:
+        try:
+            env = gym.make(envStr)
+        except MemoryError:
+            print(envStr + ' too large for memory', file=sys.stderr)
+            continue
+        except Exception as e:
+            print(envStr + ' encountered error in creation, skipping', file=sys.stderr)
+            print(e, file=sys.stderr)
+            continue
+        for params in GDICEList:
+            # Skip this permutation if we already have final results
+            if checkIfFinished(envStr, params.name, baseDir=baseSavePath)[0]:
+                print(params.name +' already finished for ' +envStr+ ', skipping...', file=sys.stderr)
+                continue
+
+            wasPartiallyRun, npzFilename = checkIfPartial(envStr, params.name)
+            prevResults = None
+            if wasPartiallyRun:
+                print(params.name + ' partially finished for ' + envStr + ', loading...', file=sys.stderr)
+                prevResults, FSCDist = loadResults(npzFilename)[:2]
+            else:
+                if params.centralized:
+                    FSCDist = FiniteStateControllerDistribution(params.numNodes, env.action_space[0].n,
+                                                                env.observation_space[0].n)
+                else:
+                    FSCDist = [FiniteStateControllerDistribution(params.numNodes, env.action_space[a].n,
+                                                                 env.observation_space[a].n) for a in range(env.agents)]
+            env.reset()
+            try:
+                results = runGDICEOnEnvironment(env, FSCDist, params, parallel=pool, results=prevResults, baseDir=baseSavePath)
+            except MemoryError:
+                print(envStr + ' too large for parallel processing. Switching to MultiEnv...', file=sys.stderr)
+                results = runGDICEOnEnvironment(env, FSCDist, params, parallel=None, results=prevResults, baseDir=baseSavePath)
+            except Exception as e:
+                print(envStr + ' encountered error in runnning' + params.name + ', skipping to next param', file=sys.stderr)
+                print(e, file=sys.stderr)
+                continue
+
+            saveResults(os.path.join(baseSavePath, 'EndResults'), envStr, params, results)
+            # Delete the temp results
+            try:
+                for filename in glob.glob(os.path.join(baseSavePath, 'GDICEResults', envStr, params.name) + '*'):
+                    os.remove(filename)
+            except:
+                continue
 
 
 if __name__ == "__main__":
-    test = getGridSearchGDICEParams()[0]
     parser = argparse.ArgumentParser(description='Choose save dir and environment')
     parser.add_argument('--save_path', type=str, default='/scratch/slayback.d/GDICE', help='Base save path')
     parser.add_argument('--env_name', type=str, default='', help='Environment to run')
+    parser.add_argument('--env_type', type=str, default='POMDP', help='Environment type to run')
     args = parser.parse_args()
+    runAllFn = runGridSearchOnAllEnv if args.env_name == 'POMDP' else runGridSearchOnAllEnvDPOMDP
+    runOneFn = runGridSearchOnOneEnv if args.env_name == 'POMDP' else runGridSearchOnOneEnvDPOMDP
     baseSavePath = args.save_path
     if not args.env_name:
-        runGridSearchOnAllEnv(baseSavePath)
+        runAllFn(baseSavePath)
     else:
-        runGridSearchOnOneEnv(baseSavePath, args.env_name)
+        runOneFn(baseSavePath, args.env_name)

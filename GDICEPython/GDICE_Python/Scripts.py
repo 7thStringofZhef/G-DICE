@@ -1,6 +1,6 @@
 import numpy as np
 from gym_pomdps import list_pomdps
-#from gym_dpomdps import list_dpomdps
+from gym_dpomdps import list_dpomdps
 from .Parameters import GDICEParams
 import os
 import pickle
@@ -16,30 +16,29 @@ def getGridSearchGDICEParams():
     N_b = np.arange(3, 10, 2)  # Keep best 3, 5, 7, 9 samples
     N_sim = 1000  # 1000 simulations per sampled controller
     lr = [0.05, 0.1, 0.2]  # Learning rate .05, .1, or .2
-    vThresholds = [None, 0]  # Either no threshold or no non-negative values. Not using
+    vThresholds = [None, 0]  # Either no threshold or no non-negative values. UNUSED
     timeHorizon = 100  # Each simulation goes for 100 steps (or until episode ends)
 
     # All registered Pomdp environments, only the non-episodic versions, no rocksample
     envStrings = [pomdp for pomdp in list_pomdps() if 'episodic' not in pomdp and 'rock' not in pomdp]
-    # Currently using just learning rate of 0.1
     paramList = [GDICEParams(n, N_k, j, N_sim, k, l, None, timeHorizon) for n in N_n for j in N_s for l in lr for k in N_b]
     return envStrings, paramList
 
 # Define a list of GDICE parameter objects that permute the variables across the possible values
 def getGridSearchGDICEParamsDPOMDP():
     N_n = np.arange(5, 16, 5)  # 5, 10, 15 nodes. Currently, each dpomdp has 2 agents, and each agent has same # nodes
+    centralized = [False, True]  # One distribution for all agents, or 1 for each?
     N_k = 1000  # Iterate, plot for every some # iterations
     N_s = np.arange(30, 71, 10)  # 30-70 samples per iteration (by 5)
     N_b = np.arange(3, 10, 2)  # Keep best 3, 5, 7, 9 samples
     N_sim = 1000  # 1000 simulations per sampled controller
     lr = np.array([0.05, 0.1, 0.2])  # Learning rate .05, .1, or .2
-    vThresholds = [None, 0]  # Either no threshold or no non-negative values
+    vThresholds = [None, 0]  # Either no threshold or no non-negative values. UNUSED
     timeHorizon = 100  # Each simulation goes for 100 steps (or until episode ends)
 
     # All registered dpomdp environments, only the non-episodic versions
     envStrings = [dpomdp for dpomdp in list_dpomdps() if 'episodic' not in dpomdp]
-    # Currently using just learning rate of 0.1
-    paramList = [GDICEParams((n, n), N_k, j, N_sim, k, 0.1, t, timeHorizon) for n in N_n for j in N_s for k in N_b for t in vThresholds]
+    paramList = [GDICEParams(n, N_k, j, N_sim, k, l, None, timeHorizon, c) for n in N_n for c in centralized for j in N_s for k in N_b for l in lr]
     return envStrings, paramList
 
 # Save the results of a run
