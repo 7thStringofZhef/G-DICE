@@ -1,7 +1,7 @@
 import numpy as np
 from gym_pomdps import list_pomdps
 from gym_dpomdps import list_dpomdps
-from .Parameters import GDICEParams
+from GDICE_Python.Parameters import GDICEParams
 import os
 import pickle
 import glob
@@ -21,7 +21,8 @@ def getGridSearchGDICEParams():
     timeHorizon = 100  # Each simulation goes for 100 steps (or until episode ends)
 
     # All registered Pomdp environments, only the non-episodic versions, no rocksample
-    envStrings = [pomdp for pomdp in list_pomdps() if 'episodic' not in pomdp and 'rock' not in pomdp]
+    envStrings = ["POMDP-1d-v0", "POMDP-4x3-v0", "POMDP-cheese-v0", "POMDP-concert-v0", "POMDP-hallway-v0", "POMDP-heavenhell-v0", "POMDP-loadunload-v0", "POMDP-network-v0", "POMDP-tiger-v0", "POMDP-voicemail-v0"]
+    #envStrings = [pomdp for pomdp in list_pomdps() if 'episodic' not in pomdp and 'rock' not in pomdp]
     paramList = [GDICEParams(n, N_k, j, N_sim, k, l, None, timeHorizon) for n in N_n for j in N_s for l in lr for k in N_b]
     return envStrings, paramList
 
@@ -46,7 +47,6 @@ def getGridSearchGDICEParamsDPOMDP():
 def writePOMDPGridSearchParamsToFile(filepath='POMDPsToEval.txt', numRuns=5):
     envStrings, paramList = getGridSearchGDICEParams()
     filelist = [os.path.join(str(run), env, param.name) for run in np.arange(numRuns)+1 for env in envStrings for param in paramList]
-    filelist *= numRuns
     with open(filepath, 'w') as f:
         for fileStr in filelist:
             f.write(fileStr+'\n')
@@ -68,7 +68,7 @@ def claimRunEnvParamSet(filepath='POMDPsToEval.txt'):
             f.seek(0)
             if len(lines) != 1:  # Write all but the next set
                 for line in lines[1:]:
-                    f.write(line+'\n')
+                    f.write(line)
             else:
                 f.write('')
             f.truncate()
@@ -77,18 +77,29 @@ def claimRunEnvParamSet(filepath='POMDPsToEval.txt'):
     inProgFilepath = os.path.splitext(filepath)[0]+'_inprog.txt'
     with filelock.FileLock(inProgFilepath+'.lock'):
         with open(inProgFilepath, 'a') as f:
-            f.write(nextSet+'\n')
-    return nextSet
+            f.write(nextSet)
+    return nextSet.rstrip()
 
 def registerRunEnvParamSetCompletion(doneSet, filepath='POMDPsToEval.txt'):
+    inProgFilepath = os.path.splitext(filepath)[0] + '_inprog.txt'
     completionPath = os.path.splitext(filepath)[0]+'_done.txt'
-    # Lock file
+    # Update completion file
     with filelock.FileLock(completionPath+'.lock'):
         with open(completionPath, 'a') as f:
             f.write(doneSet+'\n')
 
-
-
+    # Update in progress file (find and remove line)
+    with filelock.FileLock(inProgFilepath+'.lock'):
+        with open(inProgFilepath, 'r+') as f:
+            lines = f.readlines()
+            try:
+                lines.remove(doneSet+'\n')
+            except:
+                pass
+            f.seek(0)
+            for line in lines:
+                f.write(line)
+            f.truncate()
 
 
 # Save the results of a run
@@ -237,5 +248,11 @@ def genDummyFilesFromList(pathToList, baseGenPath='/scratch/slayback.d/GDICE'):
             continue
 
 
+if __name__ == "__main__":
+    writePOMDPGridSearchParamsToFile()
+    writeDPOMDPGridSearchParamsToFile()
+    for i in range(100):
+        nextSet = claimRunEnvParamSet()
+        registerRunEnvParamSetCompletion(nextSet)
 
 
