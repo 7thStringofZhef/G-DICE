@@ -43,8 +43,9 @@ class GDICEParams(object):
     def fromName(self, name):
         self.centralized = False if name.startswith('De_') else True
         self.numNodes = int((name.split('N'))[1].split('_K')[0])
-        self.numSamples = int((name.split('_K'))[1].split('_S')[0])
-        self.numSimulationsPerSample = int((name.split('_S'))[1].split('_B')[0])
+        self.numIterations = int((name.split('_K'))[1].split('_S')[0])
+        self.numSamples = int((name.split('_S'))[1].split('_sim')[0])
+        self.numSimulationsPerSample = int((name.split('_sim'))[1].split('_B')[0])
         self.numBestSamples = int((name.split('_B'))[1].split('_lr')[0])
         self.learningRate = float((name.split('_lr'))[1].split('_vT')[0])
         self.valueThreshold = None if (name.split('_vT'))[1].split('_tH')[0] == 'None' else float((name.split('_lr'))[1].split('_vT')[0])

@@ -45,7 +45,7 @@ def runOnListFile(baseSavePath, listFilePath='POMDPsToEval.txt'):
     pool = Pool()
     pString = claimRunEnvParamSet(listFilePath)
     while pString is not None:
-        splitPString = os.path.split(pString)  # {run}/{env}/{param}
+        splitPString = pString.split('/')  # {run}/{env}/{param}
         run = splitPString[0]
         os.makedirs(os.path.join(baseSavePath, run), exist_ok=True)
         envName = splitPString[1]
@@ -92,7 +92,7 @@ def runOnListFileDPOMDP(baseSavePath, listFilePath='DPOMDPsToEval.txt'):
     pool = Pool()
     pString = claimRunEnvParamSet(listFilePath)
     while pString is not None:
-        splitPString = os.path.split(pString)  # {run}/{env}/{param}
+        splitPString = pString.split('/')  # {run}/{env}/{param}
         run = splitPString[0]
         os.makedirs(os.path.join(baseSavePath, run), exist_ok=True)
         envName = splitPString[1]

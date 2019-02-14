@@ -25,7 +25,6 @@ def runGDICEOnEnvironment(env, controller, params, parallel=None, results=None, 
     assert (nActions == nActionsC and nObs == nObsC) or (nActions == tuple([nActionsC]*nAgents) and nObs == tuple([nObsC]*nAgents))
     # Ensure params match controllers
     if isinstance(nNodes, (int, np.integer)): assert nNodes == params.numNodes
-    else: assert tuple(nNodes) == tuple(params.numNodes)
 
     # Choose appropriate evaluation function
     envEvalFn = evaluateSampleMultiDPOMDP if nAgents > 1 else evaluateSampleMultiPOMDP
