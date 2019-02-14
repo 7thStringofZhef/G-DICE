@@ -41,6 +41,15 @@ def getGridSearchGDICEParamsDPOMDP():
     paramList = [GDICEParams(n, N_k, j, N_sim, k, l, None, timeHorizon, c) for n in N_n for c in centralized for j in N_s for k in N_b for l in lr]
     return envStrings, paramList
 
+def writePOMDPGridSearchParamsToFile(filepath='POMDPsToEval.txt', numRuns=5):
+    envStrings, paramList = getGridSearchGDICEParams()
+    pass
+
+def writeDPOMDPGridSearchParamsToFile(filepath='DPOMDPsToEval.txt', numRuns=5):
+    envStrings, paramList = getGridSearchGDICEParamsDPOMDP()
+    pass
+
+
 # Save the results of a run
 def saveResults(baseDir, envName, testParams, results):
     print('Saving...')
