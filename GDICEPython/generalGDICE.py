@@ -46,6 +46,8 @@ def runOnListFile(baseSavePath, listFilePath='POMDPsToEval.txt'):
     pString = claimRunEnvParamSet(listFilePath)
     while pString is not None:
         splitPString = os.path.split(pString)  # {run}/{env}/{param}
+        run = splitPString[0]
+        os.makedirs(os.path.join(baseSavePath, run), exist_ok=True)
         envName = splitPString[1]
         params = GDICEParams().fromName(name=splitPString[2])
         try:
@@ -63,21 +65,21 @@ def runOnListFile(baseSavePath, listFilePath='POMDPsToEval.txt'):
         prevResults = None
         env.reset()
         try:
-            results = runGDICEOnEnvironment(env, FSCDist, params, parallel=pool, results=prevResults, baseDir=baseSavePath)
+            results = runGDICEOnEnvironment(env, FSCDist, params, parallel=pool, results=prevResults, baseDir=os.path.join(baseSavePath, run))
         except MemoryError:
             print(envName + ' too large for parallel processing. Switching to MultiEnv...', file=sys.stderr)
-            results = runGDICEOnEnvironment(env, FSCDist, params, parallel=None, results=prevResults, baseDir=baseSavePath)
+            results = runGDICEOnEnvironment(env, FSCDist, params, parallel=None, results=prevResults, baseDir=os.path.join(baseSavePath, run))
         except Exception as e:
             print(envName + ' encountered error in runnning' + params.name + ', skipping to next param', file=sys.stderr)
             print(e, file=sys.stderr)
             return
-        saveResults(os.path.join(baseSavePath, 'EndResults'), envName, params, results)
+        saveResults(os.path.join(os.path.join(baseSavePath, run), 'EndResults'), envName, params, results)
 
         # Remove from in progress
         registerRunEnvParamSetCompletion(pString, listFilePath)
         # Delete the temp results
         try:
-            for filename in glob.glob(os.path.join(baseSavePath, 'GDICEResults', envName, params.name) + '*'):
+            for filename in glob.glob(os.path.join(os.path.join(baseSavePath, run), 'GDICEResults', envName, params.name) + '*'):
                 os.remove(filename)
         except:
             return
@@ -91,6 +93,8 @@ def runOnListFileDPOMDP(baseSavePath, listFilePath='DPOMDPsToEval.txt'):
     pString = claimRunEnvParamSet(listFilePath)
     while pString is not None:
         splitPString = os.path.split(pString)  # {run}/{env}/{param}
+        run = splitPString[0]
+        os.makedirs(os.path.join(baseSavePath, run), exist_ok=True)
         envName = splitPString[1]
         params = GDICEParams().fromName(name=splitPString[2])
         try:
@@ -112,21 +116,21 @@ def runOnListFileDPOMDP(baseSavePath, listFilePath='DPOMDPsToEval.txt'):
         prevResults = None
         env.reset()
         try:
-            results = runGDICEOnEnvironment(env, FSCDist, params, parallel=pool, results=prevResults, baseDir=baseSavePath)
+            results = runGDICEOnEnvironment(env, FSCDist, params, parallel=pool, results=prevResults, baseDir=os.path.join(baseSavePath, run))
         except MemoryError:
             print(envName + ' too large for parallel processing. Switching to MultiEnv...', file=sys.stderr)
-            results = runGDICEOnEnvironment(env, FSCDist, params, parallel=None, results=prevResults, baseDir=baseSavePath)
+            results = runGDICEOnEnvironment(env, FSCDist, params, parallel=None, results=prevResults, baseDir=os.path.join(baseSavePath, run))
         except Exception as e:
             print(envName + ' encountered error in runnning' + params.name + ', skipping to next param', file=sys.stderr)
             print(e, file=sys.stderr)
             return
-        saveResults(os.path.join(baseSavePath, 'EndResults'), envName, params, results)
+        saveResults(os.path.join(os.path.join(baseSavePath, run), 'EndResults'), envName, params, results)
 
         # Remove from in progress
         registerRunEnvParamSetCompletion(pString, listFilePath)
         # Delete the temp results
         try:
-            for filename in glob.glob(os.path.join(baseSavePath, 'GDICEResults', envName, params.name) + '*'):
+            for filename in glob.glob(os.path.join(os.path.join(baseSavePath, run), 'GDICEResults', envName, params.name) + '*'):
                 os.remove(filename)
         except:
             return

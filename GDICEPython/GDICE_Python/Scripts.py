@@ -253,8 +253,4 @@ def genDummyFilesFromList(pathToList, baseGenPath='/scratch/slayback.d/GDICE'):
 if __name__ == "__main__":
     writePOMDPGridSearchParamsToFile()
     writeDPOMDPGridSearchParamsToFile()
-    for i in range(100):
-        nextSet = claimRunEnvParamSet()
-        registerRunEnvParamSetCompletion(nextSet)
-
 
