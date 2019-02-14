@@ -50,4 +50,5 @@ class GDICEParams(object):
         self.valueThreshold = None if (name.split('_vT'))[1].split('_tH')[0] == 'None' else float((name.split('_lr'))[1].split('_vT')[0])
         self.timeHorizon = int((name.split('_tH'))[1])
         self.buildName()
+        return self
 

@@ -64,9 +64,11 @@ def claimRunEnvParamSet(filepath='POMDPsToEval.txt'):
     with filelock.FileLock(filepath+'.lock'):
         with open(filepath, 'r+') as f:
             lines = f.readlines()
+            if not lines:  # No more environments
+                return None
             nextSet = lines[0]  # Claim the next set
             f.seek(0)
-            if len(lines) != 1:  # Write all but the next set
+            if len(lines) > 1:  # Write all but the next set
                 for line in lines[1:]:
                     f.write(line)
             else:
