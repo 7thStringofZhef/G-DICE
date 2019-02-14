@@ -6,6 +6,7 @@ import os
 import pickle
 import glob
 import traceback
+import filelock
 
 
 # Define a list of GDICE parameter objects that permute the variables across the possible values
@@ -41,13 +42,53 @@ def getGridSearchGDICEParamsDPOMDP():
     paramList = [GDICEParams(n, N_k, j, N_sim, k, l, None, timeHorizon, c) for n in N_n for c in centralized for j in N_s for k in N_b for l in lr]
     return envStrings, paramList
 
+# Write out grid search permutation to text
 def writePOMDPGridSearchParamsToFile(filepath='POMDPsToEval.txt', numRuns=5):
     envStrings, paramList = getGridSearchGDICEParams()
-    pass
+    filelist = [os.path.join(str(run), env, param.name) for run in np.arange(numRuns)+1 for env in envStrings for param in paramList]
+    filelist *= numRuns
+    with open(filepath, 'w') as f:
+        for fileStr in filelist:
+            f.write(fileStr+'\n')
 
 def writeDPOMDPGridSearchParamsToFile(filepath='DPOMDPsToEval.txt', numRuns=5):
     envStrings, paramList = getGridSearchGDICEParamsDPOMDP()
-    pass
+    filelist = [os.path.join(str(run), env, param.name) for run in np.arange(numRuns)+1 for env in envStrings for param in paramList]
+    with open(filepath, 'w') as f:
+        for fileStr in filelist:
+            f.write(fileStr+'\n')
+
+# Claim the next param set
+def claimRunEnvParamSet(filepath='POMDPsToEval.txt'):
+    # Lock file
+    with filelock.FileLock(filepath+'.lock'):
+        with open(filepath, 'r+') as f:
+            lines = f.readlines()
+            nextSet = lines[0]  # Claim the next set
+            f.seek(0)
+            if len(lines) != 1:  # Write all but the next set
+                for line in lines[1:]:
+                    f.write(line+'\n')
+            else:
+                f.write('')
+            f.truncate()
+
+    # Move to "in progress"
+    inProgFilepath = os.path.splitext(filepath)[0]+'_inprog.txt'
+    with filelock.FileLock(inProgFilepath+'.lock'):
+        with open(inProgFilepath, 'a') as f:
+            f.write(nextSet+'\n')
+    return nextSet
+
+def registerRunEnvParamSetCompletion(doneSet, filepath='POMDPsToEval.txt'):
+    completionPath = os.path.splitext(filepath)[0]+'_done.txt'
+    # Lock file
+    with filelock.FileLock(completionPath+'.lock'):
+        with open(completionPath, 'a') as f:
+            f.write(doneSet+'\n')
+
+
+
 
 
 # Save the results of a run
