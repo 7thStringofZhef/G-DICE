@@ -76,15 +76,17 @@ def claimRunEnvParamSet(filepath='POMDPsToEval.txt'):
             f.truncate()
 
     # Move to "in progress"
+    # Use current process id to signal who is working on it
     inProgFilepath = os.path.splitext(filepath)[0]+'_inprog.txt'
     with filelock.FileLock(inProgFilepath+'.lock'):
         with open(inProgFilepath, 'a') as f:
-            f.write(nextSet)
+            f.write(str(os.getpid())+' '+nextSet)
     return nextSet.rstrip()
 
 def registerRunEnvParamSetCompletion(doneSet, filepath='POMDPsToEval.txt'):
     inProgFilepath = os.path.splitext(filepath)[0] + '_inprog.txt'
     completionPath = os.path.splitext(filepath)[0]+'_done.txt'
+    pid = str(os.getpid())
     # Update completion file
     with filelock.FileLock(completionPath+'.lock'):
         with open(completionPath, 'a') as f:
@@ -95,7 +97,7 @@ def registerRunEnvParamSetCompletion(doneSet, filepath='POMDPsToEval.txt'):
         with open(inProgFilepath, 'r+') as f:
             lines = f.readlines()
             try:
-                lines.remove(doneSet+'\n')
+                lines.remove(pid + ' ' + doneSet+'\n')
             except:
                 pass
             f.seek(0)
