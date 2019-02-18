@@ -80,13 +80,34 @@ def claimRunEnvParamSet(filepath='POMDPsToEval.txt'):
     inProgFilepath = os.path.splitext(filepath)[0]+'_inprog.txt'
     with filelock.FileLock(inProgFilepath+'.lock'):
         with open(inProgFilepath, 'a') as f:
-            f.write(str(os.getpid())+' '+nextSet)
+            f.write(nextSet)
+            #f.write(str(os.getpid())+' '+nextSet)
+    return nextSet.rstrip()
+
+# Claim the next param set from the "inprogress" file, assuming no one's working on it
+def claimRunEnvParamSet_unfinished(filepath='POMDPsToEval.txt'):
+    inProgFilepath = os.path.splitext(filepath)[0] + '_inprog.txt'
+    # Lock file
+    with filelock.FileLock(inProgFilepath+'.lock'):
+        with open(inProgFilepath, 'r+') as f:
+            lines = f.readlines()
+            if not lines:  # No more environments
+                return None
+            nextSet = lines[0]  # Claim the next set
+            f.seek(0)
+            if len(lines) > 1:  # Write all but the next set
+                for line in lines[1:]:
+                    f.write(line)
+            else:
+                f.write('')
+            f.truncate()
+
     return nextSet.rstrip()
 
 def registerRunEnvParamSetCompletion(doneSet, filepath='POMDPsToEval.txt'):
     inProgFilepath = os.path.splitext(filepath)[0] + '_inprog.txt'
     completionPath = os.path.splitext(filepath)[0]+'_done.txt'
-    pid = str(os.getpid())
+    #pid = str(os.getpid())
     # Update completion file
     with filelock.FileLock(completionPath+'.lock'):
         with open(completionPath, 'a') as f:
@@ -97,13 +118,22 @@ def registerRunEnvParamSetCompletion(doneSet, filepath='POMDPsToEval.txt'):
         with open(inProgFilepath, 'r+') as f:
             lines = f.readlines()
             try:
-                lines.remove(pid + ' ' + doneSet+'\n')
+                #lines.remove(pid + ' ' + doneSet + '\n')
+                lines.remove(doneSet+'\n')
             except:
                 pass
             f.seek(0)
             for line in lines:
                 f.write(line)
             f.truncate()
+
+def registerRunEnvParamSetCompletion_unfinished(doneSet, filepath='POMDPsToEval.txt'):
+    completionPath = os.path.splitext(filepath)[0]+'_done.txt'
+    #pid = str(os.getpid())
+    # Update completion file
+    with filelock.FileLock(completionPath+'.lock'):
+        with open(completionPath, 'a') as f:
+            f.write(doneSet+'\n')
 
 
 # Save the results of a run
