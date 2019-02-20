@@ -3,7 +3,7 @@ import numpy.random as npr
 from scipy.stats import entropy
 
 
-# Get columnwise entropy for a probability table
+# Get columnwise entropy for a probability table (rows*cols)
 def getColumnwiseEntropy(pTable, nCols):
     return np.array([entropy(pTable[:, col]) for col in range(nCols)])
 
@@ -135,6 +135,29 @@ class FiniteStateControllerDistribution(object):
     # Inject noise into probability table (entropy injection)
     # actionProbabilities is (numNodes, numActions)
     # obsProbabilities is (numNodes, numNodes, numObservations)
+    # Makes sense for moore. Imagine that action tables have one observation. You just need to say whether entropy of actions for each node is sufficient
+    """
+    # One node pTableTMA is numActions*numObs
+    # One node pTableNextNode is numNodes*numObs
+    for idxNode = 1:length(obj.nodes)  # (Start node)
+        entColumnsPTableTMA = entropy_columnwise(obj.nodes(idxNode).pTableTMA,obj.numObs);  # Entropy across action probabilities for each observation
+        idxsDegenPTableTMA = entColumnsPTableTMA < maxEnt*entFractionForInjection;  # Observation indices at which entropy is too low
+        
+        # For each of those columns, inject entropy
+        obj.nodes(idxNode).pTableTMA(:,idxsDegenPTableTMA) = (1-noise_injection_rate)*obj.nodes(idxNode).pTableTMA(:,idxsDegenPTableTMA) + noise_injection_rate*ones(obj.numTMAs,sum(idxsDegenPTableTMA))./obj.numTMAs;
+        
+        entColumnsPTableNextNode = entropy_columnwise(obj.nodes(idxNode).pTableNextNode,obj.numObs);  # Entropy across node probabilities for each observation
+        idxsDegenPTableNextNode = entColumnsPTableNextNode < maxEnt*entFractionForInjection;  # Observation indices at which entropy is too low
+        
+        # For each of those columns, inject entropy
+        obj.nodes(idxNode).pTableNextNode(:,idxsDegenPTableNextNode) = (1-noise_injection_rate)*obj.nodes(idxNode).pTableNextNode(:,idxsDegenPTableNextNode) + noise_injection_rate*ones(obj.numNodes,sum(idxsDegenPTableNextNode))./obj.numNodes;
+        
+        if (sum(idxsDegenPTableTMA)>1 || sum(idxsDegenPTableNextNode)>1)
+%                         fprintf(['idxNode: ' num2str(idxNode) '| sum(idxsDegenPTableTMA): ' num2str(sum(idxsDegenPTableTMA)) ' | sum(idxsDegenPTableNextNode): ' num2str(sum(idxsDegenPTableNextNode)) '\n'])
+            just_injected_noise = true;
+        end
+    end
+    """
     def injectNoise(self):
         injectedNoise = False
         nodeIndices = np.arange(self.numNodes)
@@ -145,8 +168,8 @@ class FiniteStateControllerDistribution(object):
             noiseInjectionRate = self.noiseInjectionRate  # Rate (0 to 1) at which to inject noise
             entropyFractionForInjection = self.entFraction  # Threshold of max entropy required to inject
             # Inject entropy into action probabilities. Does this make sense for moore machines?
-            actionEntropy = entropy(self.actionProbabilities[:, actionIndices], base=2)
-            nIndices = actionEntropy < maxEntropy*entropyFractionForInjection  # numNodes,
+            actionEntropy = np.array([entropy(self.actionProbabilities[idx, :], base=2) for idx in nodeIndices])
+            nIndices = actionEntropy < maxEntropy * entropyFractionForInjection  # numNodes,
             self.actionProbabilities[nIndices, :] = (1-noiseInjectionRate)*self.actionProbabilities[nIndices, :] + \
                                                     noiseInjectionRate*np.ones(np.sum(nIndices), self.numActions)/self.numActions
 
