@@ -135,7 +135,6 @@ class FiniteStateControllerDistribution(object):
     # Inject noise into probability table (entropy injection)
     # actionProbabilities is (numNodes, numActions)
     # obsProbabilities is (numNodes, numNodes, numObservations)
-    # Makes sense for moore. Imagine that action tables have one observation. You just need to say whether entropy of actions for each node is sufficient
     """
     # One node pTableTMA is numActions*numObs
     # One node pTableNextNode is numNodes*numObs
@@ -167,21 +166,26 @@ class FiniteStateControllerDistribution(object):
             maxEntropy = getMaximalEntropy(self.numNodes)  # Maximum entropy for categorical pdf
             noiseInjectionRate = self.noiseInjectionRate  # Rate (0 to 1) at which to inject noise
             entropyFractionForInjection = self.entFraction  # Threshold of max entropy required to inject
+
             # Inject entropy into action probabilities. Does this make sense for moore machines?
+            # Makes sense for moore. Imagine that action tables have one observation. You just need to say whether entropy of actions for each node is sufficient
             actionEntropy = np.array([entropy(self.actionProbabilities[idx, :], base=2) for idx in nodeIndices])
             nIndices = actionEntropy < maxEntropy * entropyFractionForInjection  # numNodes,
             self.actionProbabilities[nIndices, :] = (1-noiseInjectionRate)*self.actionProbabilities[nIndices, :] + \
                                                     noiseInjectionRate*np.ones(np.sum(nIndices), self.numActions)/self.numActions
 
+
             # Inject entropy into node transition probabilities
-            perNodeTable = np.array([self.nodeTransitionProbabilities[nIdx, :, :] for nIdx in nodeIndices])
-            nodeEntropy = np.array([entropy(tTable[:, obsIndices], base=2) for tTable in perNodeTable])
-            ntIndices = nodeEntropy < maxEntropy*entropyFractionForInjection  # numNodes, numNodes
             for startNodeIdx in nodeIndices:
-                self.nodeTransitionProbabilities[startNodeIdx, ntIndices[startNodeIdx, :], :] \
+                nodeEntropyPerObs = getColumnwiseEntropy(self.nodeTransitionProbabilities[startNodeIdx, :, :], self.numObservations)
+                ntIndices = nodeEntropyPerObs < maxEntropy * entropyFractionForInjection  # numObs,
+                # Subsection will be 10 * numColsToInject
+                self.nodeTransitionProbabilities[startNodeIdx, :, ntIndices] \
                     = (1-noiseInjectionRate) * \
-                      self.nodeTransitionProbabilities[startNodeIdx, ntIndices[startNodeIdx, :], :] + \
-                      noiseInjectionRate * np.ones(np.sum(ntIndices), self.numObservations)/self.numObservations
+                      self.nodeTransitionProbabilities[startNodeIdx, :, ntIndices] + \
+                      noiseInjectionRate * np.ones((np.sum(ntIndices), self.numNodes))/self.numNodes
+        injectedNoise = True
+        return injectedNoise
 
 
 
