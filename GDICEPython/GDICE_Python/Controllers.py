@@ -105,7 +105,7 @@ class FiniteStateControllerDistribution(object):
         self.actionProbabilities = self.actionProbabilities * (1-learningRate)
         self.nodeTransitionProbabilities = self.nodeTransitionProbabilities * (1-learningRate)
         nodeIndices = np.arange(0, self.numNodes, dtype=int)
-        obsIndices = np.arange(0,self.numObservations, dtype=int)
+        obsIndices = np.arange(0, self.numObservations, dtype=int)
 
         # Add samples factored by weight
         for sample in range(numSamples):
