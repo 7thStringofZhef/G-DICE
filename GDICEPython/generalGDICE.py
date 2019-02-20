@@ -458,5 +458,8 @@ if __name__ == "__main__":
         else:
             runOneFn(baseSavePath, args.env_name)
     else:
+        useEntropy = False
         runFn = runOnListFile if args.env_type =='POMDP' else runOnListFileDPOMDP
-        runFn(args.save_path, args.set_list)
+        if args.set_list.startswith('Ent'):
+            useEntropy = True
+        runFn(args.save_path, args.set_list, injectEntropy=useEntropy)

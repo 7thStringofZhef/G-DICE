@@ -155,7 +155,10 @@ class FiniteStateControllerDistribution(object):
             nodeEntropy = np.array([entropy(tTable[:, obsIndices], base=2) for tTable in perNodeTable])
             ntIndices = nodeEntropy < maxEntropy*entropyFractionForInjection  # numNodes, numNodes
             for startNodeIdx in nodeIndices:
-                self.nodeTransitionProbabilities[startNodeIdx, ntIndices[startNodeIdx, :], :]
+                self.nodeTransitionProbabilities[startNodeIdx, ntIndices[startNodeIdx, :], :] \
+                    = (1-noiseInjectionRate) * \
+                      self.nodeTransitionProbabilities[startNodeIdx, ntIndices[startNodeIdx, :], :] + \
+                      noiseInjectionRate * np.ones(np.sum(ntIndices), self.numObservations)/self.numObservations
 
 
 
