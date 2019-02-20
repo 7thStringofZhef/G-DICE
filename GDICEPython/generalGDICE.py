@@ -40,7 +40,7 @@ def runBasic():
 
     # Test on environment
 
-def runOnListFile(baseSavePath, listFilePath='POMDPsToEval.txt'):
+def runOnListFile(baseSavePath, listFilePath='POMDPsToEval.txt', injectEntropy=False):
     # For now, can't go back to inprogress ones
     pool = Pool()
     pString = claimRunEnvParamSet(listFilePath)
@@ -138,7 +138,7 @@ def runOnListFile_unfinished(baseSavePath, listFilePath='POMDPsToEval.txt'):
         # Claim next one
         pString = claimRunEnvParamSet_unfinished(listFilePath)
 
-def runOnListFileDPOMDP(baseSavePath, listFilePath='DPOMDPsToEval.txt'):
+def runOnListFileDPOMDP(baseSavePath, listFilePath='DPOMDPsToEval.txt', injectEntropy=False):
     # For now, can't go back to inprogress ones
     pool = Pool()
     pString = claimRunEnvParamSet(listFilePath)
