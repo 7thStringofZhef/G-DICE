@@ -88,7 +88,9 @@ class FiniteStateControllerDistribution(object):
         return np.array([self.sampleObservationTransitionFromAllNodes(obsIndex, numSamples)
                          for obsIndex in obsIndices], dtype=np.int32)
 
+
     def updateProbabilitiesFromSamples(self, actions, nodeObs, learningRate):
+        injectedNoise = False
         if actions.size == 0:  # No samples, no update
             return
         assert actions.shape[-1] == nodeObs.shape[-1]  # Same # samples
@@ -115,6 +117,12 @@ class FiniteStateControllerDistribution(object):
                 for startNode in range(nodeObs.shape[1]):
                     self.nodeTransitionProbabilities[startNode, nodeObs[observation,startNode,sample], observation] += learningRate*weightPerSample
 
+        # Inject noise if appropriate
+        if self.injectNoise():
+            print('Injected noise')
+            injectedNoise = True
+        return injectedNoise
+
     # Update the probability of taking an action in a particular node
     # Can be used for multiple inputs if numNodeIndices = n, numActionIndices = m, and newProbability = n*m or a scalar
     def updateActionProbability(self, nodeIndex, actionIndex, newProbability):
@@ -133,62 +141,40 @@ class FiniteStateControllerDistribution(object):
         return self.actionProbabilities, self.nodeTransitionProbabilities
 
     # Inject noise into probability table (entropy injection)
+    # Handles whether it's appropriate to do so
     # actionProbabilities is (numNodes, numActions)
     # obsProbabilities is (numNodes, numNodes, numObservations)
-    """
-    # One node pTableTMA is numActions*numObs
-    # One node pTableNextNode is numNodes*numObs
-    for idxNode = 1:length(obj.nodes)  # (Start node)
-        entColumnsPTableTMA = entropy_columnwise(obj.nodes(idxNode).pTableTMA,obj.numObs);  # Entropy across action probabilities for each observation
-        idxsDegenPTableTMA = entColumnsPTableTMA < maxEnt*entFractionForInjection;  # Observation indices at which entropy is too low
-        
-        # For each of those columns, inject entropy
-        obj.nodes(idxNode).pTableTMA(:,idxsDegenPTableTMA) = (1-noise_injection_rate)*obj.nodes(idxNode).pTableTMA(:,idxsDegenPTableTMA) + noise_injection_rate*ones(obj.numTMAs,sum(idxsDegenPTableTMA))./obj.numTMAs;
-        
-        entColumnsPTableNextNode = entropy_columnwise(obj.nodes(idxNode).pTableNextNode,obj.numObs);  # Entropy across node probabilities for each observation
-        idxsDegenPTableNextNode = entColumnsPTableNextNode < maxEnt*entFractionForInjection;  # Observation indices at which entropy is too low
-        
-        # For each of those columns, inject entropy
-        obj.nodes(idxNode).pTableNextNode(:,idxsDegenPTableNextNode) = (1-noise_injection_rate)*obj.nodes(idxNode).pTableNextNode(:,idxsDegenPTableNextNode) + noise_injection_rate*ones(obj.numNodes,sum(idxsDegenPTableNextNode))./obj.numNodes;
-        
-        if (sum(idxsDegenPTableTMA)>1 || sum(idxsDegenPTableNextNode)>1)
-%                         fprintf(['idxNode: ' num2str(idxNode) '| sum(idxsDegenPTableTMA): ' num2str(sum(idxsDegenPTableTMA)) ' | sum(idxsDegenPTableNextNode): ' num2str(sum(idxsDegenPTableNextNode)) '\n'])
-            just_injected_noise = true;
-        end
-    end
-    """
     def injectNoise(self):
         injectedNoise = False
         nodeIndices = np.arange(self.numNodes)
-        obsIndices = np.arange(self.numObservations)
-        actionIndices = np.arange(self.numActions)
         if self.shouldInjectNoiseUsingMaximalEntropy:
             maxEntropy = getMaximalEntropy(self.numNodes)  # Maximum entropy for categorical pdf
+            maxActionEntropy = getMaximalEntropy(self.numActions)
             noiseInjectionRate = self.noiseInjectionRate  # Rate (0 to 1) at which to inject noise
             entropyFractionForInjection = self.entFraction  # Threshold of max entropy required to inject
 
             # Inject entropy into action probabilities. Does this make sense for moore machines?
             # Makes sense for moore. Imagine that action tables have one observation. You just need to say whether entropy of actions for each node is sufficient
             actionEntropy = np.array([entropy(self.actionProbabilities[idx, :], base=2) for idx in nodeIndices])
-            nIndices = actionEntropy < maxEntropy * entropyFractionForInjection  # numNodes,
+            nIndices = actionEntropy < maxActionEntropy * entropyFractionForInjection  # numNodes,
+            if np.any(nIndices):
+                injectedNoise = True
             self.actionProbabilities[nIndices, :] = (1-noiseInjectionRate)*self.actionProbabilities[nIndices, :] + \
-                                                    noiseInjectionRate*np.ones(np.sum(nIndices), self.numActions)/self.numActions
+                                                    noiseInjectionRate*np.ones((np.sum(nIndices), self.numActions))/self.numActions
 
 
             # Inject entropy into node transition probabilities
             for startNodeIdx in nodeIndices:
                 nodeEntropyPerObs = getColumnwiseEntropy(self.nodeTransitionProbabilities[startNodeIdx, :, :], self.numObservations)
                 ntIndices = nodeEntropyPerObs < maxEntropy * entropyFractionForInjection  # numObs,
+                if np.any(ntIndices):
+                    injectedNoise = True
                 # Subsection will be 10 * numColsToInject
                 self.nodeTransitionProbabilities[startNodeIdx, :, ntIndices] \
                     = (1-noiseInjectionRate) * \
                       self.nodeTransitionProbabilities[startNodeIdx, :, ntIndices] + \
                       noiseInjectionRate * np.ones((np.sum(ntIndices), self.numNodes))/self.numNodes
-        injectedNoise = True
         return injectedNoise
-
-
-
 
 
 # A deterministic FSC that has one action for any node and one end node transition for any node-obs combination

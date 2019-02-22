@@ -22,12 +22,16 @@ def sampleFromControllerDistribution(controller, numSamples, numAgents=1):
 
 # Update controller distribution(s) using sampled actions/obs and learning rate
 def updateControllerDistribution(controller, sActions, sNodeObs, lr):
+    injectedNoise = False
     if isinstance(controller, (list, tuple)):
         for a in range(len(controller)):
-            controller[a].updateProbabilitiesFromSamples(sActions[:, a], sNodeObs[:, :, a], lr)
+            noise = controller[a].updateProbabilitiesFromSamples(sActions[:, :, a], sNodeObs[:, :, :, a], lr)
+            if noise:
+                injectedNoise = True
     else:
         # Note: For 1 controller with multiple agents, num samples provided should be that factor more (N_b of 5 with 2 agents becomes 10)
-        controller.updateProbabilitiesFromSamples(sActions, sNodeObs, lr)
+        injectedNoise = controller.updateProbabilitiesFromSamples(sActions, sNodeObs, lr)
+    return injectedNoise
 
 # Check the environment, return important parameters
 #   Input:
