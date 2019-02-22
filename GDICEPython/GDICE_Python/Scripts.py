@@ -13,10 +13,10 @@ import filelock
 def getGridSearchGDICEParams():
     N_n = np.arange(5, 16, 5)  # 5, 10, 15 nodes
     N_k = 1000  # Iterate, plot for every some # iterations
-    N_s = np.arange(30, 71, 10)  # 30-70 samples per iteration (by 5)
-    N_b = np.arange(3, 10, 2)  # Keep best 3, 5, 7, 9 samples
-    N_sim = 1000  # 1000 simulations per sampled controller
-    lr = [0.05, 0.1, 0.2]  # Learning rate .05, .1, or .2
+    N_s = np.arange(30, 71, 20)  # 30-70 samples per iteration (by 20)
+    N_b = np.arange(3, 8, 2)  # Keep best 3, 5, 7 samples
+    N_sim = 500  # 500 simulations per sampled controller
+    lr = [0.02, 0.1, 0.5]  # Learning rate .02, .1, or .5
     vThresholds = [None, 0]  # Either no threshold or no non-negative values. UNUSED
     timeHorizon = 100  # Each simulation goes for 100 steps (or until episode ends)
 
@@ -31,10 +31,10 @@ def getGridSearchGDICEParamsDPOMDP():
     N_n = np.arange(5, 16, 5)  # 5, 10, 15 nodes. Currently, each dpomdp has 2 agents, and each agent has same # nodes
     centralized = [False, True]  # One distribution for all agents, or 1 for each?
     N_k = 1000  # Iterate, plot for every some # iterations
-    N_s = np.arange(30, 71, 10)  # 30-70 samples per iteration (by 5)
-    N_b = np.arange(3, 10, 2)  # Keep best 3, 5, 7, 9 samples
+    N_s = np.arange(30, 71, 20)  # 30-70 samples per iteration (by 20)
+    N_b = np.arange(3, 8, 2)  # Keep best 3, 5, 7 samples
     N_sim = 1000  # 1000 simulations per sampled controller
-    lr = np.array([0.05, 0.1, 0.2])  # Learning rate .05, .1, or .2
+    lr = np.array([0.02, 0.1, 0.5])  # Learning rate .05, .1, or .2
     vThresholds = [None, 0]  # Either no threshold or no non-negative values. UNUSED
     timeHorizon = 100  # Each simulation goes for 100 steps (or until episode ends)
 
@@ -283,6 +283,6 @@ def genDummyFilesFromList(pathToList, baseGenPath='/scratch/slayback.d/GDICE'):
 
 
 if __name__ == "__main__":
-    writePOMDPGridSearchParamsToFile()
-    writeDPOMDPGridSearchParamsToFile()
+    writePOMDPGridSearchParamsToFile(numRuns=2)
+    writeDPOMDPGridSearchParamsToFile(numRuns=2)
 
