@@ -1,46 +1,140 @@
 import numpy as np
 from gym_pomdps import list_pomdps
-#from gym_dpomdps import list_dpomdps
-from .Parameters import GDICEParams
+from gym_dpomdps import list_dpomdps
+from GDICE_Python.Parameters import GDICEParams
 import os
 import pickle
 import glob
 import traceback
+import filelock
 
 
 # Define a list of GDICE parameter objects that permute the variables across the possible values
 def getGridSearchGDICEParams():
     N_n = np.arange(5, 16, 5)  # 5, 10, 15 nodes
     N_k = 1000  # Iterate, plot for every some # iterations
-    N_s = np.arange(30, 71, 10)  # 30-70 samples per iteration (by 5)
-    N_b = np.arange(3, 10, 2)  # Keep best 3, 5, 7, 9 samples
-    N_sim = 1000  # 1000 simulations per sampled controller
-    lr = np.array([0.05, 0.1, 0.2])  # Learning rate .05, .1, or .2
-    vThresholds = [None, 0]  # Either no threshold or no non-negative values
+    N_s = np.arange(30, 71, 20)  # 30-70 samples per iteration (by 20)
+    N_b = np.arange(3, 8, 2)  # Keep best 3, 5, 7 samples
+    N_sim = 500  # 500 simulations per sampled controller
+    lr = [0.02, 0.1, 0.5]  # Learning rate .02, .1, or .5
+    vThresholds = [None, 0]  # Either no threshold or no non-negative values. UNUSED
     timeHorizon = 100  # Each simulation goes for 100 steps (or until episode ends)
 
     # All registered Pomdp environments, only the non-episodic versions, no rocksample
-    envStrings = [pomdp for pomdp in list_pomdps() if 'episodic' not in pomdp and 'rock' not in pomdp]
-    # Currently using just learning rate of 0.1
-    paramList = [GDICEParams(n, N_k, j, N_sim, k, 0.1, t, timeHorizon) for n in N_n for j in N_s for k in N_b for t in vThresholds]
+    envStrings = ["POMDP-1d-v0", "POMDP-4x3-v0", "POMDP-cheese-v0", "POMDP-concert-v0", "POMDP-hallway-v0", "POMDP-heavenhell-v0", "POMDP-loadunload-v0", "POMDP-network-v0", "POMDP-tiger-v0", "POMDP-voicemail-v0"]
+    #envStrings = [pomdp for pomdp in list_pomdps() if 'episodic' not in pomdp and 'rock' not in pomdp]
+    paramList = [GDICEParams(n, N_k, j, N_sim, k, l, None, timeHorizon) for n in N_n for j in N_s for l in lr for k in N_b]
     return envStrings, paramList
 
 # Define a list of GDICE parameter objects that permute the variables across the possible values
 def getGridSearchGDICEParamsDPOMDP():
     N_n = np.arange(5, 16, 5)  # 5, 10, 15 nodes. Currently, each dpomdp has 2 agents, and each agent has same # nodes
+    centralized = [False, True]  # One distribution for all agents, or 1 for each?
     N_k = 1000  # Iterate, plot for every some # iterations
-    N_s = np.arange(30, 71, 10)  # 30-70 samples per iteration (by 5)
-    N_b = np.arange(3, 10, 2)  # Keep best 3, 5, 7, 9 samples
+    N_s = np.arange(30, 71, 20)  # 30-70 samples per iteration (by 20)
+    N_b = np.arange(3, 8, 2)  # Keep best 3, 5, 7 samples
     N_sim = 1000  # 1000 simulations per sampled controller
-    lr = np.array([0.05, 0.1, 0.2])  # Learning rate .05, .1, or .2
-    vThresholds = [None, 0]  # Either no threshold or no non-negative values
+    lr = np.array([0.02, 0.1, 0.5])  # Learning rate .05, .1, or .2
+    vThresholds = [None, 0]  # Either no threshold or no non-negative values. UNUSED
     timeHorizon = 100  # Each simulation goes for 100 steps (or until episode ends)
 
     # All registered dpomdp environments, only the non-episodic versions
     envStrings = [dpomdp for dpomdp in list_dpomdps() if 'episodic' not in dpomdp]
-    # Currently using just learning rate of 0.1
-    paramList = [GDICEParams((n, n), N_k, j, N_sim, k, 0.1, t, timeHorizon) for n in N_n for j in N_s for k in N_b for t in vThresholds]
+    paramList = [GDICEParams(n, N_k, j, N_sim, k, l, None, timeHorizon, c) for n in N_n for c in centralized for j in N_s for k in N_b for l in lr]
     return envStrings, paramList
+
+# Write out grid search permutation to text
+def writePOMDPGridSearchParamsToFile(filepath='POMDPsToEval.txt', numRuns=5):
+    envStrings, paramList = getGridSearchGDICEParams()
+    filelist = [os.path.join(str(run), env, param.name) for run in np.arange(numRuns)+1 for env in envStrings for param in paramList]
+    with open(filepath, 'w') as f:
+        for fileStr in filelist:
+            f.write(fileStr+'\n')
+
+def writeDPOMDPGridSearchParamsToFile(filepath='DPOMDPsToEval.txt', numRuns=5):
+    envStrings, paramList = getGridSearchGDICEParamsDPOMDP()
+    filelist = [os.path.join(str(run), env, param.name) for run in np.arange(numRuns)+1 for env in envStrings for param in paramList]
+    with open(filepath, 'w') as f:
+        for fileStr in filelist:
+            f.write(fileStr+'\n')
+
+# Claim the next param set
+def claimRunEnvParamSet(filepath='POMDPsToEval.txt'):
+    # Lock file
+    with filelock.FileLock(filepath+'.lock'):
+        with open(filepath, 'r+') as f:
+            lines = f.readlines()
+            if not lines:  # No more environments
+                return None
+            nextSet = lines[0]  # Claim the next set
+            f.seek(0)
+            if len(lines) > 1:  # Write all but the next set
+                for line in lines[1:]:
+                    f.write(line)
+            else:
+                f.write('')
+            f.truncate()
+
+    # Move to "in progress"
+    # Use current process id to signal who is working on it
+    inProgFilepath = os.path.splitext(filepath)[0]+'_inprog.txt'
+    with filelock.FileLock(inProgFilepath+'.lock'):
+        with open(inProgFilepath, 'a') as f:
+            f.write(nextSet)
+            #f.write(str(os.getpid())+' '+nextSet)
+    return nextSet.rstrip()
+
+# Claim the next param set from the "inprogress" file, assuming no one's working on it
+def claimRunEnvParamSet_unfinished(filepath='POMDPsToEval.txt'):
+    inProgFilepath = os.path.splitext(filepath)[0] + '_inprog.txt'
+    # Lock file
+    with filelock.FileLock(inProgFilepath+'.lock'):
+        with open(inProgFilepath, 'r+') as f:
+            lines = f.readlines()
+            if not lines:  # No more environments
+                return None
+            nextSet = lines[0]  # Claim the next set
+            f.seek(0)
+            if len(lines) > 1:  # Write all but the next set
+                for line in lines[1:]:
+                    f.write(line)
+            else:
+                f.write('')
+            f.truncate()
+
+    return nextSet.rstrip()
+
+def registerRunEnvParamSetCompletion(doneSet, filepath='POMDPsToEval.txt'):
+    inProgFilepath = os.path.splitext(filepath)[0] + '_inprog.txt'
+    completionPath = os.path.splitext(filepath)[0]+'_done.txt'
+    #pid = str(os.getpid())
+    # Update completion file
+    with filelock.FileLock(completionPath+'.lock'):
+        with open(completionPath, 'a') as f:
+            f.write(doneSet+'\n')
+
+    # Update in progress file (find and remove line)
+    with filelock.FileLock(inProgFilepath+'.lock'):
+        with open(inProgFilepath, 'r+') as f:
+            lines = f.readlines()
+            try:
+                #lines.remove(pid + ' ' + doneSet + '\n')
+                lines.remove(doneSet+'\n')
+            except:
+                pass
+            f.seek(0)
+            for line in lines:
+                f.write(line)
+            f.truncate()
+
+def registerRunEnvParamSetCompletion_unfinished(doneSet, filepath='POMDPsToEval.txt'):
+    completionPath = os.path.splitext(filepath)[0]+'_done.txt'
+    #pid = str(os.getpid())
+    # Update completion file
+    with filelock.FileLock(completionPath+'.lock'):
+        with open(completionPath, 'a') as f:
+            f.write(doneSet+'\n')
+
 
 # Save the results of a run
 def saveResults(baseDir, envName, testParams, results):
@@ -188,5 +282,7 @@ def genDummyFilesFromList(pathToList, baseGenPath='/scratch/slayback.d/GDICE'):
             continue
 
 
-
+if __name__ == "__main__":
+    writePOMDPGridSearchParamsToFile(numRuns=2)
+    writeDPOMDPGridSearchParamsToFile(numRuns=2)
 

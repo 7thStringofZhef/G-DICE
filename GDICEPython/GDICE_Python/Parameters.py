@@ -9,7 +9,7 @@
 #   valueThreshold: If not None, ignore all samples with worse values, even if that means there aren't numBestSamples
 #   timeHorizon: If not None, run each sampled policy on the environment for this number of timesteps
 class GDICEParams(object):
-    def __init__(self, numNodes=10, numIterations=30, numSamples=50, numSimulationsPerSample=1000, numBestSamples=5, learningRate=0.1, valueThreshold=None, timeHorizon=100):
+    def __init__(self, numNodes=10, numIterations=30, numSamples=50, numSimulationsPerSample=1000, numBestSamples=5, learningRate=0.1, valueThreshold=None, timeHorizon=100, centralized=True):
         self.numNodes = numNodes
         self.numIterations = numIterations
         self.numSamples = numSamples
@@ -18,6 +18,7 @@ class GDICEParams(object):
         self.learningRate = learningRate
         self.valueThreshold = valueThreshold
         self.timeHorizon = timeHorizon
+        self.centralized = centralized
         self.buildName()
 
     # Name for use in saving files
@@ -33,3 +34,22 @@ class GDICEParams(object):
                     str(self.numSimulationsPerSample) + '_B' + str(self.numBestSamples) + '_lr' + \
                     str(self.learningRate) + '_vT' + ('None' if self.valueThreshold is None else str(self.valueThreshold)) + \
                                                                                                 '_tH' + str(self.timeHorizon)
+        # Prepend if using decentralized controllers
+        if not self.centralized:
+            self.name = 'De_' + self.name
+
+    # Parse a string for parameters, set self to those parameters
+    # String must be the name from above
+    def fromName(self, name):
+        self.centralized = False if name.startswith('De_') else True
+        self.numNodes = int((name.split('N'))[1].split('_K')[0])
+        self.numIterations = int((name.split('_K'))[1].split('_S')[0])
+        self.numSamples = int((name.split('_S'))[1].split('_sim')[0])
+        self.numSimulationsPerSample = int((name.split('_sim'))[1].split('_B')[0])
+        self.numBestSamples = int((name.split('_B'))[1].split('_lr')[0])
+        self.learningRate = float((name.split('_lr'))[1].split('_vT')[0])
+        self.valueThreshold = None if (name.split('_vT'))[1].split('_tH')[0] == 'None' else float((name.split('_lr'))[1].split('_vT')[0])
+        self.timeHorizon = int((name.split('_tH'))[1])
+        self.buildName()
+        return self
+

@@ -4,23 +4,34 @@ from .Controllers import FiniteStateControllerDistribution
 
 
 # Sample actions and node transitions from controller distribution(s)
-# For each node in each controller, sample actions numNodes*numSamples*numControllers
-# For each node, observation in controller, sample next node numObs*numBeginNodes*numSamples*numControllers
-def sampleFromControllerDistribution(controller, numSamples):
+# For each node in each controller, sample actions numNodes*numSamples*numControllers(or)numAgents
+# For each node, observation in controller, sample next node numObs*numBeginNodes*numSamples*numControllers(or)numAgents
+def sampleFromControllerDistribution(controller, numSamples, numAgents=1):
     if isinstance(controller, (list, tuple)):
         nC = len(controller)
         return np.stack([controller[a].sampleActionFromAllNodes(numSamples) for a in range(nC)], axis=-1), \
                np.stack([controller[a].sampleAllObservationTransitionsFromAllNodes(numSamples) for a in range(nC)], axis=-1)
     else:
-        return controller.sampleActionFromAllNodes(numSamples), controller.sampleAllObservationTransitionsFromAllNodes(numSamples)
+        # In the case of 1 controller with multiple agents, return in the same form as above
+        if numAgents == 1:
+            return controller.sampleActionFromAllNodes(numSamples), \
+                   controller.sampleAllObservationTransitionsFromAllNodes(numSamples)
+        else:
+            return np.stack([controller.sampleActionFromAllNodes(numSamples) for _ in range(numAgents)], axis=-1), \
+                   np.stack([controller.sampleAllObservationTransitionsFromAllNodes(numSamples) for _ in range(numAgents)], axis=-1)
 
 # Update controller distribution(s) using sampled actions/obs and learning rate
 def updateControllerDistribution(controller, sActions, sNodeObs, lr):
+    injectedNoise = False
     if isinstance(controller, (list, tuple)):
         for a in range(len(controller)):
-            controller[a].updateProbabilitiesFromSamples(sActions[:, a], sNodeObs[:, :, a], lr)
+            noise = controller[a].updateProbabilitiesFromSamples(sActions[:, :, a], sNodeObs[:, :, :, a], lr)
+            if noise:
+                injectedNoise = True
     else:
-        controller.updateProbabilitiesFromSamples(sActions, sNodeObs, lr)
+        # Note: For 1 controller with multiple agents, num samples provided should be that factor more (N_b of 5 with 2 agents becomes 10)
+        injectedNoise = controller.updateProbabilitiesFromSamples(sActions, sNodeObs, lr)
+    return injectedNoise
 
 # Check the environment, return important parameters
 #   Input:
@@ -95,6 +106,7 @@ def _parsePartialResultsToGDICERunVariables(params, results):
 
     return bestValue, bestValueVariance, bestActionProbs, bestNodeTransitionProbs, estimatedConvergenceIteration, \
     allValues, allStdDev, bestValueAtEachIteration, bestStdDevAtEachIteration, startIter, worstValueOfPreviousIteration
+
 
 
 

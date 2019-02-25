@@ -22,21 +22,20 @@ def runGDICEOnEnvironment(env, controller, params, parallel=None, results=None, 
     nAgents, nActions, nObs = _checkEnv(env)
     nNodes, nActionsC, nObsC = _checkControllerDist(controller)
     # Ensure controller matches environment
-    assert nActions == nActionsC and nObs == nObsC
+    assert (nActions == nActionsC and nObs == nObsC) or (nActions == tuple([nActionsC]*nAgents) and nObs == tuple([nObsC]*nAgents))
     # Ensure params match controllers
-    if isinstance(nNodes, int): assert nNodes == params.numNodes
-    else: assert tuple(nNodes) == tuple(params.numNodes)
+    if isinstance(nNodes, (int, np.integer)): assert nNodes == params.numNodes
 
     # Choose appropriate evaluation function
     envEvalFn = evaluateSampleMultiDPOMDP if nAgents > 1 else evaluateSampleMultiPOMDP
 
     # Swap the wrapper function if using other type of environment
-    MultiEnvWrapper = GDICEEnvWrapper if envType else MultiPOMDP if nAgents==1 else MultiDPOMDP
+    MultiEnvWrapper = GDICEEnvWrapper if envType else MultiPOMDP if nAgents == 1 else MultiDPOMDP
 
     timeHorizon = params.timeHorizon
     if results is None:  # Not continuing previous results
         # Reset controller
-        if nAgents == 1: controller.reset()
+        if nAgents == 1 or params.centralized: controller.reset()
         else: [c.reset() for c in controller]
         # Start variables
         bestValue, bestValueVariance, bestActionProbs, bestNodeTransitionProbs, estimatedConvergenceIteration, \
@@ -50,7 +49,8 @@ def runGDICEOnEnvironment(env, controller, params, parallel=None, results=None, 
 
     iterBestValue = np.NINF  # What is the most recently seen best controller value
     for iteration in range(startIter, params.numIterations):
-        sampledActions, sampledNodes = sampleFromControllerDistribution(controller, params.numSamples)
+        injectedNoise = False
+        sampledActions, sampledNodes = sampleFromControllerDistribution(controller, params.numSamples, nAgents)
 
         # For each sampled action, evaluate in environment
         # For parallel, parallelize across simulations
@@ -72,6 +72,12 @@ def runGDICEOnEnvironment(env, controller, params, parallel=None, results=None, 
         bestValues, bestSampleIndices, bestValue, bestValueVariance, controllerChange = \
             _reduceSamplesToBest(values, stdDev, bestValue, bestValueVariance, params.numBestSamples, worstValueOfPreviousIteration)
 
+        # Update worst value to this one
+        try:
+            worstValueOfPreviousIteration = np.min(bestValues)
+        except ValueError:
+            pass
+
         # Update latest controller if best value changed
         if controllerChange:
             bestActionProbs = sampledActions[:, bestSampleIndices[-1]]
@@ -81,14 +87,21 @@ def runGDICEOnEnvironment(env, controller, params, parallel=None, results=None, 
         if params.valueThreshold is not None:
             bestSampleIndices = _applyValueThreshold(params.valueThreshold, bestValues, bestSampleIndices)
 
-        # For each controller, for each node, update using best samples
-        if nAgents == 1:
-            updateControllerDistribution(controller, sampledActions[:, bestSampleIndices], sampledNodes[:, :, bestSampleIndices], params.learningRate)
-        else:
-            updateControllerDistribution(controller, sampledActions[:, bestSampleIndices, :],
-                                         sampledNodes[:, :, bestSampleIndices, :], params.learningRate)
+        # For each controller, for each node, update using best samples (if there are any)
+        if bestSampleIndices.shape[0] > 0:
+            if nAgents == 1:
+                injectedNoise = updateControllerDistribution(controller, sampledActions[:, bestSampleIndices], sampledNodes[:, :, bestSampleIndices], params.learningRate)
+            else:
+                if params.centralized:  # For multi-agent with one distribution, reshape such that we have nAgents*N_b best samples
+                    injectedNoise = updateControllerDistribution(controller, sampledActions[:, bestSampleIndices, :].reshape(nNodes, len(bestSampleIndices)*nAgents),
+                                                                 sampledNodes[:, :, bestSampleIndices, :].reshape(nObs[0], nNodes, len(bestSampleIndices)*nAgents), params.learningRate)
+                else:
+                    injectedNoise = updateControllerDistribution(controller, sampledActions[:, bestSampleIndices, :], sampledNodes[:, :, bestSampleIndices, :], params.learningRate)
 
         print('After '+str(iteration+1) + ' iterations, best (discounted) value is ' + str(bestValue) + ' with standard deviation ' +str(bestValueVariance))
+        if injectedNoise:
+            worstValueOfPreviousIteration = np.NINF
+
         bestValueAtEachIteration[iteration] = bestValue
         bestStdDevAtEachIteration[iteration] = bestValueVariance
         # If the value stops improving, maybe we've converged?

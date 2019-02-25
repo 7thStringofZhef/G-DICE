@@ -1,5 +1,16 @@
 import numpy as np
 import numpy.random as npr
+from scipy.stats import entropy
+
+
+# Get columnwise entropy for a probability table (rows*cols)
+def getColumnwiseEntropy(pTable, nCols):
+    return np.array([entropy(pTable[:, col]) for col in range(nCols)])
+
+
+# Get maximum entropy value for a number of rows
+def getMaximalEntropy(nRows):
+    return entropy(np.ones(nRows)/nRows)
 
 
 # Class to sample finite state controllers from
@@ -9,11 +20,14 @@ import numpy.random as npr
 #   numActions: Number of actions controller nodes can perform (should match environment)
 #   numObservations: Number of observations a controller can see (should match environment)
 class FiniteStateControllerDistribution(object):
-    def __init__(self, numNodes, numActions, numObservations):
+    def __init__(self, numNodes, numActions, numObservations, shouldInjectNoiseUsingMaximalEntropy=False, noiseInjectionRate=0.05, entFraction=0.02):
         self.numNodes = numNodes
         self.numActions = numActions
         self.numObservations = numObservations
         self.currentNode = None
+        self.shouldInjectNoiseUsingMaximalEntropy = shouldInjectNoiseUsingMaximalEntropy
+        self.entFraction = entFraction
+        self.noiseInjectionRate = noiseInjectionRate
         self.initActionNodeProbabilityTable()
         self.initObservationNodeTransitionProbabilityTable()
 
@@ -22,7 +36,7 @@ class FiniteStateControllerDistribution(object):
         initialProbability = 1 / self.numActions
         self.actionProbabilities = np.full((self.numNodes, self.numActions), initialProbability)
 
-    # Probability of transition from 1 node to second node given obsersvation
+    # Probability of transition from 1 node to second node given observation
     def initObservationNodeTransitionProbabilityTable(self):
         initialProbability = 1 / self.numNodes
         self.nodeTransitionProbabilities = np.full((self.numNodes,
@@ -74,7 +88,9 @@ class FiniteStateControllerDistribution(object):
         return np.array([self.sampleObservationTransitionFromAllNodes(obsIndex, numSamples)
                          for obsIndex in obsIndices], dtype=np.int32)
 
+
     def updateProbabilitiesFromSamples(self, actions, nodeObs, learningRate):
+        injectedNoise = False
         if actions.size == 0:  # No samples, no update
             return
         assert actions.shape[-1] == nodeObs.shape[-1]  # Same # samples
@@ -91,7 +107,7 @@ class FiniteStateControllerDistribution(object):
         self.actionProbabilities = self.actionProbabilities * (1-learningRate)
         self.nodeTransitionProbabilities = self.nodeTransitionProbabilities * (1-learningRate)
         nodeIndices = np.arange(0, self.numNodes, dtype=int)
-        obsIndices = np.arange(0,self.numObservations, dtype=int)
+        obsIndices = np.arange(0, self.numObservations, dtype=int)
 
         # Add samples factored by weight
         for sample in range(numSamples):
@@ -100,6 +116,12 @@ class FiniteStateControllerDistribution(object):
             for observation in range(nodeObs.shape[0]):
                 for startNode in range(nodeObs.shape[1]):
                     self.nodeTransitionProbabilities[startNode, nodeObs[observation,startNode,sample], observation] += learningRate*weightPerSample
+
+        # Inject noise if appropriate
+        if self.injectNoise():
+            print('Injected noise')
+            injectedNoise = True
+        return injectedNoise
 
     # Update the probability of taking an action in a particular node
     # Can be used for multiple inputs if numNodeIndices = n, numActionIndices = m, and newProbability = n*m or a scalar
@@ -117,6 +139,42 @@ class FiniteStateControllerDistribution(object):
     # Get the current probability tables
     def save(self):
         return self.actionProbabilities, self.nodeTransitionProbabilities
+
+    # Inject noise into probability table (entropy injection)
+    # Handles whether it's appropriate to do so
+    # actionProbabilities is (numNodes, numActions)
+    # obsProbabilities is (numNodes, numNodes, numObservations)
+    def injectNoise(self):
+        injectedNoise = False
+        nodeIndices = np.arange(self.numNodes)
+        if self.shouldInjectNoiseUsingMaximalEntropy:
+            maxEntropy = getMaximalEntropy(self.numNodes)  # Maximum entropy for categorical pdf
+            maxActionEntropy = getMaximalEntropy(self.numActions)
+            noiseInjectionRate = self.noiseInjectionRate  # Rate (0 to 1) at which to inject noise
+            entropyFractionForInjection = self.entFraction  # Threshold of max entropy required to inject
+
+            # Inject entropy into action probabilities. Does this make sense for moore machines?
+            # Makes sense for moore. Imagine that action tables have one observation. You just need to say whether entropy of actions for each node is sufficient
+            actionEntropy = np.array([entropy(self.actionProbabilities[idx, :], base=2) for idx in nodeIndices])
+            nIndices = actionEntropy < maxActionEntropy * entropyFractionForInjection  # numNodes,
+            if np.any(nIndices):
+                injectedNoise = True
+            self.actionProbabilities[nIndices, :] = (1-noiseInjectionRate)*self.actionProbabilities[nIndices, :] + \
+                                                    noiseInjectionRate*np.ones((np.sum(nIndices), self.numActions))/self.numActions
+
+
+            # Inject entropy into node transition probabilities
+            for startNodeIdx in nodeIndices:
+                nodeEntropyPerObs = getColumnwiseEntropy(self.nodeTransitionProbabilities[startNodeIdx, :, :], self.numObservations)
+                ntIndices = nodeEntropyPerObs < maxEntropy * entropyFractionForInjection  # numObs,
+                if np.any(ntIndices):
+                    injectedNoise = True
+                # Subsection will be 10 * numColsToInject
+                self.nodeTransitionProbabilities[startNodeIdx, :, ntIndices] \
+                    = (1-noiseInjectionRate) * \
+                      self.nodeTransitionProbabilities[startNodeIdx, :, ntIndices] + \
+                      noiseInjectionRate * np.ones((np.sum(ntIndices), self.numNodes))/self.numNodes
+        return injectedNoise
 
 
 # A deterministic FSC that has one action for any node and one end node transition for any node-obs combination
