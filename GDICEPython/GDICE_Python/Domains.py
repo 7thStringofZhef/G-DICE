@@ -107,3 +107,29 @@ class PackageDeliveryEnvironment(gym.Env):
         self.state = state1
 
         return obs, reward, done, {}
+
+"""
+In the battleship POMDP, 5 ships are placed at random into a 10 × 10 grid, subject to the
+constraint that no ship may be placed adjacent or diagonally adjacent to another ship. Each
+ship has a different size of 5 × 1, 4 × 1, 3 × 1 and 2 × 1 respectively. The goal is to find
+and sink all ships. However, the agent cannot observe the location of the ships. Each step,
+the agent can fire upon one cell of the grid, and receives an observation of 1 if a ship was
+hit, and 0 otherwise. There is a -1 reward per time-step, a terminal reward of +100 for
+hitting every cell of every ship, and there is no discounting (γ = 1). It is illegal to fire twice
+on the same cell. If it was necessary to fire on all cells of the grid, the total reward is 0;
+otherwise the total reward indicates the number of steps better than the worst case. There
+are 100 actions, 2 observations, and approximately 1018 states in this challenging POMDP.
+Particle invigoration is particularly important in this problem. Each local transformation
+applied one of three transformations: 2 ships of different sizes swapped location; 2 smaller
+ships were swapped into the location of 1 larger ship; or 1 to 4 ships were moved to a new
+location, selected uniformly at random, and accepted if the new configuration was legal.
+Without preferred actions, all legal actions were considered. When preferred actions were
+used, impossible cells for ships were deduced automatically, by marking off the diagonally
+adjacent cells to each hit. These cells were never selected in the tree or during rollouts. The
+performance of POMCP, with and without preferred actions, is shown in Figure 2
+"""
+
+# 4 ships (5x1, 4x1, 3x1, 2x1)
+# 10*10 grid, no adjacent ships
+class BattleshipEnvironment(gym.env):
+    pass

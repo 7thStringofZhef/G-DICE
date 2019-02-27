@@ -5,6 +5,8 @@
 #include "grid.h"
 #include <list>
 
+
+//Ships have a position (back end), a direction (defining direction towards front), and a length
 struct SHIP
 {
     COORD Position;
@@ -12,10 +14,12 @@ struct SHIP
     int Length;
 };
 
+
+//Battleship state
 class BATTLESHIP_STATE : public STATE
 {
 public:
-
+    // Cells can be occupied
     struct CELL
     {
         bool Occupied;

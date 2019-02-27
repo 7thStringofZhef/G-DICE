@@ -448,6 +448,7 @@ if __name__ == "__main__":
     parser.add_argument('--env_name', type=str, default='', help='Environment to run')
     parser.add_argument('--env_type', type=str, default='POMDP', help='Environment type to run')
     parser.add_argument('--set_list', type=str, default='', help='If provided, uses a list of run/env/param sets instead')
+    parser.add_argument('--unfinished', type=int, default=0, help='If 1, clean out unfinished results')
     args = parser.parse_args()
     if not args.set_list:
         runAllFn = runGridSearchOnAllEnv if args.env_name == 'POMDP' else runGridSearchOnAllEnvDPOMDP
@@ -459,7 +460,10 @@ if __name__ == "__main__":
             runOneFn(baseSavePath, args.env_name)
     else:
         useEntropy = False
-        runFn = runOnListFile if args.env_type =='POMDP' else runOnListFileDPOMDP
+        if args.unfinished:
+            runFn = runOnListFile_unfinished if args.env_type == 'POMDP' else runOnListFileDPOMDP_unfinished
+        else:
+            runFn = runOnListFile if args.env_type =='POMDP' else runOnListFileDPOMDP
         if args.set_list.startswith('Ent'):
             useEntropy = True
         runFn(args.save_path, args.set_list, injectEntropy=useEntropy)
