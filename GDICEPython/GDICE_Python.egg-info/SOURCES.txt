@@ -6,11 +6,15 @@ setup.py
 testUAV.py
 GDICE_Python/Algorithms.py
 GDICE_Python/Controllers.py
+GDICE_Python/CuPyImps.py
 GDICE_Python/Domains.py
 GDICE_Python/Evaluation.py
 GDICE_Python/GDICEEnvWrapper.py
+GDICE_Python/NumbaGym.py
+GDICE_Python/NumbaImp.py
 GDICE_Python/Parameters.py
 GDICE_Python/Plotting.py
+GDICE_Python/PyCUDAImp.py
 GDICE_Python/Scripts.py
 GDICE_Python/UAVDomains.py
 GDICE_Python/Utils.py
