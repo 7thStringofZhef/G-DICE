@@ -208,11 +208,12 @@ def replaceResultsWithDummyFiles(baseDirs = np.arange(1,11,dtype=int), endDir='E
 
 # Script to get me the results from all the runs beneath a directory
 # Structure is basePath/<1,2,3,4,5,6,7,8,9,10>/EndResults/GDICEResults/envName/<params>
-def extractResultsFromAllRuns(basePath, saveSeparate=False, saveDummyList=True):
+def extractResultsFromAllRuns(basePath, saveSeparate=False, saveDummyList=False):
     # List environments I actually did runs for
-    baseEnvNames = ['1d', '4x3', 'cheese', 'concert', 'hallway', 'heavenhell', 'loadunload', 'network', 'shopping_5', 'tiger', 'voicemail']
+    baseEnvNames = ['1d', '4x3', 'cheese', 'concert', 'hallway', 'heavenhell', 'loadunload', 'network', 'tiger', 'voicemail']
     envNames = ['POMDP-' + base + '-v0' for base in baseEnvNames]
-    runDirs = np.arange(1, 11, dtype=int)
+    envNamesDPOMDP = [dpomdp for dpomdp in list_dpomdps() if 'episodic' not in dpomdp]
+    runDirs = np.arange(1, 3, dtype=int)
     f = None
 
     if saveDummyList:
