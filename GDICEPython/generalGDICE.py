@@ -87,7 +87,7 @@ def runOnListFile(baseSavePath, listFilePath='POMDPsToEval.txt', injectEntropy=F
         # Claim next one
         pString = claimRunEnvParamSet(listFilePath)
 
-def runOnListFile_unfinished(baseSavePath, listFilePath='POMDPsToEval.txt'):
+def runOnListFile_unfinished(baseSavePath, listFilePath='POMDPsToEval.txt', injectEntropy=True):
     pool = Pool()
     pString = claimRunEnvParamSet_unfinished(listFilePath)
     while pString is not None:
@@ -190,7 +190,7 @@ def runOnListFileDPOMDP(baseSavePath, listFilePath='DPOMDPsToEval.txt', injectEn
         pString = claimRunEnvParamSet(listFilePath)
 
 # Clean up unfinished runs
-def runOnListFileDPOMDP_unfinished(baseSavePath, listFilePath='DPOMDPsToEval.txt'):
+def runOnListFileDPOMDP_unfinished(baseSavePath, listFilePath='DPOMDPsToEval.txt', injectEntropy=True):
     # For now, can't go back to inprogress ones
     pool = Pool()
     pString = claimRunEnvParamSet_unfinished(listFilePath)
