@@ -127,9 +127,10 @@ Without preferred actions, all legal actions were considered. When preferred act
 used, impossible cells for ships were deduced automatically, by marking off the diagonally
 adjacent cells to each hit. These cells were never selected in the tree or during rollouts. The
 performance of POMCP, with and without preferred actions, is shown in Figure 2
-"""
+
 
 # 4 ships (5x1, 4x1, 3x1, 2x1)
 # 10*10 grid, no adjacent ships
-class BattleshipEnvironment(gym.env):
+class BattleshipEnvironment(gym.Env):
     pass
+"""
