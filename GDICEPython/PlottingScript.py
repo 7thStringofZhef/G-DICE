@@ -59,7 +59,7 @@ def extractNonEntropy():
         plt.ylabel("Performance")
         plt.title(envNames[envIndex] + ' number of nodes average performance')
         plt.legend()
-        plt.savefig('Figures/'+envNames[envIndex]+'Nodes.png')
+        plt.savefig('Figures/'+envNames[envIndex]+'Nodes.eps')
         plt.cla()
 
         # num samples per iteration
@@ -67,13 +67,11 @@ def extractNonEntropy():
         plt.plot(iterations, sampleMeanVals[0], label=str(numSampleValues[0]))
         plt.plot(iterations, sampleMeanVals[1], label=str(numSampleValues[1]))
         plt.plot(iterations, sampleMeanVals[2], label=str(numSampleValues[2]))
-        plt.plot(iterations, sampleMeanVals[3], label=str(numSampleValues[3]))
-        plt.plot(iterations, sampleMeanVals[4], label=str(numSampleValues[4]))
         plt.xlabel("Iterations")
         plt.ylabel("Performance")
         plt.title(envNames[envIndex] + ' number of samples average performance')
         plt.legend()
-        plt.savefig('Figures/'+envNames[envIndex]+'Samples.png')
+        plt.savefig('Figures/'+envNames[envIndex]+'Samples.eps')
         plt.cla()
 
         # num best samples per iteration
@@ -81,12 +79,11 @@ def extractNonEntropy():
         plt.plot(iterations, bestSampleMeanVals[0], label=str(numBestSampleValues[0]))
         plt.plot(iterations, bestSampleMeanVals[1], label=str(numBestSampleValues[1]))
         plt.plot(iterations, bestSampleMeanVals[2], label=str(numBestSampleValues[2]))
-        plt.plot(iterations, bestSampleMeanVals[3], label=str(numBestSampleValues[3]))
         plt.xlabel("Iterations")
         plt.ylabel("Performance")
         plt.title(envNames[envIndex] + ' number of best samples average performance')
         plt.legend()
-        plt.savefig('Figures/'+envNames[envIndex]+'BestSamples.png')
+        plt.savefig('Figures/'+envNames[envIndex]+'BestSamples.eps')
         plt.cla()
 
 def extractEntropy():
@@ -133,7 +130,7 @@ def extractEntropy():
         plt.ylabel("Performance")
         plt.title(envNames[envIndex] + ' number of nodes average performance')
         plt.legend()
-        plt.savefig('Figures/'+envNames[envIndex]+'Nodes.png')
+        plt.savefig('Figures/'+envNames[envIndex]+'Nodes.eps')
         plt.cla()
 
         # num samples per iteration
@@ -141,13 +138,11 @@ def extractEntropy():
         plt.plot(iterations, sampleMeanVals[0], label=str(numSampleValues[0]))
         plt.plot(iterations, sampleMeanVals[1], label=str(numSampleValues[1]))
         plt.plot(iterations, sampleMeanVals[2], label=str(numSampleValues[2]))
-        plt.plot(iterations, sampleMeanVals[3], label=str(numSampleValues[3]))
-        plt.plot(iterations, sampleMeanVals[4], label=str(numSampleValues[4]))
         plt.xlabel("Iterations")
         plt.ylabel("Performance")
         plt.title(envNames[envIndex] + ' number of samples average performance')
         plt.legend()
-        plt.savefig('Figures/'+envNames[envIndex]+'Samples.png')
+        plt.savefig('Figures/'+envNames[envIndex]+'Samples.eps')
         plt.cla()
 
         # num best samples per iteration
@@ -155,12 +150,11 @@ def extractEntropy():
         plt.plot(iterations, bestSampleMeanVals[0], label=str(numBestSampleValues[0]))
         plt.plot(iterations, bestSampleMeanVals[1], label=str(numBestSampleValues[1]))
         plt.plot(iterations, bestSampleMeanVals[2], label=str(numBestSampleValues[2]))
-        plt.plot(iterations, bestSampleMeanVals[3], label=str(numBestSampleValues[3]))
         plt.xlabel("Iterations")
         plt.ylabel("Performance")
         plt.title(envNames[envIndex] + ' number of best samples average performance')
         plt.legend()
-        plt.savefig('Figures/'+envNames[envIndex]+'BestSamples.png')
+        plt.savefig('Figures/'+envNames[envIndex]+'BestSamples.eps')
         plt.cla()
 
 if __name__ == "__main__":
