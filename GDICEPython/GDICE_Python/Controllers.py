@@ -176,13 +176,6 @@ class FiniteStateControllerDistribution(object):
                       noiseInjectionRate * np.ones((np.sum(ntIndices), self.numNodes))/self.numNodes
         return injectedNoise
 
-
-# A deterministic FSC that has one action for any node and one end node transition for any node-obs combination
-# Constructed using output policy from G-DICE
-#   Inputs:
-#     actionTransitions: (numNodes, ) array of actions to perform at each node
-#     nodeObservationTransitions: (numObservations, numNodes) array of end nodes to transition to
-#                                 from each start node and observation combination
 class DeterministicFiniteStateController(object):
     def __init__(self, actionTransitions, nodeObservationTransitions):
         self.actionTransitions = actionTransitions
@@ -190,11 +183,11 @@ class DeterministicFiniteStateController(object):
         self.numNodes = self.actionTransitions.shape[0]
         self.numActions = np.unique(self.actionTransitions)
         self.numObservations = self.nodeObservationTransitions[0]
-        self.currentNode = 0
+        self.reset()
 
     # Set current node to 0
     def reset(self):
-        self.currentNode = 0
+        self.currentNodes = 0
 
     # Get action using current node
     def getAction(self):
@@ -207,3 +200,41 @@ class DeterministicFiniteStateController(object):
     # return current node index
     def getCurrentNode(self):
         return self.currentNode
+
+# A deterministic FSC that runs multiple agents using the same controller
+# Each agent runs on a different node of the controller
+# Constructed using output policy from G-DICE
+#   Inputs:
+#     actionTransitions: (numNodes, ) array of actions to perform at each node
+#     nodeObservationTransitions: (numObservations, numNodes) array of end nodes to transition to
+#                                 from each start node and observation combination
+class DeterministicMultiAgentFiniteStateController(object):
+    def __init__(self, actionTransitions, nodeObservationTransitions, nAgents):
+        self.actionTransitions = actionTransitions
+        self.nodeObservationTransitions = nodeObservationTransitions
+        self.numNodes = self.actionTransitions.shape[0]
+        self.numActions = np.unique(self.actionTransitions)
+        self.numObservations = self.nodeObservationTransitions[0]
+        self.nAgents = nAgents
+        self.reset()
+
+    # Set current node to 0
+    def reset(self):
+        self.currentNodes = [0] * self.nAgents
+
+    # Get action using current node
+    def getAction(self):
+        actions = []
+        for agent in range(self.nAgents):
+            action = self.actionTransitions[self.currentNodes[agent], agent]
+            actions.append(action)
+        return actions
+
+    # Set current nodes using the agents' observations
+    def processObservation(self, observationIndex):
+        for agent in range(self.nAgents):
+            self.currentNodes[agent] = self.nodeObservationTransitions[observationIndex[agent],
+                                                                       self.currentNodes[agent], agent]
+    # return current node index
+    def getCurrentNode(self):
+        return self.currentNodes

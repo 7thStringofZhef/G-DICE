@@ -119,6 +119,7 @@ def runDeterministicControllerOnEnvironment(env, controller, timeHorizon, printM
             print('Timestep', currentTimestep)
             print('action', action)
         obs, reward, isDone = env.step(action, printEnv=printMsgs)[:3]
+        print('reward:', reward)
         controller.processObservation(obs)
         value += reward * (gamma ** currentTimestep)
         currentTimestep += 1

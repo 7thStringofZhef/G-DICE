@@ -7,6 +7,7 @@ class GDICEEnvWrapper(gym.Wrapper):
     def __init__(self, env, numTrajectories):
         super().__init__(env)
         self.nTrajectories = numTrajectories
+        self.nAgents = env.agents
         self.reset()
 
     def __getattr__(self, attr):
@@ -48,10 +49,10 @@ class GDICEEnvWrapper(gym.Wrapper):
         dones = []
 
         for i in range(len(self.states)):
-            # For each agent that is done, return nothing
+            # For each simulation run that is done, return nothing
             if i in self.doneIndices:
                 newStates.append(-1)
-                observations.append(-1)
+                observations.append([-1] * self.nAgents)
                 rewards.append(0)
                 dones.append(True)
                 continue
