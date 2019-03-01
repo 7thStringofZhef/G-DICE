@@ -77,7 +77,7 @@ def runOnListFile(baseSavePath, listFilePath='POMDPsToEval.txt', injectEntropy=F
             prevResults, FSCDist = loadResults(npzFilename)[:2]
         else:
             FSCDist = FiniteStateControllerDistribution(params.numNodes, env.action_space.n,
-                                                        env.observation_space.n)
+                                                        env.observation_space.n, shouldInjectNoiseUsingMaximalEntropy=injectEntropy)
         env.reset()
         try:
             results = runGDICEOnEnvironment(env, FSCDist, params, parallel=pool, results=prevResults, baseDir=os.path.join(baseSavePath, run))
@@ -191,10 +191,10 @@ def runOnListFileDPOMDP(baseSavePath, listFilePath='DPOMDPsToEval.txt', injectEn
         else:
             if params.centralized:
                 FSCDist = FiniteStateControllerDistribution(params.numNodes, env.action_space[0].n,
-                                                            env.observation_space[0].n)
+                                                            env.observation_space[0].n, shouldInjectNoiseUsingMaximalEntropy=injectEntropy)
             else:
                 FSCDist = [FiniteStateControllerDistribution(params.numNodes, env.action_space[a].n,
-                                                             env.observation_space[a].n) for a in range(env.agents)]
+                                                             env.observation_space[a].n, shouldInjectNoiseUsingMaximalEntropy=injectEntropy) for a in range(env.agents)]
         prevResults = None
         env.reset()
         try:
