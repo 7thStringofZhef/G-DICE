@@ -50,6 +50,17 @@ def runOnListFile(baseSavePath, listFilePath='POMDPsToEval.txt', injectEntropy=F
         os.makedirs(os.path.join(baseSavePath, run), exist_ok=True)
         envName = splitPString[1]
         params = GDICEParams().fromName(name=splitPString[2])
+        # Check if run was already finished
+        if checkIfFinished(envName, params.name, baseDir=os.path.join(baseSavePath, run))[0]:
+            print(params.name + ' already finished for ' + envName + ', skipping...', file=sys.stderr)
+            # Remove from in progress
+            registerRunEnvParamSetCompletion(pString, listFilePath)
+            # Claim next one
+            pString = claimRunEnvParamSet(listFilePath)
+            continue
+
+        # Check if the run was partially finished
+        wasPartiallyRun, npzFilename = checkIfPartial(envName, params.name, baseDir=os.path.join(baseSavePath, run))
         try:
             env = gym.make(envName)
         except MemoryError:
@@ -60,9 +71,13 @@ def runOnListFile(baseSavePath, listFilePath='POMDPsToEval.txt', injectEntropy=F
             print(e, file=sys.stderr)
             return
 
-        FSCDist = FiniteStateControllerDistribution(params.numNodes, env.action_space.n,
-                                                    env.observation_space.n)
         prevResults = None
+        if wasPartiallyRun:
+            print(params.name + ' partially finished for ' + envName + ', loading...', file=sys.stderr)
+            prevResults, FSCDist = loadResults(npzFilename)[:2]
+        else:
+            FSCDist = FiniteStateControllerDistribution(params.numNodes, env.action_space.n,
+                                                        env.observation_space.n)
         env.reset()
         try:
             results = runGDICEOnEnvironment(env, FSCDist, params, parallel=pool, results=prevResults, baseDir=os.path.join(baseSavePath, run))
@@ -148,6 +163,17 @@ def runOnListFileDPOMDP(baseSavePath, listFilePath='DPOMDPsToEval.txt', injectEn
         os.makedirs(os.path.join(baseSavePath, run), exist_ok=True)
         envName = splitPString[1]
         params = GDICEParams().fromName(name=splitPString[2])
+        # Check if run was already finished
+        if checkIfFinished(envName, params.name, baseDir=os.path.join(baseSavePath, run))[0]:
+            print(params.name + ' already finished for ' + envName + ', skipping...', file=sys.stderr)
+            # Remove from in progress
+            registerRunEnvParamSetCompletion(pString, listFilePath)
+            # Claim next one
+            pString = claimRunEnvParamSet(listFilePath)
+            continue
+
+        # Check if the run was partially finished
+        wasPartiallyRun, npzFilename = checkIfPartial(envName, params.name, baseDir=os.path.join(baseSavePath, run))
         try:
             env = gym.make(envName)
         except MemoryError:
@@ -158,12 +184,17 @@ def runOnListFileDPOMDP(baseSavePath, listFilePath='DPOMDPsToEval.txt', injectEn
             print(e, file=sys.stderr)
             return
 
-        if params.centralized:
-            FSCDist = FiniteStateControllerDistribution(params.numNodes, env.action_space[0].n,
-                                                        env.observation_space[0].n)
+        prevResults = None
+        if wasPartiallyRun:
+            print(params.name + ' partially finished for ' + envName + ', loading...', file=sys.stderr)
+            prevResults, FSCDist = loadResults(npzFilename)[:2]
         else:
-            FSCDist = [FiniteStateControllerDistribution(params.numNodes, env.action_space[a].n,
-                                                         env.observation_space[a].n) for a in range(env.agents)]
+            if params.centralized:
+                FSCDist = FiniteStateControllerDistribution(params.numNodes, env.action_space[0].n,
+                                                            env.observation_space[0].n)
+            else:
+                FSCDist = [FiniteStateControllerDistribution(params.numNodes, env.action_space[a].n,
+                                                             env.observation_space[a].n) for a in range(env.agents)]
         prevResults = None
         env.reset()
         try:
