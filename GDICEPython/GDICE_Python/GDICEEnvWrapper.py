@@ -14,8 +14,12 @@ class GDICEEnvWrapper(gym.Wrapper):
         return getattr(self.env, attr)
 
     def reset(self):
-        self.env.reset()
-        self.states = [self.env.state] * self.nTrajectories
+        #self.states = [self.env.state] * self.nTrajectories
+        # Generate a new environment for each trajectory
+        self.states = []
+        for i in range(self.nTrajectories):
+            self.env.reset()
+            self.states.append(self.env.state)
         self.doneIndices = []  # states are not indices here, thus we need a separate list
                                # to keep the indices the states that are done
 
