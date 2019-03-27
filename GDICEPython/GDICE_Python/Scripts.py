@@ -208,7 +208,7 @@ def replaceResultsWithDummyFiles(baseDirs = np.arange(1,11,dtype=int), endDir='E
 
 # Script to get me the results from all the runs beneath a directory
 # Structure is basePath/<1,2,3,4,5,6,7,8,9,10>/EndResults/GDICEResults/envName/<params>
-def extractResultsFromAllRuns(basePath, saveSeparate=False, saveDummyList=False):
+def extractResultsFromAllRuns(basePath, saveSeparate=False, saveDummyList=False, sepName='compiledValues.npz', sepName2='compiledValueLabels.pkl'):
     # List environments I actually did runs for
     baseEnvNames = ['1d', '4x3', 'cheese', 'concert', 'hallway', 'heavenhell', 'loadunload', 'network', 'tiger', 'voicemail']
     envNames = ['POMDP-' + base + '-v0' for base in baseEnvNames]
@@ -259,8 +259,69 @@ def extractResultsFromAllRuns(basePath, saveSeparate=False, saveDummyList=False)
     # Save the extracted results in a single file for easier access later
     if saveSeparate:
         try:
-            np.savez('compiledValues.npz', runResultsFound=runResultsFound, iterValue=iterValues, iterStdDev=iterStdDev, runs=runDirs)
-            pickle.dump({'envs': envNames, 'params': paramList}, open('compiledValueLabels.pkl', 'wb'))
+            np.savez(sepName, runResultsFound=runResultsFound, iterValue=iterValues, iterStdDev=iterStdDev, runs=runDirs)
+            pickle.dump({'envs': envNames, 'params': paramList}, open(sepName2, 'wb'))
+        except Exception as e:
+            traceback.print_exc()
+            print(e)
+            print('Save failed')
+
+    return runResultsFound, iterValues, iterStdDev, envNames, paramList, runDirs
+
+# Script to get me the results from all the runs beneath a directory
+# Structure is basePath/<1,2,3,4,5,6,7,8,9,10>/EndResults/GDICEResults/envName/<params>
+def extractResultsFromAllRunsDPOMDP(basePath, saveSeparate=False, saveDummyList=False, sepName='compiledValues.npz', sepName2='compiledValueLabels.pkl'):
+    # List environments I actually did runs for
+    envNames = [dpomdp for dpomdp in list_dpomdps() if 'episodic' not in dpomdp]
+    runDirs = np.arange(1, 3, dtype=int)
+    f = None
+
+    if saveDummyList:
+        f = open("FilesToGenList.txt", 'w')
+        f2 = open("UnfinishedRuns.txt", 'w')
+
+
+    # Get list of grid search params
+    paramList = getGridSearchGDICEParamsDPOMDP()[1]
+
+    # Keep track of which run results we actually found
+    runResultsFound = np.zeros((len(runDirs), len(envNames), len(paramList)), dtype=bool)
+
+    # I just want the best value (and its stddev) at each iteration
+    iterValues = np.full((len(runDirs), len(envNames), len(paramList), paramList[0].numIterations), np.nan, dtype=np.float64)
+    iterStdDev = np.full((len(runDirs), len(envNames), len(paramList), paramList[0].numIterations), np.nan, dtype=np.float64)
+
+    # Start digging!
+    for runDir in runDirs:
+        runPath = os.path.join(basePath, str(runDir), 'EndResults', 'GDICEResults')
+        for envIndex in range(len(envNames)):
+            envName = envNames[envIndex]
+            envPath = os.path.join(runPath, envName)
+            for paramIndex in range(len(paramList)):
+                param = paramList[paramIndex]
+                filePath = os.path.join(envPath, param.name+'.npz')
+                if os.path.isfile(filePath):
+                    try:
+                        fileResults = np.load(filePath)
+                        iterValues[runDir-1, envIndex, paramIndex, :] = fileResults['bestValueAtEachIteration']
+                        iterStdDev[runDir-1, envIndex, paramIndex, :] = fileResults['bestStdDevAtEachIteration']
+                        runResultsFound[runDir-1, envIndex, paramIndex] = True
+                        fileResults.close()
+                        if saveDummyList:
+                            strippedPath = filePath[filePath.find('/'+str(runDir))+1:]
+                            f.write(strippedPath + '\n')
+                    except:
+                        print('Load failed for env ' + envName + ' params ' + os.path.basename(filePath))
+                        continue
+                else:
+                    pass
+                    #strippedPath = filePath[filePath.find('/'+str(runDir))+1:]
+                    #f2.write(strippedPath+'\n')
+    # Save the extracted results in a single file for easier access later
+    if saveSeparate:
+        try:
+            np.savez(sepName, runResultsFound=runResultsFound, iterValue=iterValues, iterStdDev=iterStdDev, runs=runDirs)
+            pickle.dump({'envs': envNames, 'params': paramList}, open(sepName2, 'wb'))
         except Exception as e:
             traceback.print_exc()
             print(e)
