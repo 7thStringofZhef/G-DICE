@@ -119,6 +119,9 @@ def runGDICEOnEnvironment(env, controller, params, parallel=None, results=None, 
             saveResults(baseDir, env.spec.id, params, (bestValue, bestValueVariance, bestActionProbs, bestNodeTransitionProbs,
                                                controller, estimatedConvergenceIteration, allValues, allStdDev, bestValueAtEachIteration, bestStdDevAtEachIteration))
 
+        # Notify the environment that an iteration has finished
+        if hasattr(env, 'gdice_iteration_end'):
+            env.gdice_iteration_end()
 
     # Return best policy, best value, updated controller
     return bestValue, bestValueVariance, bestActionProbs, bestNodeTransitionProbs, controller, \
