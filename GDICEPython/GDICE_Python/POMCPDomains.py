@@ -6,6 +6,9 @@ from enum import Enum
 import numpy as np
 from gym import Env
 from gym.spaces import Discrete
+from gym.utils import seeding
+
+from functools import partial
 
 from gym_pomdp.envs.coord import Grid, Coord
 from gym_pomdp.envs.gui import ShipGui
@@ -20,14 +23,51 @@ from gym_pomdp.envs.gui import ShipGui
 # State of each cell: 0 (empty), 1 (empty, visited), 2 (empty, diagonal), 3 (occupied), 4 (occupied, visited),
 
 class BattleshipPOMDP(POMDP):
-    def __init__(self, boardSize=10):
-        self.state = np.zeros((boardSize, boardSize), dtype=np.uint8)  # Grid
+    def __init__(self, boardSize=10, seed=None):
+        self.seed(seed)
+        self.boardSize = boardSize
         self.observation_space = Discrete(2)  # Miss or hit
         self.action_space = Discrete(boardSize ** 2)  # Fire on any square
+        self.actionMap = partial(np.unravel_index, dims=(boardSize, boardSize))  # Function to get flat indices from tuple
+        self.actionUnMap = partial(np.ravel_multi_index, dims=(boardSize, boardSize))  # Function to get tuple indices from flat
 
+    # Seed the RNG
+    def seed(self, seed):
+        self.np_random, seed_ = seeding.np_random(seed)
+        return [seed_]
 
+    def reset(self):
+        self.grid = np.zeros(self.boardSize ** 2, dtype=np.uint8)  # Grid (as flat)
+        self.legalMoves = np.ones(self.boardSize ** 2, dtype=bool)  # Which squares have been fired on? Mark those as false
+        self.preferredMoves = np.ones(self.boardSize ** 2, dtype=bool)  # Additionally prune squares diagonal to hit
+        self._initShips()
+
+    # Place a valid configuration of ships on the board
     def _initShips(self):
-        pass
+        shipLengths = [5, 4, 3, 3, 2]  # Carrier, battleship, cruiser, sub, destroyer
+        positions = self.actionMap(np.arange(self.boardSize ** 2))  # Flat indices 0-100
+        directions = np.arange(4)  # Directions
+        permutations = np.array(np.meshgrid(positions, directions)).reshape(2, -1).swapaxes(0, 1)
+        for ship in shipLengths:
+            shuffleInd = self.np_random.permutation(directions.size * positions.size)  # Shuffle permutations
+            perm = permutations[shuffleInd, :]
+            for pos, dir in perm:
+                if not self._collide(pos, dir, ship):
+                    self._placeShip(pos, dir, ship)
+                    break
+
+    # Does placing this new ship collide with previous ships? Or with the grid?
+    # shipPos is flat index
+    # shipDir is 0 (N), 1 (E), 2 (W), 3 (S)
+    def _collide(self, shipPos, shipDir, shipLength):
+        posAsTuple = self.actionUnMap(shipPos)
+        allPosAsTuple = [posAsTuple]
+
+
+        return False
+
+    def _placeShip(self, shipPos, shipDir, shipLength):
+        allPos = 0
 
 
 
