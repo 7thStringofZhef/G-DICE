@@ -5,7 +5,7 @@ from enum import Enum
 
 import numpy as np
 from gym import Env
-from gym.spaces import Discrete
+from gym.spaces import Discrete, MultiBinary
 from gym.utils import seeding
 
 from functools import partial
@@ -30,14 +30,10 @@ class BattleshipPOMDP(POMDP):
         self.boardSize = boardSize
         self.observation_space = Discrete(2)  # Miss or hit
         self.action_space = Discrete(boardSize ** 2)  # Fire on any square
+        self.reward_range = -1, 100  # Range of rewards. -1 for each timestep, 100 for winning
         self.actionMap = partial(np.unravel_index, dims=(boardSize, boardSize))  # Function to get flat indices from tuple
         self.actionUnMap = partial(np.ravel_multi_index, dims=(boardSize, boardSize))  # Function to get tuple indices from flat
         self.reset()
-
-    # Seed the RNG
-    def seed(self, seed):
-        self.np_random, seed_ = seeding.np_random(seed)
-        return [seed_]
 
     def reset(self):
         # Occupied, visited, diagonal
@@ -135,6 +131,98 @@ class BattleshipPOMDP(POMDP):
     # Done if you win
     def _isDone(self):
         return np.sum(np.logical_and(self.visited, self.occupied)) == self.numSegments
+
+class PocmanPOMDP(POMDP):
+    # If size
+    def __init__(self, size='standard', seed=None):
+        self.gamma = 0.95
+        self.size = size
+        self.seed(seed)
+        self.reward_range = -100, 1000
+        self.observation_space = MultiBinary(10)  # 10 bit binary observations
+        self.action_space = Discrete(4)
+
+    # Initialize standard 17*19 grid
+    # 4 ghosts
+    # Ghosts can sense at 6 manhattan distance
+    def _initStandard(self):
+        #** Transpose?
+        self.grid = np.array([[3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+        [3, 0, 0, 3, 0, 0, 0, 3, 0, 3, 0, 0, 0, 3, 0, 0, 3],
+        [7, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 7],
+        [3, 0, 0, 3, 0, 3, 0, 0, 0, 0, 0, 3, 0, 3, 0, 0, 3],
+        [3, 3, 3, 3, 0, 3, 3, 3, 0, 3, 3, 3, 0, 3, 3, 3, 3],
+        [0, 0, 0, 3, 0, 0, 0, 3, 0, 3, 0, 0, 0, 3, 0, 0, 0],
+        [0, 0, 0, 3, 0, 1, 1, 1, 1, 1, 1, 1, 0, 3, 0, 0, 0],
+        [0, 0, 0, 3, 0, 1, 0, 1, 1, 1, 0, 1, 0, 3, 0, 0, 0],
+        [1, 1, 1, 3, 0, 1, 0, 1, 1, 1, 0, 1, 0, 3, 1, 1, 1],
+        [0, 0, 0, 3, 0, 1, 0, 0, 0, 0, 0, 1, 0, 3, 0, 0, 0],
+        [0, 0, 0, 3, 0, 1, 1, 1, 1, 1, 1, 1, 0, 3, 0, 0, 0],
+        [0, 0, 0, 3, 0, 3, 0, 0, 0, 0, 0, 3, 0, 3, 0, 0, 0],
+        [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+        [3, 0, 0, 3, 0, 0, 0, 3, 0, 3, 0, 0, 0, 3, 0, 0, 3],
+        [7, 3, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 3, 7],
+        [0, 3, 0, 3, 0, 3, 0, 0, 0, 0, 0, 3, 0, 3, 0, 3, 0],
+        [3, 3, 3, 3, 0, 3, 3, 3, 0, 3, 3, 3, 0, 3, 3, 3, 3],
+        [3, 0, 0, 0, 0, 0, 0, 3, 0, 3, 0, 0, 0, 0, 0, 0, 3],
+        [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3]], dtype=int)
+        self.nGhosts = 4
+        self.ghostRange = 6
+        self.pocmanHome = (8, 6)
+        self.ghostHome = (8, 10)
+        self.passageY = 10
+
+    # Initialize mini 10*10 grid
+    #
+    def _initMini(self):
+        self.grid = np.array([[3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+        [3, 0, 0, 3, 0, 0, 3, 0, 0, 3],
+        [3, 0, 3, 3, 3, 3, 3, 3, 0, 3],
+        [3, 3, 3, 0, 0, 0, 0, 3, 3, 3],
+        [0, 0, 3, 0, 1, 1, 3, 3, 0, 0],
+        [0, 0, 3, 0, 1, 1, 3, 3, 0, 0],
+        [3, 3, 3, 0, 0, 0, 0, 3, 3, 3],
+        [3, 0, 3, 3, 3, 3, 3, 3, 0, 3],
+        [3, 0, 0, 3, 0, 0, 3, 0, 0, 3],
+        [3, 3, 3, 3, 3, 3, 3, 3, 3, 3]], dtype=int)
+        self.nGhosts = 3
+        self.ghostRange = 4
+        self.pocmanHome = (4, 2)
+        self.ghostHome = (4, 4)
+        self.passageY = 5
+
+    # Initialize micro 7*7 grid
+    #
+    def _initMicro(self):
+        self.grid = np.array([[3, 3, 3, 3, 3, 3, 3],
+        [3, 3, 0, 3, 0, 3, 3],
+        [3, 0, 3, 3, 3, 0, 3],
+        [3, 3, 3, 0, 3, 3, 3],
+        [3, 0, 3, 3, 3, 0, 3],
+        [3, 3, 0, 3, 0, 3, 3],
+        [3, 3, 3, 3, 3, 3, 3]], dtype=int)
+        self.nGhosts = 1
+        self.ghostRange = 3
+        self.pocmanHome = (3, 0)
+        self.ghostHome = (3, 4)
+        self.passageY = None
+
+    def reset(self):
+        if self.size is 'standard':
+            self._initStandard()
+        elif self.size is 'mini':
+            self._initMini()
+        elif self.size is 'micro':
+            self._initMicro()
+
+    def step(self, action):
+        pass
+
+    def _reward(self):
+        pass
+
+    def _manhattanDistance(self, tup1, tup2):
+        pass
 
 
 if __name__ == "__main__":
