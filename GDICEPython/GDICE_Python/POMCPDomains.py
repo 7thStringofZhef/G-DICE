@@ -132,7 +132,30 @@ class BattleshipPOMDP(POMDP):
     def _isDone(self):
         return np.sum(np.logical_and(self.visited, self.occupied)) == self.numSegments
 
+
+# Grid flags: 1 is passable, 3 is food, 7 is power (0, 01, 11, 111 were bit flags)
 class PocmanPOMDP(POMDP):
+    # Flags
+    PASS = 1
+    SEED = 3
+    POWER = 7
+
+    # Static variables
+    PassageY = -1  # The row (column?) at which an agent can wrap around to the other side of the maze
+    SmellRange = 1  # How far can POCMAN smell food (adjacent, even diagonally)
+    HearRange = 2  # How far can POCMAN hear ghosts (manhattan)
+    FoodProb = 0.5  # How likely is it that a seed becomes food
+    ChaseProb = 0.75  # How likely is it that ghost moves towards POCMAN when trying to attack
+    DefensiveSlip = 0.25  # How often do ghosts fail to move (slip) when trying to escape
+    PowerNumSteps = 15  # powerup duration
+
+    # Rewards
+    RewardClearLevel = 1000
+    RewardDefault = -1
+    RewardDie = -100
+    RewardEatFood = 10
+    RewardEatGhost = 25
+    RewardHitWall = -25
     # If size
     def __init__(self, size='standard', seed=None):
         self.gamma = 0.95
@@ -185,6 +208,7 @@ class PocmanPOMDP(POMDP):
         [3, 0, 3, 3, 3, 3, 3, 3, 0, 3],
         [3, 0, 0, 3, 0, 0, 3, 0, 0, 3],
         [3, 3, 3, 3, 3, 3, 3, 3, 3, 3]], dtype=int)
+        self.foodGrid = np.logical_and(self.grid == self.SEED, self.grid == )
         self.nGhosts = 3
         self.ghostRange = 4
         self.pocmanHome = (4, 2)
@@ -215,14 +239,27 @@ class PocmanPOMDP(POMDP):
         elif self.size is 'micro':
             self._initMicro()
 
+        self.numFood = np.sum(self.grid == self.POWER)
+
     def step(self, action):
+        # Order of operations
+        #   Start reward at default
+        #   Move pocman (add reward if hit wall)
+        #   Decrement power steps
+        #   Check for hit ghost (send home if eaten)
+        #   Move ghosts
+        #   Check again
+        #   Get observation
+        #   Eat food
+        #   Check if level cleared
         pass
 
     def _reward(self):
         pass
 
-    def _manhattanDistance(self, tup1, tup2):
-        pass
+# Get the manhattan distance between two coordinates
+def _manhattanDistance(tup1, tup2):
+    return abs(tup1[0]-tup2[0]) + abs(tup1[1]-tup2[1])
 
 
 if __name__ == "__main__":
