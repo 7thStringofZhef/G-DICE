@@ -134,11 +134,20 @@ class BattleshipPOMDP(POMDP):
 
 
 # Grid flags: 1 is passable, 3 is food, 7 is power (0, 01, 11, 111 were bit flags)
+# Actions: N, E, S, W (0,1,2,3)
 class PocmanPOMDP(POMDP):
     # Flags
     PASS = 1
     SEED = 3
     POWER = 7
+
+    # Directions dict
+    actionDict = {
+        0: np.array([-1, 0]),  # N
+        1: np.array([0, 1]),  # E
+        2: np.array([1, 0]),  # S
+        3: np.array([0, -1])  # W
+    }
 
     # Static variables
     PassageY = -1  # The row (column?) at which an agent can wrap around to the other side of the maze
@@ -164,6 +173,7 @@ class PocmanPOMDP(POMDP):
         self.reward_range = -100, 1000
         self.observation_space = MultiBinary(10)  # 10 bit binary observations
         self.action_space = Discrete(4)
+        self.reset()
 
     # Initialize standard 17*19 grid
     # 4 ghosts
@@ -188,7 +198,7 @@ class PocmanPOMDP(POMDP):
         [0, 3, 0, 3, 0, 3, 0, 0, 0, 0, 0, 3, 0, 3, 0, 3, 0],
         [3, 3, 3, 3, 0, 3, 3, 3, 0, 3, 3, 3, 0, 3, 3, 3, 3],
         [3, 0, 0, 0, 0, 0, 0, 3, 0, 3, 0, 0, 0, 0, 0, 0, 3],
-        [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3]], dtype=int)
+        [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3]], dtype=int).T
         self.nGhosts = 4
         self.ghostRange = 6
         self.pocmanHome = (8, 6)
@@ -208,7 +218,6 @@ class PocmanPOMDP(POMDP):
         [3, 0, 3, 3, 3, 3, 3, 3, 0, 3],
         [3, 0, 0, 3, 0, 0, 3, 0, 0, 3],
         [3, 3, 3, 3, 3, 3, 3, 3, 3, 3]], dtype=int)
-        self.foodGrid = np.logical_and(self.grid == self.SEED, self.grid == )
         self.nGhosts = 3
         self.ghostRange = 4
         self.pocmanHome = (4, 2)
@@ -238,8 +247,21 @@ class PocmanPOMDP(POMDP):
             self._initMini()
         elif self.size is 'micro':
             self._initMicro()
+        self._resetPocmanState()
 
-        self.numFood = np.sum(self.grid == self.POWER)
+    def _resetPocmanState(self):
+        self.pocmanPosition = np.array(self.pocmanHome)  # Place POCMAN at home
+        self.powerSteps = 0  # No powerup at start
+
+        # Place ghosts
+        self.ghostPositions = np.zeros((self.nGhosts, 2))
+        self.ghostDirections = np.zeros(self.nGhosts)
+
+        # Food
+        foodMask = np.random.rand(*self.grid.shape)
+        self.foodGrid = np.logical_or(np.logical_and(self.grid == self.SEED, foodMask < self.FoodProb), self.grid == self.POWER)
+        self.numFood = np.sum(self.foodGrid)
+        self.nRows, self.nCols = self.grid.shape
 
     def step(self, action):
         # Order of operations
@@ -252,17 +274,67 @@ class PocmanPOMDP(POMDP):
         #   Get observation
         #   Eat food
         #   Check if level cleared
+        r = self.RewardDefault
+        isDone = False
+        if not self._nextPos(self.pocmanPosition, action): r += self.RewardHitWall  # If step failed, I hit a wall
+        hitGhost = False
+        if np.any(np.all(self.ghostPositions == self.pocmanPosition, axis=1)):
+            hitGhost = True
+        self._moveGhosts()
+        if np.any(np.all(self.ghostPositions == self.pocmanPosition, axis=1)):
+            hitGhost = True
+        if hitGhost:
+            if self.powerSteps > 0:  # Under effect of powerup, eat the ghost
+                r += self.RewardEatGhost
+                #***Return ghost to home
+            else:
+                r += self.RewardDie
+                isDone = True
         pass
 
-    def _reward(self):
+    # Coord is x, y nparray
+    # Return False if made invalid move, True otherwise
+    # Modifies position in place
+    def _nextPos(self, coord, action):
+        # Check for wrap-around
+        if coord[0] == 0 and coord[1] == self.passageY and action == 3:  # Going west, wrap to east
+            coord[0] = self.nCols
+        elif coord[0] == self.nCols - 1 and coord[1] == self.passageY and action == 1:  # Going east, wrap west
+            coord[0] = self.nRows
+        else:
+            coord += self.actionDict[action]
+        if self._validPos(coord):
+            return True
+        else:
+            coord -= self.actionDict[action]
+            return False
+
+    def _validPos(self, coord):
+        if coord[0] >= self.nCols or coord[0] < 0:  # Exceeds X dimension
+            return False
+        elif coord[1] >= self.nRows or coord[1] < 0:  # Exceeds Y dimension
+            return False
+        elif not self.grid[tuple(coord)]:  # Not passable
+            return False
+        return True
+
+    # Move the ghosts
+    def _moveGhosts(self):
+        pass
+    
+    # Make an observation for POCMAN
+    def _makeObservation(self):
         pass
 
 # Get the manhattan distance between two coordinates
-def _manhattanDistance(tup1, tup2):
-    return abs(tup1[0]-tup2[0]) + abs(tup1[1]-tup2[1])
+def _manhattanDistance(c1, c2):
+    return np.abs(c1 - c2)
+    #return abs(tup1[0]-tup2[0]) + abs(tup1[1]-tup2[1])
 
 
 if __name__ == "__main__":
-    test = BattleshipPOMDP()
-    test2 = test.step(0)
+    #test = BattleshipPOMDP()
+    #test2 = test.step(0)
+    test = PocmanPOMDP()
+    test.step(2)
     pass
