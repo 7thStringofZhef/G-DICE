@@ -459,6 +459,7 @@ class PocmanPOMDP(POMDP):
                 if np.any(np.all(self.ghostPositions == eyepos, axis=1)):
                     obs |= (1 << dir)
                     break
+                eyepos = eyepos + self.actionDict[dir]
 
         # Can I smell food?
         for dir in range(8):
@@ -478,17 +479,17 @@ class PocmanPOMDP(POMDP):
 
 # Get the manhattan distance between two coordinates (or coordinate and a set)
 def _manhattanDistance(c1, c2):
-    return np.sum(np.abs(c1 - c2), axis=1)
+    return np.sum(np.abs(c1 - c2), axis=-1)
     #return abs(tup1[0]-tup2[0]) + abs(tup1[1]-tup2[1])
 
 # Do two coordinates (or one coordinate to a set) collide?
 def _collide(c1, c2):
-    return np.any(np.all(c1 == c2, axis=1))
+    return np.any(np.all(c1 == c2, axis=-1))
 
 
 if __name__ == "__main__":
     #test = BattleshipPOMDP()
     #test2 = test.step(0)
     test = PocmanPOMDP()
-    test.step(2)
+    testReward = test.step(2)
     pass
