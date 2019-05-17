@@ -143,10 +143,15 @@ class PocmanPOMDP(POMDP):
 
     # Directions dict
     actionDict = {
-        0: np.array([-1, 0]),  # N
-        1: np.array([0, 1]),  # E
-        2: np.array([1, 0]),  # S
-        3: np.array([0, -1])  # W
+        0: np.array([-1, 0], dtype=int),  # N
+        1: np.array([0, 1], dtype=int),  # E
+        2: np.array([1, 0], dtype=int),  # S
+        3: np.array([0, -1], dtype=int),  # W
+        # Following directions are not allowed actions
+        4: np.array([-1, 1], dtype=int),  # NE
+        5: np.array([1, 1], dtype=int),  # SE
+        6: np.array([1, -1], dtype=int),  # SW
+        7: np.array([-1, -1], dtype=int)  # NW
     }
 
     # Static variables
@@ -250,12 +255,12 @@ class PocmanPOMDP(POMDP):
         self._resetPocmanState()
 
     def _resetPocmanState(self):
-        self.pocmanPosition = np.array(self.pocmanHome)  # Place POCMAN at home
+        self.pocmanPosition = np.array(self.pocmanHome, dtype=int)  # Place POCMAN at home
         self.powerSteps = 0  # No powerup at start
 
         # Place ghosts
-        self.ghostPositions = np.zeros((self.nGhosts, 2))
-        self.ghostDirections = np.zeros(self.nGhosts)
+        self.ghostPositions = np.zeros((self.nGhosts, 2), dtype=int)
+        self.ghostDirections = np.zeros(self.nGhosts, dtype=int)
 
         # Food
         foodMask = np.random.rand(*self.grid.shape)
@@ -277,20 +282,42 @@ class PocmanPOMDP(POMDP):
         r = self.RewardDefault
         isDone = False
         if not self._nextPos(self.pocmanPosition, action): r += self.RewardHitWall  # If step failed, I hit a wall
+        if self.powerSteps: self.powerSteps -= 1  # Decrement power-up timesteps
+
         hitGhost = False
-        if np.any(np.all(self.ghostPositions == self.pocmanPosition, axis=1)):
+        # Do it this way so I have index of ghost that was hit
+        hits = np.flatnonzero(np.all(self.ghostPositions == self.pocmanPosition, axis=1))
+        if hits:
             hitGhost = True
         self._moveGhosts()
-        if np.any(np.all(self.ghostPositions == self.pocmanPosition, axis=1)):
+        hits = np.flatnonzero(np.all(self.ghostPositions == self.pocmanPosition, axis=1))
+        if hits:
             hitGhost = True
         if hitGhost:
-            if self.powerSteps > 0:  # Under effect of powerup, eat the ghost
+            if self.powerSteps > 0:  # Under effect of powerup, eat the ghost. Ghost goes home
                 r += self.RewardEatGhost
-                #***Return ghost to home
+                self.ghostPositions[hits] = self.ghostHome
+                self.ghostDirections[hits] = -1
             else:
                 r += self.RewardDie
                 isDone = True
-        pass
+                return -1, r, isDone, {}
+
+        obs = self._makeObservation()
+
+        # Eat food and/or powerup. Note that position is x, y, grid is rows, cols, so reverse coord order
+        if self.foodGrid[self.pocmanPosition[1], self.pocmanPosition[0]]:
+            self.foodGrid[self.pocmanPosition[1], self.pocmanPosition[0]] = False
+            self.numFood -= 1
+            if self.numFood == 0:  # No food left, level done
+                r += self.RewardClearLevel
+                isDone = True
+                return obs, r, isDone, {}
+            if self.grid[self.pocmanPosition[1], self.pocmanPosition[0]] == self.POWER:  # Found powerup
+                self.powerSteps = self.PowerNumSteps
+            r += self.RewardEatFood
+
+        return obs, r, isDone, {}
 
     # Coord is x, y nparray
     # Return False if made invalid move, True otherwise
@@ -321,15 +348,51 @@ class PocmanPOMDP(POMDP):
     # Move the ghosts
     def _moveGhosts(self):
         pass
-    
-    # Make an observation for POCMAN
-    def _makeObservation(self):
-        pass
 
-# Get the manhattan distance between two coordinates
+    # Make an observation for POCMAN
+    # Bits are:
+    # 4 for sight (ghost in LOS)
+    # 4 for touch (wall adjacent)
+    # 1 for smell (food adjacent in any direction)
+    # 1 for hear (ghost within manhattan distance)
+    def _makeObservation(self):
+        obs = 0
+        # Check in all directions for ghosts ("see")
+        # Sight range extends to end of grid or first wall
+        # Also check if walls are adjacent ("touch")
+        for dir in range(4):
+            eyepos = self.pocmanPosition + self.actionDict[dir]
+            if not self.grid[eyepos[1], eyepos[0]]:  # Impassable
+                obs |= (16 << dir)
+            while self._validPos(eyepos):
+                if np.any(np.all(self.ghostPositions == eyepos, axis=1)):
+                    obs |= (1 << dir)
+                    break
+
+        # Can I smell food?
+        for dir in range(8):
+            foundFood = False
+            for dist in range(1, self.SmellRange + 1):
+                smellpos = self.pocmanPosition + self.actionDict[dir]
+                if self.foodGrid[smellpos[1], smellpos[0]]:
+                    obs |= 256
+                    foundFood = True
+                    break
+            if foundFood: break
+
+        # Can I hear a ghost?
+        if np.any(_manhattanDistance(self.pocmanPosition, self.ghostPositions) <= self.HearRange):
+            obs |= 512
+        return obs
+
+# Get the manhattan distance between two coordinates (or coordinate and a set)
 def _manhattanDistance(c1, c2):
-    return np.abs(c1 - c2)
+    return np.sum(np.abs(c1 - c2), axis=1)
     #return abs(tup1[0]-tup2[0]) + abs(tup1[1]-tup2[1])
+
+# Do two coordinates (or one coordinate to a set) collide?
+def _collide(c1, c2):
+    return np.any(np.all(c1 == c2, axis=1))
 
 
 if __name__ == "__main__":
