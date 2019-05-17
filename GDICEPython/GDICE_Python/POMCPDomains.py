@@ -176,7 +176,7 @@ class PocmanPOMDP(POMDP):
         self.size = size
         self.seed(seed)
         self.reward_range = -100, 1000
-        self.observation_space = MultiBinary(10)  # 10 bit binary observations
+        self.observation_space = Discrete(1 << 10)  # 10 bit binary observations
         self.action_space = Discrete(4)
         self.reset()
 
@@ -206,8 +206,10 @@ class PocmanPOMDP(POMDP):
         [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3]], dtype=int).T
         self.nGhosts = 4
         self.ghostRange = 6
-        self.pocmanHome = (8, 6)
-        self.ghostHome = (8, 10)
+        #self.pocmanHome = (8, 6)
+        #self.ghostHome = (8, 10)
+        self.pocmanHome = np.array([6, 8], dtype=int)
+        self.ghostHome = np.array([10, 8], dtype=int)
         self.passageY = 10
 
     # Initialize mini 10*10 grid
@@ -225,8 +227,10 @@ class PocmanPOMDP(POMDP):
         [3, 3, 3, 3, 3, 3, 3, 3, 3, 3]], dtype=int)
         self.nGhosts = 3
         self.ghostRange = 4
-        self.pocmanHome = (4, 2)
-        self.ghostHome = (4, 4)
+        #self.pocmanHome = (4, 2)
+        #self.ghostHome = (4, 4)
+        self.pocmanHome = np.array([2, 4], dtype=int)
+        self.ghostHome = np.array([4, 4], dtype=int)
         self.passageY = 5
 
     # Initialize micro 7*7 grid
@@ -241,9 +245,11 @@ class PocmanPOMDP(POMDP):
         [3, 3, 3, 3, 3, 3, 3]], dtype=int)
         self.nGhosts = 1
         self.ghostRange = 3
-        self.pocmanHome = (3, 0)
-        self.ghostHome = (3, 4)
-        self.passageY = None
+        #self.pocmanHome = (3, 0)
+        #self.ghostHome = (3, 4)
+        self.pocmanHome = np.array([0, 3], dtype=int)
+        self.ghostHome = np.array([4, 3], dtype=int)
+        self.passageY = -1
 
     def reset(self):
         if self.size is 'standard':
@@ -260,7 +266,9 @@ class PocmanPOMDP(POMDP):
 
         # Place ghosts
         self.ghostPositions = np.zeros((self.nGhosts, 2), dtype=int)
-        self.ghostDirections = np.zeros(self.nGhosts, dtype=int)
+        self.ghostPositions[:, 0] = self.ghostHome[0] + (np.arange(self.nGhosts) % 2)  # X
+        self.ghostPositions[:, 1] = self.ghostHome[1] + np.floor(np.arange(self.nGhosts) / 2)  # Y
+        self.ghostDirections = np.full(self.nGhosts, -1, dtype=int)
 
         # Food
         foodMask = np.random.rand(*self.grid.shape)
@@ -347,7 +355,90 @@ class PocmanPOMDP(POMDP):
 
     # Move the ghosts
     def _moveGhosts(self):
-        pass
+        for ghostInd, ghostPos in enumerate(self.ghostPositions):
+            # If pocman is in range, either chase or run (depending on powerup)
+            if _manhattanDistance(ghostPos, self.pocmanPosition) < self.ghostRange:
+                if self.powerSteps:
+                    self._moveGhostDefensive(ghostInd)
+                else:
+                    self._moveGhostAggressive(ghostInd)
+            else:
+                self._moveGhostRandom(ghostInd)
+
+    # Move a ghost randomly
+    def _moveGhostRandom(self, ghostInd):
+        d = self.np_random.randint(0, 4)
+        newpos = self.ghostPositions[ghostInd, :] + self.actionDict[d]
+        if d == 1:
+            opp = self.ghostDirections[ghostInd] == 3
+        else:
+            opp = self.ghostDirections[ghostInd] == abs(d-2)
+        while not opp and not self._validPos(newpos):  # Can't double back, must be valid position
+            d = self.np_random.randint(0, 4)
+            newpos = self.ghostPositions[ghostInd, :] + self.actionDict[d]
+            if d == 1:
+                opp = self.ghostDirections[ghostInd] == 3
+            else:
+                opp = self.ghostDirections[ghostInd] == abs(d - 2)
+        self.ghostPositions[ghostInd, :] = newpos
+        self.ghostDirections[ghostInd] = d
+
+    # Move a ghost aggressively after pocman
+    def _moveGhostAggressive(self, ghostInd):
+        # Decided not to chase, move randomly
+        if self.np_random.rand() < self.ChaseProb:
+            self._moveGhostRandom(ghostInd)
+            return
+        else:
+            bestDistance = self.grid.size
+            bestPos = self.ghostPositions[ghostInd, :]
+            bestDir = -1
+            for d in range(4):
+                # Can;t double back
+                if d == 1 and self.ghostDirections[ghostInd] == 3: continue
+                elif abs(d-2) == self.ghostDirections[ghostInd]: continue
+
+                newPos = bestPos + self.actionDict[d]
+                if self._validPos(newPos):
+                    if d == 1 or d == 3:  # E-W
+                        dist = abs(self.pocmanPosition[0] - self.ghostPositions[ghostInd, 0])
+                    else:
+                        dist = abs(self.pocmanPosition[1] - self.ghostPositions[ghostInd, 1])
+                    if dist < bestDistance:
+                        bestDistance = dist
+                        bestPos = newPos
+                        bestDir = d
+            self.ghostPositions[ghostInd, :] = bestPos
+            self.ghostDirections[ghostInd] = bestDir
+
+
+    # Move a ghost defensively away from pocman
+    def _moveGhostDefensive(self, ghostInd):
+        # Slipped. Don't move
+        if self.np_random.rand() < self.DefensiveSlip:
+            self.ghostDirections[ghostInd] = -1
+            return
+        else:
+            bestDistance = 0
+            bestPos = self.ghostPositions[ghostInd, :]
+            bestDir = -1
+            for d in range(4):
+                # Can;t double back
+                if d == 1 and self.ghostDirections[ghostInd] == 3: continue
+                elif abs(d-2) == self.ghostDirections[ghostInd]: continue
+
+                newPos = bestPos + self.actionDict[d]
+                if self._validPos(newPos):
+                    if d == 1 or d == 3:  # E-W
+                        dist = abs(self.pocmanPosition[0] - self.ghostPositions[ghostInd, 0])
+                    else:
+                        dist = abs(self.pocmanPosition[1] - self.ghostPositions[ghostInd, 1])
+                    if dist > bestDistance:
+                        bestDistance = dist
+                        bestPos = newPos
+                        bestDir = d
+            self.ghostPositions[ghostInd, :] = bestPos
+            self.ghostDirections[ghostInd] = bestDir
 
     # Make an observation for POCMAN
     # Bits are:
