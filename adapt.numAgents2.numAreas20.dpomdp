@@ -1,0 +1,89 @@
+#agents
+agents: 2
+#discount
+discount: 1.000000
+#values
+values: reward
+#states
+states: s15_12 s6_9 s15_1 s1_1 s13_1 s15_15 s13_13 s1_15 s12_12 s1_13 s13_15 s12_13
+start:
+0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 1.0000 0.0000 0.0000 0.0000 0.0000 0.0000
+#actions
+actions:
+D1_S1 D10_CW NControl_B_F1 SControl_B_F1 D2_B1_F1 D9_B3_F1 D3_B2_F1 D2_SW D3_B1 D3_B3_F2_1 D8_5_Alley_S D5_SE D4_C D11_C D13_B1_F1 CControl_B_F1 D2_S D7_N D6_S1 D7_W
+D1_S1 D10_CW NControl_B_F1 SControl_B_F1 D2_B1_F1 D9_B3_F1 D3_B2_F1 D2_SW D3_B1 D3_B3_F2_1 D8_5_Alley_S D5_SE D4_C D11_C D13_B1_F1 CControl_B_F1 D2_S D7_N D6_S1 D7_W
+#observations
+observations:
+1
+1
+#transitions (current test model is deterministic)
+T: CControl_B_F1 D4_C : s15_12 : s15_12 : 1.0
+T: D4_C D4_C : s6_9 : s12_12 : 1.0
+T: D3_B2_F1 D3_B3_F2_1 : s6_9 : s6_9 : 1.0
+T: D11_C D11_C : s15_1 : s13_13 : 1.0
+T: D11_C D10_CW : s15_1 : s13_1 : 1.0
+T: CControl_B_F1 D10_CW : s15_1 : s15_1 : 1.0
+T: D11_C D11_C : s1_1 : s13_13 : 1.0
+T: D10_CW D11_C : s1_1 : s1_13 : 1.0
+T: D11_C D10_CW : s1_1 : s13_1 : 1.0
+T: D10_CW D10_CW : s1_1 : s1_1 : 1.0
+T: D10_CW D11_C : s13_1 : s1_13 : 1.0
+T: D11_C D11_C : s13_1 : s13_13 : 1.0
+T: D10_CW D10_CW : s13_1 : s1_1 : 1.0
+T: CControl_B_F1 D10_CW : s13_1 : s15_1 : 1.0
+T: D11_C D10_CW : s13_1 : s13_1 : 1.0
+T: D11_C D11_C : s15_15 : s13_13 : 1.0
+T: D11_C CControl_B_F1 : s15_15 : s13_15 : 1.0
+T: CControl_B_F1 CControl_B_F1 : s15_15 : s15_15 : 1.0
+T: D10_CW D10_CW : s13_13 : s1_1 : 1.0
+T: CControl_B_F1 D10_CW : s13_13 : s15_1 : 1.0
+T: D11_C D10_CW : s13_13 : s13_1 : 1.0
+T: D10_CW CControl_B_F1 : s13_13 : s1_15 : 1.0
+T: CControl_B_F1 CControl_B_F1 : s13_13 : s15_15 : 1.0
+T: D11_C CControl_B_F1 : s13_13 : s13_15 : 1.0
+T: D10_CW D11_C : s13_13 : s1_13 : 1.0
+T: D11_C D11_C : s13_13 : s13_13 : 1.0
+T: D11_C D11_C : s1_15 : s13_13 : 1.0
+T: D10_CW D11_C : s1_15 : s1_13 : 1.0
+T: D11_C CControl_B_F1 : s1_15 : s13_15 : 1.0
+T: D10_CW CControl_B_F1 : s1_15 : s1_15 : 1.0
+T: D3_B2_F1 D3_B3_F2_1 : s12_12 : s6_9 : 1.0
+T: D4_C D4_C : s12_12 : s12_12 : 1.0
+T: D11_C D10_CW : s1_13 : s13_1 : 1.0
+T: D10_CW D10_CW : s1_13 : s1_1 : 1.0
+T: D11_C CControl_B_F1 : s1_13 : s13_15 : 1.0
+T: D10_CW CControl_B_F1 : s1_13 : s1_15 : 1.0
+T: D11_C D11_C : s1_13 : s13_13 : 1.0
+T: D10_CW D11_C : s1_13 : s1_13 : 1.0
+T: D10_CW D11_C : s13_15 : s1_13 : 1.0
+T: D11_C D11_C : s13_15 : s13_13 : 1.0
+T: D10_CW CControl_B_F1 : s13_15 : s1_15 : 1.0
+T: CControl_B_F1 CControl_B_F1 : s13_15 : s15_15 : 1.0
+T: D11_C CControl_B_F1 : s13_15 : s13_15 : 1.0
+T: D4_C D11_C : s12_13 : s12_13 : 1.0
+#observation probabilities (current test model is deterministic)
+O: CControl_B_F1 D4_C : s15_12 : * : 1.0
+O: D3_B2_F1 D3_B3_F2_1 : s6_9 : * : 1.0
+O: CControl_B_F1 D10_CW : s15_1 : * : 1.0
+O: D10_CW D10_CW : s1_1 : * : 1.0
+O: D11_C D10_CW : s13_1 : * : 1.0
+O: CControl_B_F1 CControl_B_F1 : s15_15 : * : 1.0
+O: D11_C D11_C : s13_13 : * : 1.0
+O: D10_CW CControl_B_F1 : s1_15 : * : 1.0
+O: D4_C D4_C : s12_12 : * : 1.0
+O: D10_CW D11_C : s1_13 : * : 1.0
+O: D11_C CControl_B_F1 : s13_15 : * : 1.0
+O: D4_C D11_C : s12_13 : * : 1.0
+#rewards
+R: CControl_B_F1 D4_C : * : s15_12 : * : 0.004442965780753267
+R: D3_B2_F1 D3_B3_F2_1 : * : s6_9 : * : 0.005178757243092628
+R: CControl_B_F1 D10_CW : * : s15_1 : * : 0.002995380183502134
+R: D10_CW D10_CW : * : s1_1 : * : 0.0027731112603205615
+R: D11_C D10_CW : * : s13_1 : * : 0.002689711881891326
+R: CControl_B_F1 CControl_B_F1 : * : s15_15 : * : 0.0035103132818071927
+R: D11_C D11_C : * : s13_13 : * : 0.003424050745169091
+R: D10_CW CControl_B_F1 : * : s1_15 : * : 0.0032498343090628973
+R: D4_C D4_C : * : s12_12 : * : 0.004069812421493089
+R: D10_CW D11_C : * : s1_13 : * : 0.0035302196273381595
+R: D11_C CControl_B_F1 : * : s13_15 : * : 0.003152097818914817
+R: D4_C D11_C : * : s12_13 : * : 0.0034929133157619086
