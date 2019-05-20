@@ -24,6 +24,16 @@ baseSavePath = ''
 
 
 if __name__ == "__main__":
+    # Should probably split runs, envs, and param sets across jobs
+    # So I should probably just do the "list" approach again...
+    parser = argparse.ArgumentParser(description='Choose save dir and environment')
+    parser.add_argument('--save_path', type=str, default='/scratch/slayback.d/GDICE', help='Base save path')
+    parser.add_argument('--env_name', type=str, default='', help='Environment to run')
+    parser.add_argument('--env_type', type=str, default='POMDP', help='Environment type to run')
+    parser.add_argument('--set_list', type=str, default='', help='If provided, uses a list of run/env/param sets instead')
+    parser.add_argument('--unfinished', type=int, default=0, help='If 1, clean out unfinished results')
+    args = parser.parse_args()
+
     pool = Pool()
     dpomdpsnames = [os.path.join('../', name) for name in os.listdir('../') if name.endswith('.dpomdp')]  # Get environments
     dpomdps = [DPOMDP(name) for name in dpomdpsnames]
