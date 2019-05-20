@@ -21,6 +21,7 @@ lr = [0.1, 0.2, 0.5]
 timeHorizon = 100
 injectEntropy = True
 baseSavePath = ''
+aptimaPath = '/scratch/slayback.d/GDICE/G-DICE'
 
 
 if __name__ == "__main__":
@@ -35,7 +36,7 @@ if __name__ == "__main__":
     baseSavePath = args.save_path
 
     pool = Pool()
-    dpomdpsnames = [os.path.join('../', name) for name in os.listdir('../') if name.endswith('.dpomdp')]  # Get environments
+    dpomdpsnames = [os.path.join(aptimaPath, name) for name in os.listdir(aptimaPath) if name.endswith('.dpomdp')]  # Get environments
     dpomdps = [DPOMDP(name) for name in dpomdpsnames]
     paramList = [GDICEParams(n, N_k, nSamples, N_sim, N_k, l, None, timeHorizon) for n in nNodes for l in lr]  # Mini grid search
     run = str(args.run_num)
