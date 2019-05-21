@@ -13,15 +13,15 @@ import glob
 
 # Parameters I'll use. Keeping permutations to a minimum
 nNodes = [10, 20]
-nSamples = 70
-nBestSamples = 5
+nSamples = 100
+nBestSamples = 3
 N_k = 1000
 N_sim = 1000
 lr = [0.1, 0.2, 0.5]
 timeHorizon = 100
 injectEntropy = True
 baseSavePath = ''
-aptimaPath = '/scratch/slayback.d/GDICE/G-DICE'
+aptimaPath = '../'
 
 
 if __name__ == "__main__":
@@ -29,16 +29,16 @@ if __name__ == "__main__":
     # So I should probably just do the "list" approach again...
     parser = argparse.ArgumentParser(description='Choose save dir and environment')
     parser.add_argument('--save_path', type=str, default='/scratch/slayback.d/GDICE', help='Base save path')
-    parser.add_argument('--env_num', type=int, default=0, help='Environment to run (of 3)')
+    parser.add_argument('--env_num', type=int, default=2, help='Environment to run (of 3)')
     parser.add_argument('--param_num', type=int, default=0, help='Paramset to run (of 6)')
     parser.add_argument('--run_num', type=int, default=1, help='If provided, uses a list of run/env/param sets instead')
     args = parser.parse_args()
     baseSavePath = args.save_path
 
-    pool = Pool()
+    pool = None
     dpomdpsnames = [os.path.join(aptimaPath, name) for name in os.listdir(aptimaPath) if name.endswith('.dpomdp')]  # Get environments
     dpomdps = [DPOMDP(name) for name in dpomdpsnames]
-    paramList = [GDICEParams(n, N_k, nSamples, N_sim, N_k, l, None, timeHorizon) for n in nNodes for l in lr]  # Mini grid search
+    paramList = [GDICEParams(n, N_k, nSamples, N_sim, nBestSamples, l, None, timeHorizon) for n in nNodes for l in lr]  # Mini grid search
     run = str(args.run_num)
     envName = dpomdpsnames[args.env_num]
     env = DPOMDP(envName)
