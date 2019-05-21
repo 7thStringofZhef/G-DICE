@@ -1,7 +1,7 @@
 #!/bin/bash
 
 fullDir="/scratch/slayback.d/GDICE/"
-for runInd in {1..4..1}
+for runInd in {5..8..1}
 do
     for envInd in {0..2..1}
     do
