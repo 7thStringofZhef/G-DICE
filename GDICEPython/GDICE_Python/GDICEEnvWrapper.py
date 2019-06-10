@@ -3,23 +3,30 @@ import numpy as np
 
 # A class that wraps a gym environment in which states, observations, rewards, actions and dones
 # are lists or np arrays, so multiple trajectories can be simulated in parallel
+
+from copy import deepcopy
+
 class GDICEEnvWrapper(gym.Wrapper):
     def __init__(self, env, numTrajectories):
         super().__init__(env)
         self.nTrajectories = numTrajectories
         self.nAgents = env.agents
+
+        # Generate a new environment for each trajectory
+        self.environments = [deepcopy(env) for _ in range(numTrajectories)]
         self.reset()
 
     def __getattr__(self, attr):
         return getattr(self.env, attr)
 
     def reset(self):
-        #self.states = [self.env.state] * self.nTrajectories
-        # Generate a new environment for each trajectory
-        self.states = []
-        for i in range(self.nTrajectories):
-            self.env.reset()
-            self.states.append(self.env.state)
+        # self.states = []
+        # for i in range(self.nTrajectories):
+        #     self.env.reset()
+        #     self.states.append(self.env.state)
+        for env in self.environments:
+            env.reset()
+
         self.doneIndices = []  # states are not indices here, thus we need a separate list
                                # to keep the indices the states that are done
 
@@ -40,41 +47,30 @@ class GDICEEnvWrapper(gym.Wrapper):
         if np.isscalar(actions):
             actions = np.full(self.numTrajectories, actions, dtype=np.int32)
 
-        # Tuple of (action, index) given, step for one worker only (for multithreaded applications)
-        #if isinstance(actions, tuple) and len(actions) == 2:
-        #    return self._stepForSingleWorker(int(actions[0]), int(actions[1]))
-
         # Make sure numpy array is of appropriate size
         assert actions.shape[0] == self.nTrajectories
 
-        newStates = []
         observations = []
         rewards = []
         dones = []
 
-        for i in range(len(self.states)):
+        for i in range(len(self.environments)):
             # For each simulation run that is done, return nothing
             if i in self.doneIndices:
-                newStates.append(-1)
                 observations.append([-1] * self.nAgents)
                 rewards.append(0)
                 dones.append(True)
                 continue
 
-            state = self.states[i]
+            env = self.environments[i]
             action = actions[i]
-
-            obs, reward, done, params = self.env.step(action, state=state)
-
-            newState = params['new_state']
-            newStates.append(newState)
+            obs, reward, done = env.step(action)
             observations.append(obs)
             rewards.append(reward)
             dones.append(done)
             if done:
                 self.doneIndices.append(i)
 
-        self.states = newStates
         return np.array(observations), np.array(rewards), np.array(dones), {}
 
     # If multiprocessing, each worker will provide its trajectory index and desired action
