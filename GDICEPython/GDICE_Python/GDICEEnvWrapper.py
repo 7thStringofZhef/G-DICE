@@ -4,7 +4,7 @@ import numpy as np
 # A class that wraps a gym environment in which states, observations, rewards, actions and dones
 # are lists or np arrays, so multiple trajectories can be simulated in parallel
 
-from copy import deepcopy
+from copy import copy
 
 class GDICEEnvWrapper(gym.Wrapper):
     def __init__(self, env, numTrajectories):
@@ -13,7 +13,7 @@ class GDICEEnvWrapper(gym.Wrapper):
         self.nAgents = env.agents
 
         # Generate a new environment for each trajectory
-        self.environments = [deepcopy(env) for _ in range(numTrajectories)]
+        self.environments = [copy(env) for _ in range(numTrajectories)]
         self.reset()
 
     def __getattr__(self, attr):
