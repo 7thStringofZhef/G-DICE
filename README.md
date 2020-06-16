@@ -26,7 +26,7 @@ To install, just install the dependencies (listed below), then install using the
 * Gym
 * Andrea's repositories, rl_parsers and gym_pomdps. These are expected to be pip installed with their included script
     * https://github.ccs.neu.edu/abaisero/gym-pomdps
-    * https://github.com/abaisero/rl_parsers
+    * https://github.com/abaisero/rl-parsers/tree/feature_dpomdp
 * gym_dpomdps (included in repo, "pip install gym_dpomdps/dist/gym_dpomdps-0.1.0.tar.gz"
 
 ## Future work
